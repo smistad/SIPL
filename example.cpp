@@ -9,7 +9,7 @@ int main(int argc, char ** argv)
 	Image * image = new Image("images/example.bmp");
 	image->show();
 
-	Image * edgeImage = image->convolution(new LaplaceMask());
+	Image * edgeImage = image->convolution(new SobelYMask());
 	edgeImage->show();
 	edgeImage->save("images/example_result.bmp", "bmp");
 
