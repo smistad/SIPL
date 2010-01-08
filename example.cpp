@@ -1,4 +1,5 @@
 #include "SIPL/Core.h"
+#include "SIPL/Masks.h"
 using namespace SIPL;
 
 int main(int argc, char ** argv)
