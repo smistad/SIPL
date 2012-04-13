@@ -23,20 +23,12 @@ namespace SIPL
     typedef float PIXEL_FLOAT ;
     typedef unsigned char PIXEL_UCHAR ;
     typedef struct PIXEL_COLOR_FLOAT { float red, blue, green;} PIXEL_COLOR_FLOAT ;
-
-	class Window
-	{
-	public:
-		Window(GtkWidget * gtkWindow);
-		void update();
-		void destroy();
-	private:
-		GtkWidget * gtkWindow;
-	};
+    typedef struct PIXEL_COLOR_UCHAR { unsigned char red, blue, green;} PIXEL_COLOR_UCHAR ;
 
     template <class T>
 	class Pixel;
 
+    class Window;
 	class Mask;
 
     template <class T>
@@ -51,6 +43,7 @@ namespace SIPL
 		int getHeight();
 		Window show();
 		void crop(); 
+        void update();
 		Image convolution(Mask * mask); 
 		void save(const char * filepath, const char * imageType);
 		friend class Pixel<T>;
@@ -61,6 +54,16 @@ namespace SIPL
         T * data;
 	};
 
+	class Window
+	{
+	public:
+		Window(GtkWidget * gtkWindow);
+		void destroy();
+	private:
+		GtkWidget * gtkWindow;
+	};
+
+
     template <class T>
 	class Pixel
 	{
@@ -70,7 +73,6 @@ namespace SIPL
 		T get();
 	private:
         T * data;
-		Image<T> *image;
 		int x, y,width;
 	};
 
@@ -108,6 +110,21 @@ void Image<PIXEL_UCHAR>::pixbufToData() {
         guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
         unsigned char * c = (unsigned char *)((pixels + i * gdk_pixbuf_get_n_channels(pixBuf)));
         this->data[i] = c[0];
+    }
+    gdk_threads_leave();
+}
+
+template <>
+void Image<PIXEL_COLOR_UCHAR>::pixbufToData() {
+	gdk_threads_enter ();
+    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) this->image);
+
+    for(int i = 0; i < getWidth()*getHeight(); i++) {
+        guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
+        unsigned char * c = (unsigned char *)((pixels + i * gdk_pixbuf_get_n_channels(pixBuf)));
+        this->data[i].red = c[0];
+        this->data[i].green = c[1];
+        this->data[i].blue = c[2];
     }
     gdk_threads_leave();
 }
@@ -173,11 +190,12 @@ Image<T>::Image(unsigned int width, unsigned int height) {
 
 template <class T>
 Image<T>::~Image() {
-	//free(image);
+	free(this->data);
 }
 
 template <class T>
 void Image<T>::save(const char * filepath, const char * imageType = "jpeg") {
+    this->dataToPixbuf();
 	gdk_pixbuf_save(gtk_image_get_pixbuf((GtkImage *) image), filepath, imageType,
 			NULL, "quality", "100", NULL);
 }
@@ -217,6 +235,7 @@ void destroyWindow(GtkWidget * widget, gpointer window) {
 	windowCount--;
 	if (windowCount == 0) {
 		gtk_main_quit();
+        exit(0);
 	} else {
 		gtk_widget_destroy(GTK_WIDGET(window));
 	}
@@ -274,6 +293,22 @@ void Image<PIXEL_UCHAR>::dataToPixbuf() {
     p[0] = intensity;
     p[1] = intensity;
     p[2] = intensity;
+   }
+   gdk_threads_leave();
+
+}
+
+template <>
+void Image<PIXEL_COLOR_UCHAR>::dataToPixbuf() {
+    gdk_threads_enter();
+    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) this->image);
+   for(int i = 0; i < getWidth()*getHeight(); i++) {
+    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
+    guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
+    PIXEL_COLOR_UCHAR intensity = this->data[i];
+    p[0] = intensity.red;
+    p[1] = intensity.green;
+    p[2] = intensity.blue;
    }
    gdk_threads_leave();
 
@@ -370,9 +405,10 @@ int Image<T>::getHeight() {
 	return gdk_pixbuf_get_height(gtk_image_get_pixbuf((GtkImage *) image));
 }
 
-
-void Window::update() {
-    gtk_widget_queue_draw (gtkWindow);
+template <class T>
+void Image<T>::update() {
+    this->dataToPixbuf();
+    gtk_widget_queue_draw (this->image);
 }
 
 }

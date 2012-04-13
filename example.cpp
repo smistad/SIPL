@@ -5,12 +5,14 @@ int main(int argc, char ** argv)
 {
     Init();
 
-	Image<PIXEL_FLOAT> image = Image<PIXEL_FLOAT>("images/example.bmp");
-    for(int i = 0; i < 50; i++) {
-    for(int j = 0; j < 50; j++) {
-        image.getPixel(i,j).set(0.5f);
-    }}
-	image.show();
+	Image<PIXEL_COLOR_UCHAR> image = Image<PIXEL_COLOR_UCHAR>("images/example.bmp");
+    image.show();
+    for(int i = 0; i < image.getWidth(); i++) {
+    for(int j = 0; j < image.getHeight(); j++) {
+        PIXEL_COLOR_UCHAR c;
+        c.green = 255;
+        image.getPixel(i,j).set(c);
+    }image.update();}
 
 	return 0;
 }
