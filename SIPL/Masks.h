@@ -2,12 +2,13 @@
 
 namespace SIPL {
 
-Image Image::convolution(Mask * mask) {
+template <class T>
+Image<T> Image<T>::convolution(Mask * mask) {
 	double ** maskMatrix = mask->get();
 	int width = this->getWidth();
 	int height = this->getHeight();
 	int size = mask->getSize();
-	Image newImage = Image(width, height);
+	Image<T> newImage = Image<T>(width, height);
 	double sum = 0.0;
 
 	for (int y = size / 2; y < height - (size / 2); y++) {
