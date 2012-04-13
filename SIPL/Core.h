@@ -13,8 +13,8 @@
 
 namespace SIPL
 {
-	void setupWindow(int width, int height);
 	void quit(void);
+    void Init();
 
 	struct pixel {
 		unsigned char blue,green,red,alpha;
@@ -43,10 +43,9 @@ namespace SIPL
 		Pixel getPixel(int x, int y);
 		int getWidth();
 		int getHeight();
-		void update(int x, int y, int w, int h);
-		Window * show();
-		void crop(); // TODO:
-		Image * convolution(Mask * mask); // TODO:
+		Window show();
+		void crop(); 
+		Image convolution(Mask * mask); 
 		void save(const char * filepath, const char * imageType);
 		friend class Pixel;
 	private:

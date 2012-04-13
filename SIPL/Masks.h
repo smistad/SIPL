@@ -1,5 +1,32 @@
 #include "Core.h"
-using namespace SIPL;
+
+namespace SIPL {
+
+Image Image::convolution(Mask * mask) {
+	double ** maskMatrix = mask->get();
+	int width = this->getWidth();
+	int height = this->getHeight();
+	int size = mask->getSize();
+	Image newImage = Image(width, height);
+	double sum = 0.0;
+
+	for (int y = size / 2; y < height - (size / 2); y++) {
+		for (int x = size / 2; x < width - (size / 2); x++) {
+			sum = 0.0;
+			for (int m = 0; m < size; m++) {
+				for (int n = 0; n < size; n++) {
+					sum += maskMatrix[m][n] * this->getPixel(
+							x + (size / 2) - m, y + (size / 2) - n).get()[0];
+				}
+			}
+
+			newImage.getPixel(x, y).set((unsigned char) round(sum));
+		}
+	}
+
+	return newImage;
+}
+
 class AverageMask: public Mask {
 public:
 	AverageMask(int size) {
@@ -77,3 +104,5 @@ public:
 		maskMatrix[2][2] = 1.0;
 	}
 };
+
+}

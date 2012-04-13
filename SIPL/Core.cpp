@@ -5,8 +5,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <pthread.h>
-using namespace SIPL;
 using namespace std;
+namespace SIPL {
+void Init() {
+    atexit(quit);
+}
 
 string intToString(int inInt) {
 	stringstream ss;
@@ -106,8 +109,8 @@ unsigned char * Pixel::get() {
 	gdk_threads_enter();
 	GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image->image);
 	guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
-	unsigned char * c = (unsigned char *) (pixels + x * gdk_pixbuf_get_n_channels(pixBuf)
-			+ y * gdk_pixbuf_get_rowstride(pixBuf));
+    unsigned char * c = (unsigned char *)((pixels + x * gdk_pixbuf_get_n_channels(pixBuf)
+			+ y * gdk_pixbuf_get_rowstride(pixBuf)));
 	gdk_threads_leave ();
 	return c;
 
@@ -184,7 +187,7 @@ void saveDialog(GtkWidget * widget, gpointer image) {
 	gtk_widget_show(fileSelection);
 }
 
-Window * Image::show() {
+Window Image::show() {
 	gdk_threads_enter();
 	windowCount++;
 	GtkWidget * window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -241,9 +244,8 @@ Window * Image::show() {
 	gtk_widget_show_all(window);
 
 	gdk_threads_leave();
-	return winObj;
+	return *winObj;
 }
-
 int Image::getWidth() {
 	return gdk_pixbuf_get_width(gtk_image_get_pixbuf((GtkImage *) image));
 }
@@ -252,31 +254,11 @@ int Image::getHeight() {
 	return gdk_pixbuf_get_height(gtk_image_get_pixbuf((GtkImage *) image));
 }
 
-Image * Image::convolution(Mask * mask) {
-	double ** maskMatrix = mask->get();
-	int width = this->getWidth();
-	int height = this->getHeight();
-	int size = mask->getSize();
-	Image * newImage = new Image(width, height);
-	double sum = 0.0;
-
-	for (int y = size / 2; y < height - (size / 2); y++) {
-		for (int x = size / 2; x < width - (size / 2); x++) {
-			sum = 0.0;
-			for (int m = 0; m < size; m++) {
-				for (int n = 0; n < size; n++) {
-					sum += maskMatrix[m][n] * this->getPixel(
-							x + (size / 2) - m, y + (size / 2) - n).get()[0];
-				}
-			}
-
-			newImage->getPixel(x, y).set((unsigned char) round(sum));
-		}
-	}
-
-	return newImage;
+void quit(void) {
+	pthread_join(gtkThread, NULL);
 }
 
-void SIPL::quit(void) {
-	pthread_join(gtkThread, NULL);
+void Window::update() {
+    gtk_widget_queue_draw (gtkWindow);
+}
 }
