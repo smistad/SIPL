@@ -20,7 +20,8 @@ using namespace std;
 
 namespace SIPL {
 
-typedef float PIXEL_FLOAT ;
+typedef bool PIXEL_BINARY; // not implemented
+typedef float PIXEL_FLOAT;
 typedef unsigned char PIXEL_UCHAR;
 typedef unsigned short PIXEL_USHORT; // not implemented
 typedef short PIXEL_SHORT; // not implemented
@@ -42,7 +43,7 @@ class Image {
         int getWidth();
         int getHeight();
         Window show();
-        void crop(); 
+        void crop();  // not implemented
         void update();
         void save(const char * filepath, const char * imageType);
         void dataToPixbuf();

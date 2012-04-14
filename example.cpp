@@ -1,4 +1,4 @@
-#include "SIPL/Core.h"
+#include "Core.h"
 using namespace SIPL;
 
 int main(int argc, char ** argv)
