@@ -21,9 +21,13 @@ using namespace std;
 namespace SIPL {
 
 typedef float PIXEL_FLOAT ;
-typedef unsigned char PIXEL_UCHAR ;
+typedef unsigned char PIXEL_UCHAR;
+typedef unsigned short PIXEL_USHORT; // not implemented
+typedef short PIXEL_SHORT; // not implemented
 typedef struct PIXEL_COLOR_FLOAT { float red, blue, green;} PIXEL_COLOR_FLOAT ;
 typedef struct PIXEL_COLOR_UCHAR { unsigned char red, blue, green;} PIXEL_COLOR_UCHAR ;
+typedef struct PIXEL_FLOAT2 { float x,y; } PIXEL_FLOAT2; // not implemented
+typedef struct PIXEL_FLOAT3 { float x,y,z; } PIXEL_FLOAT3; // not implemented
 
 class Window;
 
@@ -308,28 +312,28 @@ Window Image<T>::show() {
 	gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar), GTK_ORIENTATION_HORIZONTAL);
 	gtk_toolbar_append_item (
 			 GTK_TOOLBAR (toolbar), /* our toolbar */
-	                             "Save",               /* button label */
-	                             "Save this image",     /* this button's tooltip */
-	                             NULL,             /* tooltip private info */
-	                             NULL,                 /* icon widget */
-	                             GTK_SIGNAL_FUNC(saveDialog), /* a signal */
-	                             this->image);
+             "Save",               /* button label */
+             "Save this image",     /* this button's tooltip */
+             NULL,             /* tooltip private info */
+             NULL,                 /* icon widget */
+             GTK_SIGNAL_FUNC(saveDialog), /* a signal */
+             this->image);
 	gtk_toolbar_append_item (
 			 GTK_TOOLBAR (toolbar), /* our toolbar */
-	                             "Close",               /* button label */
-	                             "Close this image",     /* this button's tooltip */
-	                             NULL,             /* tooltip private info */
-	                             NULL,                 /* icon widget */
-	                             GTK_SIGNAL_FUNC (signalDestroyWindow), /* a signal */
-	                             window);
+             "Close",               /* button label */
+             "Close this image",     /* this button's tooltip */
+             NULL,             /* tooltip private info */
+             NULL,                 /* icon widget */
+             GTK_SIGNAL_FUNC (signalDestroyWindow), /* a signal */
+             window);
 	gtk_toolbar_append_item (
 			 GTK_TOOLBAR (toolbar), /* our toolbar */
-	                             "Close program",               /* button label */
-	                             "Close this program",     /* this button's tooltip */
-	                             NULL,             /* tooltip private info */
-	                             NULL,                 /* icon widget */
-	                             GTK_SIGNAL_FUNC (gtk_main_quit), /* a signal */
-	                             NULL);
+             "Close program",               /* button label */
+             "Close this program",     /* this button's tooltip */
+             NULL,             /* tooltip private info */
+             NULL,                 /* icon widget */
+             GTK_SIGNAL_FUNC (gtk_main_quit), /* a signal */
+             NULL);
 
 
 	gtk_window_set_default_size(
