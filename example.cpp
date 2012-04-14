@@ -11,8 +11,11 @@ int main(int argc, char ** argv)
     for(int j = 0; j < image.getHeight(); j++) {
         PIXEL_COLOR_UCHAR c;
         c.green = 255;
-        image.getPixel(i,j).set(c);
-    }image.update();}
+        image.set(i,j,c);
+    }}
+    image.update();
+	Image<PIXEL_COLOR_UCHAR> image2 = Image<PIXEL_COLOR_UCHAR>("images/example.bmp");
+    image2.show();
 
 	return 0;
 }

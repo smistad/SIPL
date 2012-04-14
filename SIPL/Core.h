@@ -3,8 +3,8 @@
  * @author Erik Smistad <smistad@idi.ntnu.no>
  */
 
-#ifndef IPLIB_H_
-#define IPLIB_H_
+#ifndef SIPL_H_
+#define SIPL_H_
 
 #include <stdlib.h>
 #include <cmath>
@@ -18,80 +18,50 @@
 
 using namespace std;
 
-namespace SIPL
-{
-    typedef float PIXEL_FLOAT ;
-    typedef unsigned char PIXEL_UCHAR ;
-    typedef struct PIXEL_COLOR_FLOAT { float red, blue, green;} PIXEL_COLOR_FLOAT ;
-    typedef struct PIXEL_COLOR_UCHAR { unsigned char red, blue, green;} PIXEL_COLOR_UCHAR ;
+namespace SIPL {
 
-    template <class T>
-	class Pixel;
+typedef float PIXEL_FLOAT ;
+typedef unsigned char PIXEL_UCHAR ;
+typedef struct PIXEL_COLOR_FLOAT { float red, blue, green;} PIXEL_COLOR_FLOAT ;
+typedef struct PIXEL_COLOR_UCHAR { unsigned char red, blue, green;} PIXEL_COLOR_UCHAR ;
 
-    class Window;
-	class Mask;
+class Window;
 
-    template <class T>
-	class Image
-	{
-	public:
-		Image(const char * filepath);
-		Image(unsigned int width, unsigned int height);
-		~Image();
-		Pixel<T> getPixel(int x, int y);
-		int getWidth();
-		int getHeight();
-		Window show();
-		void crop(); 
+template <class T>
+class Image {
+    public:
+        Image(const char * filepath);
+        Image(unsigned int width, unsigned int height);
+        ~Image();
+        T get(int x, int y);
+        void set(int x, int y, T pixel);
+        int getWidth();
+        int getHeight();
+        Window show();
+        void crop(); 
         void update();
-		Image convolution(Mask * mask); 
-		void save(const char * filepath, const char * imageType);
-		friend class Pixel<T>;
+        void save(const char * filepath, const char * imageType);
         void dataToPixbuf();
         void pixbufToData();
-	private:
-		GtkWidget * image;
+    private:
+        GtkWidget * image;
         T * data;
-	};
+        int width, height;
+};
 
-	class Window
-	{
-	public:
-		Window(GtkWidget * gtkWindow);
-		void destroy();
-	private:
-		GtkWidget * gtkWindow;
-	};
+class Window {
+    public:
+        Window(GtkWidget * gtkWindow);
+        void destroy();
+    private:
+        GtkWidget * gtkWindow;
+};
 
-
-    template <class T>
-	class Pixel
-	{
-	public:
-		Pixel(T *data, int width, int x, int y);
-		void set(T value);
-		T get();
-	private:
-        T * data;
-		int x, y,width;
-	};
-
-	class Mask
-	{
-	public:
-		double ** get() {createMatrix(); return maskMatrix; };
-		int getSize() { return this->size; };
-	protected:
-		double ** maskMatrix;
-		int size;
-		virtual void createMatrix() = 0;
-	};
 
 bool init = false;
 pthread_t gtkThread;
 
-void * initGTK(void * t)
-{
+void * initGTK(void * t) {
 	g_thread_init(NULL);
 	gdk_threads_init ();
 	gdk_threads_enter ();
@@ -99,13 +69,13 @@ void * initGTK(void * t)
 	init = true;
 	gtk_main();
     gdk_threads_leave();
+    return 0;
 }
 
 template <>
 void Image<PIXEL_UCHAR>::pixbufToData() {
 	gdk_threads_enter ();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) this->image);
-
     for(int i = 0; i < getWidth()*getHeight(); i++) {
         guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
         unsigned char * c = (unsigned char *)((pixels + i * gdk_pixbuf_get_n_channels(pixBuf)));
@@ -178,8 +148,6 @@ string intToString(int inInt) {
 	return s;
 }
 
-
-
 template <class T>
 Image<T>::Image(unsigned int width, unsigned int height) {
 	while(!init);
@@ -191,6 +159,7 @@ Image<T>::Image(unsigned int width, unsigned int height) {
 template <class T>
 Image<T>::~Image() {
 	free(this->data);
+    //free(this->image);
 }
 
 template <class T>
@@ -201,26 +170,13 @@ void Image<T>::save(const char * filepath, const char * imageType = "jpeg") {
 }
 
 template <class T>
-Pixel<T>::Pixel(T * data, int width, int x, int y) {
-	this->x = x;
-	this->y = y;
-	this->data = data;
-    this->width = width;
+void Image<T>::set(int x, int y, T value) {
+    this->data[x+y*this->getWidth()] = value;
 }
 
 template <class T>
-void Pixel<T>::set(T value) {
-    this->data[this->x+this->y*this->width] = value;
-}
-
-template <class T>
-T Pixel<T>::get() {
-    return this->data[this->x+this->y*this->width];
-}
-
-template <class T>
-Pixel<T> Image<T>::getPixel(int x, int y) {
-    return Pixel<T>(this->data, this->getWidth(), x, y);
+T Image<T>::get(int x, int y) {
+    return this->data[x+y*this->getWidth()];
 }
 
 Window::Window(GtkWidget * gtkWindow) {
@@ -411,5 +367,5 @@ void Image<T>::update() {
     gtk_widget_queue_draw (this->image);
 }
 
-}
-#endif /* IPLIB_H_ */
+} // End SIPL namespace
+#endif /* SIPL_H_ */
