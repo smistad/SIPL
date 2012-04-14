@@ -76,7 +76,7 @@ template <>
 void Image<PIXEL_UCHAR>::pixbufToData() {
 	gdk_threads_enter ();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) this->image);
-    for(int i = 0; i < getWidth()*getHeight(); i++) {
+    for(int i = 0; i < this->width*this->height; i++) {
         guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
         unsigned char * c = (unsigned char *)((pixels + i * gdk_pixbuf_get_n_channels(pixBuf)));
         this->data[i] = c[0];
@@ -89,7 +89,7 @@ void Image<PIXEL_COLOR_UCHAR>::pixbufToData() {
 	gdk_threads_enter ();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) this->image);
 
-    for(int i = 0; i < getWidth()*getHeight(); i++) {
+    for(int i = 0; i < this->width*this->height; i++) {
         guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
         unsigned char * c = (unsigned char *)((pixels + i * gdk_pixbuf_get_n_channels(pixBuf)));
         this->data[i].red = c[0];
@@ -104,7 +104,7 @@ void Image<PIXEL_FLOAT>::pixbufToData() {
 	gdk_threads_enter ();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) this->image);
 
-    for(int i = 0; i < getWidth()*getHeight(); i++) {
+    for(int i = 0; i < this->width*this->height; i++) {
         guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
         unsigned char * c = (unsigned char *)((pixels + i * gdk_pixbuf_get_n_channels(pixBuf)));
         this->data[i] = (float)c[0]/255.0f;
@@ -130,7 +130,9 @@ Image<T>::Image(const char * filename) {
 	gdk_threads_enter ();
 	image = gtk_image_new_from_file(filename);
 	gdk_threads_leave ();
-    this->data = new T[getWidth()*getHeight()];
+	this->height = gdk_pixbuf_get_height(gtk_image_get_pixbuf((GtkImage *) image));
+	this->width = gdk_pixbuf_get_width(gtk_image_get_pixbuf((GtkImage *) image));
+    this->data = new T[this->height*this->width];
     this->pixbufToData();
 }
 void quit(void) {
@@ -171,12 +173,12 @@ void Image<T>::save(const char * filepath, const char * imageType = "jpeg") {
 
 template <class T>
 void Image<T>::set(int x, int y, T value) {
-    this->data[x+y*this->getWidth()] = value;
+    this->data[x+y*this->width] = value;
 }
 
 template <class T>
 T Image<T>::get(int x, int y) {
-    return this->data[x+y*this->getWidth()];
+    return this->data[x+y*this->width];
 }
 
 Window::Window(GtkWidget * gtkWindow) {
@@ -242,7 +244,7 @@ template <>
 void Image<PIXEL_UCHAR>::dataToPixbuf() {
     gdk_threads_enter();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) this->image);
-   for(int i = 0; i < getWidth()*getHeight(); i++) {
+   for(int i = 0; i < this->width*this->height; i++) {
     guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
     guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
     PIXEL_UCHAR intensity = this->data[i];
@@ -258,7 +260,7 @@ template <>
 void Image<PIXEL_COLOR_UCHAR>::dataToPixbuf() {
     gdk_threads_enter();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) this->image);
-   for(int i = 0; i < getWidth()*getHeight(); i++) {
+   for(int i = 0; i < this->width*this->height; i++) {
     guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
     guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
     PIXEL_COLOR_UCHAR intensity = this->data[i];
@@ -274,7 +276,7 @@ template <>
 void Image<PIXEL_FLOAT>::dataToPixbuf() {
     gdk_threads_enter();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) this->image);
-   for(int i = 0; i < getWidth()*getHeight(); i++) {
+   for(int i = 0; i < this->width*this->height; i++) {
     guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
     guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
     guchar intensity = (guchar)round(this->data[i]*255.0f);
@@ -330,8 +332,8 @@ Window Image<T>::show() {
 
 	gtk_window_set_default_size(
 			GTK_WINDOW(window),
-			this->getWidth(),
-			this->getHeight() + 35
+			this->width,
+			this->height + 35
 	);
 	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
 	g_signal_connect_swapped(
@@ -353,12 +355,12 @@ Window Image<T>::show() {
 
 template <class T>
 int Image<T>::getWidth() {
-	return gdk_pixbuf_get_width(gtk_image_get_pixbuf((GtkImage *) image));
+    return this->width;
 }
 
 template <class T>
 int Image<T>::getHeight() {
-	return gdk_pixbuf_get_height(gtk_image_get_pixbuf((GtkImage *) image));
+    return this->height;
 }
 
 template <class T>
