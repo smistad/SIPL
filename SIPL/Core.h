@@ -156,6 +156,8 @@ Image<T>::Image(unsigned int width, unsigned int height) {
 	image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, width, height));
     this->data = new T[width*height];
+    this->width = width;
+    this->height = height;
 }
 
 template <class T>
