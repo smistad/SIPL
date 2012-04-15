@@ -30,7 +30,14 @@ typedef struct PIXEL_COLOR_UCHAR { unsigned char red, blue, green;} PIXEL_COLOR_
 typedef struct PIXEL_FLOAT2 { float x,y; } PIXEL_FLOAT2; // not implemented
 typedef struct PIXEL_FLOAT3 { float x,y,z; } PIXEL_FLOAT3; // not implemented
 
-class Window;
+class Window {
+    public:
+        Window(GtkWidget * gtkWindow);
+        void destroy();
+    private:
+        GtkWidget * gtkWindow;
+};
+
 
 template <class T>
 class Image {
@@ -54,14 +61,28 @@ class Image {
         int width, height;
 };
 
-class Window {
+template <class T>
+class Volume {
     public:
-        Window(GtkWidget * gtkWindow);
-        void destroy();
+        Volume(const char * filename);
+        Volume(int width, int height, int depth);
+        ~Volume();
+        T get(int x, int y, int z);
+        void set(int x, int y, int z, T value);
+        int getWidth();
+        int getHeight();
+        int getDepth();
+        Window show();
+        void crop();  // not implemented
+        void update();
+        void save(const char * filepath, const char * imageType);
+        void dataToPixbuf();
+        void pixbufToData();
     private:
-        GtkWidget * gtkWindow;
+        GtkWidget * image;
+        T * data;
+        int width, height, depth;
 };
-
 
 bool init = false;
 pthread_t gtkThread;
