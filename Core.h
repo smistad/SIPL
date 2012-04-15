@@ -64,7 +64,8 @@ class Image {
 template <class T>
 class Volume {
     public:
-        Volume(const char * filename);
+        Volume(const char * filename); // for reading mhd files
+        Volume(const char * filename, int width, int height, int depth); // for reading raw files
         Volume(int width, int height, int depth);
         ~Volume();
         T get(int x, int y, int z);
