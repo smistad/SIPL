@@ -5,7 +5,7 @@ int main(int argc, char ** argv) {
     Init();
 
     Volume<uchar> volume = Volume<uchar>("skull.raw", 256, 256, 256);
-    volume.show(128, 0);
+    volume.show();
 
     Image<uchar> imageTest = Image<uchar>(500, 500);
     for(int i = 0; i < imageTest.getWidth(); i++) {
@@ -24,8 +24,8 @@ int main(int argc, char ** argv) {
                 c.green = 100;
             image.set(i,j,c);
         }
-    }
     w.update();
+    }
 
 	return 0;
 }

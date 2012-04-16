@@ -27,6 +27,7 @@ typedef struct float2 { float x,y; } float2; // not implemented
 typedef struct float3 { float x,y,z; } float3; // not implemented
 typedef struct int2 { int x,y; } int2;
 typedef struct int3 { int x,y,z; } int3;
+enum slice_plane {X,Y,Z};
 
 template <class T>
 class Window;
@@ -71,10 +72,11 @@ class Volume {
         int getHeight();
         int getDepth();
         Window<T> show();
-        Window<T> show(int slice, int direction);
+        Window<T> show(int slice, slice_plane direction);
+        Window<T> show(int slice, slice_plane direction, float level, float window);
         void crop();  // not implemented
         void save(const char * filepath, const char * imageType);
-        void dataToPixbuf(GtkWidget * image, int slice, int direction);
+        void dataToPixbuf(GtkWidget * image, int slice, slice_plane direction);
     private:
         T * data;
         int width, height, depth;
@@ -158,23 +160,23 @@ void Image<uchar>::dataToPixbuf(GtkWidget * image) {
 }
 
 template <>
-void Volume<uchar>::dataToPixbuf(GtkWidget * image, int slice, int direction) {
+void Volume<uchar>::dataToPixbuf(GtkWidget * image, int slice, slice_plane direction) {
     gdk_threads_enter();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
     int xSize;
     int ySize;
     switch(direction) {
-        case 0:
+        case X:
             // x direction
             xSize = this->height;
             ySize = this->depth;
             break;
-        case 1:
+        case Y:
             // y direction
             xSize = this->width;
             ySize = this->depth;
             break;
-        case 2:
+        case Z:
             // z direction
             xSize = this->width;
             ySize = this->height;
@@ -189,13 +191,13 @@ void Volume<uchar>::dataToPixbuf(GtkWidget * image, int slice, int direction) {
     guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
     uchar intensity;
     switch(direction) {
-        case 0:
+        case X:
             intensity = this->data[slice + x*this->width + y*this->width*this->height];
             break;
-        case 1:
+        case Y:
             intensity = this->data[x + slice*this->width + y*this->width*this->height];
             break;
-        case 2:
+        case Z:
             intensity = this->data[x + y*this->width + slice*this->width*this->height];
             break;
     }
@@ -326,6 +328,27 @@ Volume<T>::Volume(const char * filename, int width, int height, int depth) {
 }
 
 template <class T>
+Volume<T>::Volume(int width, int height, int depth) {
+    if (!init) {
+
+		int rc = pthread_create(&gtkThread, NULL, initGTK, NULL);
+
+	    if (rc){
+	       printf("ERROR; return code from pthread_create() is %d\n", rc);
+	       return;
+	    }
+	}
+
+	while(!init);
+
+    this->data = new T[width*height*depth];
+    this->width = width;
+    this->height = height;
+    this->depth = depth;
+}
+
+
+template <class T>
 Volume<T>::~Volume() {
     delete[] this->data;
 }
@@ -421,13 +444,22 @@ void destroyWindow(GtkWidget * widget, gpointer window) {
 	if (windowCount == 0) {
 		gtk_main_quit();
         exit(0);
-	} else {
-		gtk_widget_destroy(GTK_WIDGET(window));
 	}
 }
 
+void quitProgram(GtkWidget * widget, gpointer window) {
+    gtk_main_quit();
+    exit(0);
+}
+
 void signalDestroyWindow(GtkWidget * widget, gpointer window) {
-	gtk_widget_destroy(GTK_WIDGET(window));
+	windowCount--;
+	if (windowCount == 0) {
+		gtk_main_quit();
+        exit(0);
+	} else {
+        gtk_widget_hide(GTK_WIDGET(window));
+    }
 }
 struct _saveData {
 	GtkWidget * fs;
@@ -502,7 +534,7 @@ Window<T> Image<T>::setupGUI(GtkWidget * image) {
              "Close this program",     /* this button's tooltip */
              NULL,             /* tooltip private info */
              NULL,                 /* icon widget */
-             GTK_SIGNAL_FUNC (gtk_main_quit), /* a signal */
+             GTK_SIGNAL_FUNC (quitProgram), /* a signal */
              NULL);
 
 
@@ -565,7 +597,7 @@ Window<T> Volume<T>::setupGUI(GtkWidget * image) {
              "Close this program",     /* this button's tooltip */
              NULL,             /* tooltip private info */
              NULL,                 /* icon widget */
-             GTK_SIGNAL_FUNC (gtk_main_quit), /* a signal */
+             GTK_SIGNAL_FUNC (quitProgram), /* a signal */
              NULL);
 
 
@@ -611,19 +643,32 @@ Window<T> Image<T>::show(float level, float window) {
 }
 
 template <class T>
-Window<T> Volume<T>::show(int slice, int direction) {
+Window<T> Volume<T>::show(){
+    int slice = this->height/2;
+    slice_plane direction = Z;
+    int displayWidth = this->width;
+    int displayHeight = this->height;
+    GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
+			8, displayWidth, displayHeight));
+    this->dataToPixbuf(image, slice, direction);
+    return setupGUI(image);
+}
+
+
+template <class T>
+Window<T> Volume<T>::show(int slice, slice_plane direction) {
     int displayWidth;
     int displayHeight;
     switch(direction) {
-        case 0:
+        case X:
             displayWidth = this->height;
             displayHeight = this->depth;
             break;
-        case 1:
+        case Y:
             displayWidth = this->width;
             displayHeight = this->depth;
             break;
-        case 2:
+        case Z:
             displayWidth = this->width;
             displayHeight = this->height;
             break;
