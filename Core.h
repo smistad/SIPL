@@ -19,16 +19,13 @@
 using namespace std;
 
 namespace SIPL {
-
-typedef bool PIXEL_BINARY; // not implemented
-typedef float PIXEL_FLOAT;
-typedef unsigned char PIXEL_UCHAR;
-typedef unsigned short PIXEL_USHORT; // not implemented
-typedef short PIXEL_SHORT; // not implemented
-typedef struct PIXEL_COLOR_FLOAT { float red, blue, green;} PIXEL_COLOR_FLOAT ;
-typedef struct PIXEL_COLOR_UCHAR { unsigned char red, blue, green;} PIXEL_COLOR_UCHAR ;
-typedef struct PIXEL_FLOAT2 { float x,y; } PIXEL_FLOAT2; // not implemented
-typedef struct PIXEL_FLOAT3 { float x,y,z; } PIXEL_FLOAT3; // not implemented
+typedef unsigned char uchar;
+typedef unsigned short ushort; // not implemented
+typedef unsigned int uint; // not implemented
+typedef struct color_float { float red, blue, green;} color_float ; // not implemented
+typedef struct color_uchar { unsigned char red, blue, green;} color_uchar ;
+typedef struct float2 { float x,y; } float2; // not implemented
+typedef struct float3 { float x,y,z; } float3; // not implemented
 
 template <class T>
 class Window;
@@ -44,13 +41,16 @@ class Image {
         int getWidth();
         int getHeight();
         Window<T> show();
+        Window<T> show(float level, float window);
         void crop();  // not implemented
         void save(const char * filepath, const char * imageType);
         void dataToPixbuf(GtkWidget * image);
+        void dataToPixbuf(GtkWidget * image, float level, float wdinow);
         void pixbufToData(GtkImage * image);
     private:
         T * data;
         int width, height;
+        Window<T> setupGUI(GtkWidget * image);
 };
 
 template <class T>
@@ -105,7 +105,7 @@ void * initGTK(void * t) {
 }
 
 template <>
-void Image<PIXEL_UCHAR>::pixbufToData(GtkImage * image) {
+void Image<uchar>::pixbufToData(GtkImage * image) {
 	gdk_threads_enter ();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
     for(int i = 0; i < this->width*this->height; i++) {
@@ -117,7 +117,7 @@ void Image<PIXEL_UCHAR>::pixbufToData(GtkImage * image) {
 }
 
 template <>
-void Image<PIXEL_COLOR_UCHAR>::pixbufToData(GtkImage * image) {
+void Image<color_uchar>::pixbufToData(GtkImage * image) {
 	gdk_threads_enter ();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
 
@@ -132,7 +132,7 @@ void Image<PIXEL_COLOR_UCHAR>::pixbufToData(GtkImage * image) {
 }
 
 template <>
-void Image<PIXEL_FLOAT>::pixbufToData(GtkImage * image) {
+void Image<float>::pixbufToData(GtkImage * image) {
 	gdk_threads_enter ();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
 
@@ -184,6 +184,16 @@ string intToString(int inInt) {
 
 template <class T>
 Image<T>::Image(unsigned int width, unsigned int height) {
+if (!init) {
+
+		int rc = pthread_create(&gtkThread, NULL, initGTK, NULL);
+
+	    if (rc){
+	       printf("ERROR; return code from pthread_create() is %d\n", rc);
+	       return;
+	    }
+	}
+	while(!init);
     this->data = new T[width*height];
     this->width = width;
     this->height = height;
@@ -294,13 +304,13 @@ void saveDialog(GtkWidget * widget, gpointer image) {
 
 
 template <>
-void Image<PIXEL_UCHAR>::dataToPixbuf(GtkWidget * image) {
+void Image<uchar>::dataToPixbuf(GtkWidget * image) {
     gdk_threads_enter();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
    for(int i = 0; i < this->width*this->height; i++) {
     guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
     guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
-    PIXEL_UCHAR intensity = this->data[i];
+    uchar intensity = this->data[i];
     p[0] = intensity;
     p[1] = intensity;
     p[2] = intensity;
@@ -309,13 +319,13 @@ void Image<PIXEL_UCHAR>::dataToPixbuf(GtkWidget * image) {
 }
 
 template <>
-void Image<PIXEL_COLOR_UCHAR>::dataToPixbuf(GtkWidget * image) {
+void Image<color_uchar>::dataToPixbuf(GtkWidget * image) {
     gdk_threads_enter();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
    for(int i = 0; i < this->width*this->height; i++) {
     guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
     guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
-    PIXEL_COLOR_UCHAR intensity = this->data[i];
+    color_uchar intensity = this->data[i];
     p[0] = intensity.red;
     p[1] = intensity.green;
     p[2] = intensity.blue;
@@ -324,7 +334,7 @@ void Image<PIXEL_COLOR_UCHAR>::dataToPixbuf(GtkWidget * image) {
 }
 
 template <>
-void Image<PIXEL_FLOAT>::dataToPixbuf(GtkWidget * image) {
+void Image<float>::dataToPixbuf(GtkWidget * image) {
     gdk_threads_enter();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
    for(int i = 0; i < this->width*this->height; i++) {
@@ -338,18 +348,36 @@ void Image<PIXEL_FLOAT>::dataToPixbuf(GtkWidget * image) {
    gdk_threads_leave();
 }
 
+template <>
+void Image<float>::dataToPixbuf(GtkWidget * image, float level, float window) {
+    gdk_threads_enter();
+    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
+   for(int i = 0; i < this->width*this->height; i++) {
+    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
+    guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
+    float v = this->data[i];
+    if(v < level-window*0.5f) {
+        v = 0.0f;
+    } else if(v > level+window*0.5f) {
+        v = 1.0f;
+    } else {
+        v = (v-(level-window*0.5f)) / window;
+    }
+    guchar intensity = (guchar)round(v*255.0f);
+    p[0] = intensity;
+    p[1] = intensity;
+    p[2] = intensity;
+   }
+   gdk_threads_leave();
+}
 
 template <class T>
-Window<T> Image<T>::show() {
-    GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
-			8, width, height));
-    this->dataToPixbuf(image);
+Window<T> Image<T>::setupGUI(GtkWidget * image) {
+
 	gdk_threads_enter();
-
-
 	windowCount++;
 	GtkWidget * window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	Window<T> * winObj = new Window<T>(window,image,this);
+	Window<T> winObj = Window<T>(window,image,this);
 	gtk_window_set_title(GTK_WINDOW(window),
 			("Image #" + intToString(windowCount)).c_str()
 	);
@@ -384,15 +412,15 @@ Window<T> Image<T>::show() {
 
 	gtk_window_set_default_size(
 			GTK_WINDOW(window),
-			this->width,
-			this->height + 35
+			width,
+			height + 35
 	);
 	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
 	g_signal_connect_swapped(
 			G_OBJECT(window),
 			"destroy",
 			G_CALLBACK(destroyWindow),
-			winObj
+			&winObj
 	);
 
 	GtkWidget * fixed = gtk_fixed_new ();
@@ -402,8 +430,26 @@ Window<T> Image<T>::show() {
 	gtk_widget_show_all(window);
 
 	gdk_threads_leave();
-	return *winObj;
+    return winObj;
+
 }
+
+template <class T>
+Window<T> Image<T>::show() {
+    GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
+			8, width, height));
+    this->dataToPixbuf(image);
+	return setupGUI(image);
+}
+
+template <class T>
+Window<T> Image<T>::show(float level, float window) {
+    GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
+			8, width, height));
+    this->dataToPixbuf(image, level, window);
+	return setupGUI(image);
+}
+
 
 template <class T>
 int Image<T>::getWidth() {
