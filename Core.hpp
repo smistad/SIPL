@@ -37,6 +37,8 @@ class Image {
         Image(unsigned int width, unsigned int height);
         ~Image();
         T get(int x, int y);
+        T * getData();
+        void setData(T *);
         void set(int x, int y, T pixel);
         int getWidth();
         int getHeight();
@@ -62,6 +64,8 @@ class Volume {
         ~Volume();
         T get(int x, int y, int z);
         void set(int x, int y, int z, T value);
+        T * getData();
+        void setData(T *);
         int getWidth();
         int getHeight();
         int getDepth();
@@ -90,20 +94,9 @@ class Window {
 };
 
 
-bool init = false;
-pthread_t gtkThread;
 
-void * initGTK(void * t) {
-	g_thread_init(NULL);
-	gdk_threads_init ();
-	gdk_threads_enter ();
-	gtk_init(0, (char ***) "");
-	init = true;
-	gtk_main();
-    gdk_threads_leave();
-    return 0;
-}
 
+/* --- Spesialized pixbufToData methods --- */
 template <>
 void Image<uchar>::pixbufToData(GtkImage * image) {
 	gdk_threads_enter ();
@@ -144,6 +137,88 @@ void Image<float>::pixbufToData(GtkImage * image) {
     gdk_threads_leave();
 }
 
+/* --- Spesialized dataToPixbuf methods --- */
+
+template <>
+void Image<uchar>::dataToPixbuf(GtkWidget * image) {
+    gdk_threads_enter();
+    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
+   for(int i = 0; i < this->width*this->height; i++) {
+    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
+    guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
+    uchar intensity = this->data[i];
+    p[0] = intensity;
+    p[1] = intensity;
+    p[2] = intensity;
+   }
+   gdk_threads_leave();
+}
+
+template <>
+void Image<color_uchar>::dataToPixbuf(GtkWidget * image) {
+    gdk_threads_enter();
+    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
+   for(int i = 0; i < this->width*this->height; i++) {
+    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
+    guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
+    color_uchar intensity = this->data[i];
+    p[0] = intensity.red;
+    p[1] = intensity.green;
+    p[2] = intensity.blue;
+   }
+   gdk_threads_leave();
+}
+
+template <>
+void Image<float>::dataToPixbuf(GtkWidget * image) {
+    gdk_threads_enter();
+    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
+   for(int i = 0; i < this->width*this->height; i++) {
+    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
+    guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
+    guchar intensity = (guchar)round(this->data[i]*255.0f);
+    p[0] = intensity;
+    p[1] = intensity;
+    p[2] = intensity;
+   }
+   gdk_threads_leave();
+}
+
+template <>
+void Image<float>::dataToPixbuf(GtkWidget * image, float level, float window) {
+    gdk_threads_enter();
+    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
+   for(int i = 0; i < this->width*this->height; i++) {
+    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
+    guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
+    float v = this->data[i];
+    if(v < level-window*0.5f) {
+        v = 0.0f;
+    } else if(v > level+window*0.5f) {
+        v = 1.0f;
+    } else {
+        v = (v-(level-window*0.5f)) / window;
+    }
+    guchar intensity = (guchar)round(v*255.0f);
+    p[0] = intensity;
+    p[1] = intensity;
+    p[2] = intensity;
+   }
+   gdk_threads_leave();
+}
+
+bool init = false;
+pthread_t gtkThread;
+void * initGTK(void * t) {
+	g_thread_init(NULL);
+	gdk_threads_init ();
+	gdk_threads_enter ();
+	gtk_init(0, (char ***) "");
+	init = true;
+	gtk_main();
+    gdk_threads_leave();
+    return 0;
+}
 
 template <class T>
 Image<T>::Image(const char * filename) {
@@ -303,74 +378,6 @@ void saveDialog(GtkWidget * widget, gpointer image) {
 }
 
 
-template <>
-void Image<uchar>::dataToPixbuf(GtkWidget * image) {
-    gdk_threads_enter();
-    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
-   for(int i = 0; i < this->width*this->height; i++) {
-    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
-    guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
-    uchar intensity = this->data[i];
-    p[0] = intensity;
-    p[1] = intensity;
-    p[2] = intensity;
-   }
-   gdk_threads_leave();
-}
-
-template <>
-void Image<color_uchar>::dataToPixbuf(GtkWidget * image) {
-    gdk_threads_enter();
-    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
-   for(int i = 0; i < this->width*this->height; i++) {
-    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
-    guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
-    color_uchar intensity = this->data[i];
-    p[0] = intensity.red;
-    p[1] = intensity.green;
-    p[2] = intensity.blue;
-   }
-   gdk_threads_leave();
-}
-
-template <>
-void Image<float>::dataToPixbuf(GtkWidget * image) {
-    gdk_threads_enter();
-    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
-   for(int i = 0; i < this->width*this->height; i++) {
-    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
-    guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
-    guchar intensity = (guchar)round(this->data[i]*255.0f);
-    p[0] = intensity;
-    p[1] = intensity;
-    p[2] = intensity;
-   }
-   gdk_threads_leave();
-}
-
-template <>
-void Image<float>::dataToPixbuf(GtkWidget * image, float level, float window) {
-    gdk_threads_enter();
-    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
-   for(int i = 0; i < this->width*this->height; i++) {
-    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
-    guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
-    float v = this->data[i];
-    if(v < level-window*0.5f) {
-        v = 0.0f;
-    } else if(v > level+window*0.5f) {
-        v = 1.0f;
-    } else {
-        v = (v-(level-window*0.5f)) / window;
-    }
-    guchar intensity = (guchar)round(v*255.0f);
-    p[0] = intensity;
-    p[1] = intensity;
-    p[2] = intensity;
-   }
-   gdk_threads_leave();
-}
-
 template <class T>
 Window<T> Image<T>::setupGUI(GtkWidget * image) {
 
@@ -450,7 +457,6 @@ Window<T> Image<T>::show(float level, float window) {
 	return setupGUI(image);
 }
 
-
 template <class T>
 int Image<T>::getWidth() {
     return this->width;
@@ -460,6 +466,22 @@ template <class T>
 int Image<T>::getHeight() {
     return this->height;
 }
+
+template <class T>
+int Volume<T>::getWidth() {
+    return this->width;
+}
+
+template <class T>
+int Volume<T>::getHeight() {
+    return this->height;
+}
+
+template <class T>
+int Volume<T>::getDepth() {
+    return this->depth;
+}
+
 
 } // End SIPL namespace
 #endif /* SIPL_H_ */
