@@ -16,7 +16,6 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-using namespace std;
 
 namespace SIPL {
 typedef unsigned char uchar;
@@ -26,6 +25,8 @@ typedef struct color_float { float red, blue, green;} color_float ; // not imple
 typedef struct color_uchar { unsigned char red, blue, green;} color_uchar ;
 typedef struct float2 { float x,y; } float2; // not implemented
 typedef struct float3 { float x,y,z; } float3; // not implemented
+typedef struct int2 { int x,y; } int2;
+typedef struct int3 { int x,y,z; } int3;
 
 template <class T>
 class Window;
@@ -70,12 +71,14 @@ class Volume {
         int getHeight();
         int getDepth();
         Window<T> show();
+        Window<T> show(int slice, int direction);
         void crop();  // not implemented
         void save(const char * filepath, const char * imageType);
-        void dataToPixbuf(int slice, int direction);
+        void dataToPixbuf(GtkWidget * image, int slice, int direction);
     private:
         T * data;
         int width, height, depth;
+        Window<T> setupGUI(GtkWidget * image);
 };
 
 template <class T>
@@ -155,6 +158,58 @@ void Image<uchar>::dataToPixbuf(GtkWidget * image) {
 }
 
 template <>
+void Volume<uchar>::dataToPixbuf(GtkWidget * image, int slice, int direction) {
+    gdk_threads_enter();
+    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
+    int xSize;
+    int ySize;
+    switch(direction) {
+        case 0:
+            // x direction
+            xSize = this->height;
+            ySize = this->depth;
+            break;
+        case 1:
+            // y direction
+            xSize = this->width;
+            ySize = this->depth;
+            break;
+        case 2:
+            // z direction
+            xSize = this->width;
+            ySize = this->height;
+            break;
+    }
+            
+            
+   for(int x = 0; x < xSize; x++) {
+   for(int y = 0; y < ySize; y++) {
+    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
+    int i = x + y *xSize;
+    guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
+    uchar intensity;
+    switch(direction) {
+        case 0:
+            intensity = this->data[slice + x*this->width + y*this->width*this->height];
+            break;
+        case 1:
+            intensity = this->data[x + slice*this->width + y*this->width*this->height];
+            break;
+        case 2:
+            intensity = this->data[x + y*this->width + slice*this->width*this->height];
+            break;
+    }
+
+    p[0] = intensity;
+    p[1] = intensity;
+    p[2] = intensity;
+   }}
+   gdk_threads_leave();
+}
+
+
+
+template <>
 void Image<color_uchar>::dataToPixbuf(GtkWidget * image) {
     gdk_threads_enter();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
@@ -232,7 +287,6 @@ Image<T>::Image(const char * filename) {
 	    }
 	}
 
-	// Load image filename
 	while(!init);
 	gdk_threads_enter ();
 	GtkWidget * image = gtk_image_new_from_file(filename);
@@ -242,6 +296,41 @@ Image<T>::Image(const char * filename) {
     this->data = new T[this->height*this->width];
     this->pixbufToData((GtkImage *)image);
 }
+
+template <class T>
+Volume<T>::Volume(const char * filename, int width, int height, int depth) {
+    if (!init) {
+
+		int rc = pthread_create(&gtkThread, NULL, initGTK, NULL);
+
+	    if (rc){
+	       printf("ERROR; return code from pthread_create() is %d\n", rc);
+	       return;
+	    }
+	}
+
+	while(!init);
+
+    // Read raw file
+    this->data = new T[width*height*depth];
+    FILE * file = fopen(filename, "rb");
+    if(file == NULL) {
+        std::cout << "File " << filename << " not found" << std::endl;
+        exit(0);
+    }
+    fread(this->data, sizeof(T), width*height*depth, file);
+    fclose(file);
+    this->width = width;
+    this->height = height;
+    this->depth = depth;
+}
+
+template <class T>
+Volume<T>::~Volume() {
+    delete[] this->data;
+}
+
+
 void quit(void) {
 	pthread_join(gtkThread, NULL);
 }
@@ -249,9 +338,9 @@ void Init() {
     atexit(quit);
 }
 
-string intToString(int inInt) {
-	stringstream ss;
-	string s;
+std::string intToString(int inInt) {
+    std::stringstream ss;
+    std::string s;
 	ss << inInt;
 	s = ss.str();
 	return s;
@@ -276,7 +365,7 @@ if (!init) {
 
 template <class T>
 Image<T>::~Image() {
-	free(this->data);
+	delete[] this->data;
 }
 
 template <class T>
@@ -347,7 +436,7 @@ struct _saveData {
 
 void saveFileSignal(GtkWidget * widget, gpointer data) {
 	// Get extension to determine image type
-	string filepath(gtk_file_selection_get_filename (GTK_FILE_SELECTION (((_saveData *)data)->fs)));
+    std::string filepath(gtk_file_selection_get_filename (GTK_FILE_SELECTION (((_saveData *)data)->fs)));
 	gdk_pixbuf_save(gtk_image_get_pixbuf(
 			((_saveData *)data)->image),
 			filepath.c_str(),
@@ -442,6 +531,70 @@ Window<T> Image<T>::setupGUI(GtkWidget * image) {
 }
 
 template <class T>
+Window<T> Volume<T>::setupGUI(GtkWidget * image) {
+
+	gdk_threads_enter();
+	windowCount++;
+	GtkWidget * window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	Window<T> winObj = Window<T>(window,image,this);
+	gtk_window_set_title(GTK_WINDOW(window),
+			("Image #" + intToString(windowCount)).c_str()
+	);
+
+	GtkWidget * toolbar = gtk_toolbar_new();
+	gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar), GTK_ORIENTATION_HORIZONTAL);
+	gtk_toolbar_append_item (
+			 GTK_TOOLBAR (toolbar), /* our toolbar */
+             "Save",               /* button label */
+             "Save this image",     /* this button's tooltip */
+             NULL,             /* tooltip private info */
+             NULL,                 /* icon widget */
+             GTK_SIGNAL_FUNC(saveDialog), /* a signal */
+             image);
+	gtk_toolbar_append_item (
+			 GTK_TOOLBAR (toolbar), /* our toolbar */
+             "Close",               /* button label */
+             "Close this image",     /* this button's tooltip */
+             NULL,             /* tooltip private info */
+             NULL,                 /* icon widget */
+             GTK_SIGNAL_FUNC (signalDestroyWindow), /* a signal */
+             window);
+	gtk_toolbar_append_item (
+			 GTK_TOOLBAR (toolbar), /* our toolbar */
+             "Close program",               /* button label */
+             "Close this program",     /* this button's tooltip */
+             NULL,             /* tooltip private info */
+             NULL,                 /* icon widget */
+             GTK_SIGNAL_FUNC (gtk_main_quit), /* a signal */
+             NULL);
+
+
+	gtk_window_set_default_size(
+			GTK_WINDOW(window),
+			width,
+			height + 35
+	);
+	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
+	g_signal_connect_swapped(
+			G_OBJECT(window),
+			"destroy",
+			G_CALLBACK(destroyWindow),
+			&winObj
+	);
+
+	GtkWidget * fixed = gtk_fixed_new ();
+	gtk_container_add (GTK_CONTAINER (window), fixed);
+	gtk_fixed_put(GTK_FIXED(fixed), toolbar, 0,0);
+	gtk_fixed_put(GTK_FIXED(fixed), image, 0, 35);
+	gtk_widget_show_all(window);
+
+	gdk_threads_leave();
+    return winObj;
+
+}
+
+
+template <class T>
 Window<T> Image<T>::show() {
     GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, width, height));
@@ -455,6 +608,30 @@ Window<T> Image<T>::show(float level, float window) {
 			8, width, height));
     this->dataToPixbuf(image, level, window);
 	return setupGUI(image);
+}
+
+template <class T>
+Window<T> Volume<T>::show(int slice, int direction) {
+    int displayWidth;
+    int displayHeight;
+    switch(direction) {
+        case 0:
+            displayWidth = this->height;
+            displayHeight = this->depth;
+            break;
+        case 1:
+            displayWidth = this->width;
+            displayHeight = this->depth;
+            break;
+        case 2:
+            displayWidth = this->width;
+            displayHeight = this->height;
+            break;
+    }
+    GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
+			8, displayWidth, displayHeight));
+    this->dataToPixbuf(image, slice, direction);
+    return setupGUI(image);
 }
 
 template <class T>
