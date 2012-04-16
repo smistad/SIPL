@@ -1,4 +1,4 @@
-#include "Core.h"
+#include "Core.hpp"
 using namespace SIPL;
 
 int main(int argc, char ** argv) {
@@ -21,7 +21,7 @@ int main(int argc, char ** argv) {
                 c.green = 100;
             image.set(i,j,c);
         }
-        //w.update();
+        w.update();
     }
 
 	return 0;
