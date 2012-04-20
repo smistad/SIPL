@@ -75,7 +75,8 @@ class Volume {
         Window<T> show(int slice, slice_plane direction);
         Window<T> show(int slice, slice_plane direction, float level, float window);
         void crop();  // not implemented
-        void save(const char * filepath, const char * imageType);
+        void save(const char * filepath);
+        void saveSlice(int slice, slice_plane direction, const char * filepath, const char * imageType);
         void dataToPixbuf(GtkWidget * image, int slice, slice_plane direction);
     private:
         T * data;
@@ -346,11 +347,11 @@ void Init() {
 
 	    if (rc){
 	       printf("ERROR; return code from pthread_create() is %d\n", rc);
-	       return;
+           exit(-1);
 	    }
 	}
 
-	while(!init);
+	while(!init); // wait for the thread to created
     atexit(quit);
 }
 
@@ -367,6 +368,19 @@ void Image<T>::save(const char * filepath, const char * imageType = "jpeg") {
     GtkImage * image = this->dataToPixbuf();
 	gdk_pixbuf_save(gtk_image_get_pixbuf((GtkImage *) image), filepath, imageType,
 			NULL, "quality", "100", NULL);
+}
+
+template <class T>
+void Volume<T>::save(const char * filepath) {
+    // This might not work for the defined struct types?
+    FILE * file = fopen(filepath, "wb");
+    if(file == NULL) {
+        std::cout << "Could not write RAW file to " << filepath << std::endl;
+        exit(-1);
+    }
+
+    fwrite(this->data, sizeof(T), this->width*this->height*this->depth, file);
+    fclose(file);
 }
 
 template <class T>
