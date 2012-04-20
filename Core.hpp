@@ -265,32 +265,10 @@ void Image<float>::dataToPixbuf(GtkWidget * image, float level, float window) {
    gdk_threads_leave();
 }
 
-bool init = false;
-pthread_t gtkThread;
-void * initGTK(void * t) {
-	g_thread_init(NULL);
-	gdk_threads_init ();
-	gdk_threads_enter ();
-	gtk_init(0, (char ***) "");
-	init = true;
-	gtk_main();
-    gdk_threads_leave();
-    return 0;
-}
+/* --- Constructors & destructors --- */
 
 template <class T>
 Image<T>::Image(const char * filename) {
-	if (!init) {
-
-		int rc = pthread_create(&gtkThread, NULL, initGTK, NULL);
-
-	    if (rc){
-	       printf("ERROR; return code from pthread_create() is %d\n", rc);
-	       return;
-	    }
-	}
-
-	while(!init);
 	gdk_threads_enter ();
 	GtkWidget * image = gtk_image_new_from_file(filename);
 	gdk_threads_leave ();
@@ -302,18 +280,6 @@ Image<T>::Image(const char * filename) {
 
 template <class T>
 Volume<T>::Volume(const char * filename, int width, int height, int depth) {
-    if (!init) {
-
-		int rc = pthread_create(&gtkThread, NULL, initGTK, NULL);
-
-	    if (rc){
-	       printf("ERROR; return code from pthread_create() is %d\n", rc);
-	       return;
-	    }
-	}
-
-	while(!init);
-
     // Read raw file
     this->data = new T[width*height*depth];
     FILE * file = fopen(filename, "rb");
@@ -330,7 +296,51 @@ Volume<T>::Volume(const char * filename, int width, int height, int depth) {
 
 template <class T>
 Volume<T>::Volume(int width, int height, int depth) {
-    if (!init) {
+    this->data = new T[width*height*depth];
+    this->width = width;
+    this->height = height;
+    this->depth = depth;
+}
+
+template <class T>
+Image<T>::Image(unsigned int width, unsigned int height) {
+    this->data = new T[width*height];
+    this->width = width;
+    this->height = height;
+}
+
+template <class T>
+Image<T>::~Image() {
+	delete[] this->data;
+}
+
+
+template <class T>
+Volume<T>::~Volume() {
+    delete[] this->data;
+}
+
+/* Init and Quit stuff */
+
+bool init = false;
+pthread_t gtkThread;
+void * initGTK(void * t) {
+	g_thread_init(NULL);
+	gdk_threads_init ();
+	gdk_threads_enter ();
+	gtk_init(0, (char ***) "");
+	init = true;
+	gtk_main();
+    gdk_threads_leave();
+    return 0;
+}
+
+void quit(void) {
+	pthread_join(gtkThread, NULL);
+}
+
+void Init() {
+	if (!init) {
 
 		int rc = pthread_create(&gtkThread, NULL, initGTK, NULL);
 
@@ -341,24 +351,6 @@ Volume<T>::Volume(int width, int height, int depth) {
 	}
 
 	while(!init);
-
-    this->data = new T[width*height*depth];
-    this->width = width;
-    this->height = height;
-    this->depth = depth;
-}
-
-
-template <class T>
-Volume<T>::~Volume() {
-    delete[] this->data;
-}
-
-
-void quit(void) {
-	pthread_join(gtkThread, NULL);
-}
-void Init() {
     atexit(quit);
 }
 
@@ -368,28 +360,6 @@ std::string intToString(int inInt) {
 	ss << inInt;
 	s = ss.str();
 	return s;
-}
-
-template <class T>
-Image<T>::Image(unsigned int width, unsigned int height) {
-if (!init) {
-
-		int rc = pthread_create(&gtkThread, NULL, initGTK, NULL);
-
-	    if (rc){
-	       printf("ERROR; return code from pthread_create() is %d\n", rc);
-	       return;
-	    }
-	}
-	while(!init);
-    this->data = new T[width*height];
-    this->width = width;
-    this->height = height;
-}
-
-template <class T>
-Image<T>::~Image() {
-	delete[] this->data;
 }
 
 template <class T>
