@@ -11,6 +11,7 @@
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <string>
 #include <stdlib.h>
@@ -293,6 +294,102 @@ Volume<T>::Volume(const char * filename, int width, int height, int depth) {
     this->width = width;
     this->height = height;
     this->depth = depth;
+}
+
+template <class T>
+Volume<T>::Volume(const char * filename) {
+    // Current limits of this method: T and the data type to be read has to be the same. Does not handle space after strings
+
+    // Read mhd file
+    std::fstream mhdFile;
+    mhdFile.open(filename, std::fstream::in);
+    std::string line;
+    std::string rawFilename;
+    bool sizeFound = false, 
+         rawFilenameFound = false, 
+         typeFound = false, 
+         dimensionsFound = false;
+    bool isSigned;
+    int readTypeSize;
+    do{
+        std::getline(mhdFile, line);
+        if(line.substr(0, 7) == "DimSize") {
+            std::string sizeString = line.substr(7+3);
+            std::string sizeX = sizeString.substr(0,sizeString.find(" "));
+            sizeString = sizeString.substr(sizeString.find(" ")+1);
+            std::string sizeY = sizeString.substr(0,sizeString.find(" "));
+            sizeString = sizeString.substr(sizeString.find(" ")+1);
+            std::string sizeZ = sizeString.substr(0,sizeString.find(" "));
+
+            this->width = atoi(sizeX.c_str());
+            this->height = atoi(sizeY.c_str());
+            this->depth = atoi(sizeZ.c_str());
+
+            sizeFound = true;
+        } else if(line.substr(0, 15) == "ElementDataFile") {
+            rawFilename = line.substr(15+3);
+            rawFilenameFound = true;
+        } else if(line.substr(0, 11) == "ElementType") {
+            typeFound = true;
+            std::string typeName = line.substr(11+3);
+            std::cout << typeName << std::endl;
+            if(typeName == "MET_SHORT") {
+                readTypeSize = sizeof(short);
+                isSigned = true;
+            } else if(typeName == "MET_USHORT") {
+                readTypeSize = sizeof(short);
+                isSigned = false;
+            } else if(typeName == "MET_CHAR") {
+                readTypeSize = sizeof(char);
+                isSigned = true;
+            } else if(typeName == "MET_UCHAR") {
+                readTypeSize = sizeof(char);
+                isSigned = false;
+            } else if(typeName == "MET_INT") {
+                readTypeSize = sizeof(int);
+                isSigned = true;
+            } else if(typeName == "MET_UINT") {
+                readTypeSize = sizeof(int);
+                isSigned = false;
+            } else if(typeName == "MET_FLOAT") {
+                readTypeSize = sizeof(float);
+                isSigned = true;
+            } else {
+                std::cout << "Error: Trying to read volume of unsupported data type" << std::endl;
+                exit(-1);
+            }
+        } else if(line.substr(0, 5) == "NDims") {
+            if(line.substr(5+3, 1) == "3") 
+                dimensionsFound = true;
+        }
+    } while(!mhdFile.eof());
+
+    mhdFile.close();
+    if(!sizeFound || !rawFilenameFound || !typeFound || !dimensionsFound) {
+        std::cout << "Error reading the mhd file" << std::endl;
+        exit(-1);
+    }
+
+    if(readTypeSize != sizeof(T)) {
+        std::cout << readTypeSize << std::endl;
+        std::cout << "Error: mismatch between datatype to read and that of Volume object (size). Conversion not supported yet." << std::endl;
+        exit(-1);
+    }
+
+    if(((T)(-1) > 0 && isSigned) || ((T)(-1) < 0 && !isSigned)) {
+        std::cout << "Error: mismatch between datatype to read and that of Volume object (sign). Conversion not supported yet." << std::endl;
+        exit(-1);
+    }
+
+    // Read raw file
+    this->data = new T[width*height*depth];
+    FILE * file = fopen(rawFilename.c_str(), "rb");
+    if(file == NULL) {
+        std::cout << "File " << rawFilename << " not found" << std::endl;
+        exit(0);
+    }
+    fread(this->data, sizeof(T), width*height*depth, file);
+    fclose(file);
 }
 
 template <class T>

@@ -4,7 +4,7 @@ using namespace SIPL;
 int main(int argc, char ** argv) {
     Init();
 
-    Volume<uchar> volume = Volume<uchar>("skull.raw", 256, 256, 256);
+    Volume<uchar> volume = Volume<uchar>("CT_Patient_005.mhd");
     volume.show();
 
     Image<uchar> imageTest = Image<uchar>(500, 500);
