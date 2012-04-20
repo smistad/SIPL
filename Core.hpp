@@ -90,6 +90,7 @@ class Window {
         Window(GtkWidget * gtkWindow, GtkWidget * gtkImage, Volume<T> * volume);
         void destroy();
         void update();
+        void hide();
     private:
         GtkWidget * gtkWindow;
         GtkWidget * gtkImage;
@@ -704,6 +705,25 @@ int Volume<T>::getDepth() {
     return this->depth;
 }
 
+template <class T>
+void Image<T>::setData(T * data) {
+    this->data = data;
+}
+
+template <class T>
+T * Image<T>::getData() {
+    return this->data;
+}
+
+template <class T>
+void Volume<T>::setData(T * data) {
+    this->data = data;
+}
+
+template <class T>
+T * Volume<T>::getData() {
+    return this->data;
+}
 
 } // End SIPL namespace
 #endif /* SIPL_H_ */
