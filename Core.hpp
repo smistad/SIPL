@@ -121,24 +121,24 @@ void toGuchar(char value, guchar * pixel) {
     pixel[2] = value+128;
 }
 void toGuchar(ushort value, guchar * pixel) {
-    pixel[0] = value;
-    pixel[1] = value;
-    pixel[2] = value;
+    pixel[0] = ((float)value/65535)*255;
+    pixel[1] = ((float)value/65535)*255;
+    pixel[2] = ((float)value/65535)*255;
 }
 void toGuchar(short value, guchar * pixel) {
-    pixel[0] = value+128;
-    pixel[1] = value+128;
-    pixel[2] = value+128;
+    pixel[0] = ((float)(value+32768)/65535)*255;
+    pixel[1] = ((float)(value+32768)/65535)*255;
+    pixel[2] = ((float)(value+32768)/65535)*255;
 }
 void toGuchar(uint value, guchar * pixel) {
-    pixel[0] = value;
-    pixel[1] = value;
-    pixel[2] = value;
+    pixel[0] = ((float)value/4294967295)*255;
+    pixel[1] = ((float)value/4294967295)*255;
+    pixel[2] = ((float)value/4294967295)*255;
 }
 void toGuchar(int value, guchar * pixel) {
-    pixel[0] = value+128;
-    pixel[1] = value+128;
-    pixel[2] = value+128;
+    pixel[0] = ((float)(value+2147483648)/4294967295)*255;
+    pixel[1] = ((float)(value+2147483648)/4294967295)*255;
+    pixel[2] = ((float)(value+2147483648)/4294967295)*255;
 }
 void toGuchar(float value, guchar * pixel) {
     pixel[0] = value;
