@@ -79,6 +79,7 @@ class Volume {
         void save(const char * filepath);
         void saveSlice(int slice, slice_plane direction, const char * filepath, const char * imageType);
         void dataToPixbuf(GtkWidget * image, int slice, slice_plane direction);
+        void dataToPixbuf(GtkWidget * image, int slice, slice_plane direction, float level, float window);
     private:
         T * data;
         int width, height, depth;
@@ -101,69 +102,231 @@ class Window {
         bool isVolume;
 };
 
+/* --- Spesialized conversion functions --- */
 
+void toGuchar(bool value, guchar * pixel) {
+    uchar intensity = value ? 255 : 0;
+    pixel[0] = intensity;
+    pixel[1] = intensity;
+    pixel[2] = intensity;
+}
+void toGuchar(uchar value, guchar * pixel) {
+    pixel[0] = value;
+    pixel[1] = value;
+    pixel[2] = value;
+}
+void toGuchar(char value, guchar * pixel) {
+    pixel[0] = value+128;
+    pixel[1] = value+128;
+    pixel[2] = value+128;
+}
+void toGuchar(ushort value, guchar * pixel) {
+    pixel[0] = value;
+    pixel[1] = value;
+    pixel[2] = value;
+}
+void toGuchar(short value, guchar * pixel) {
+    pixel[0] = value+128;
+    pixel[1] = value+128;
+    pixel[2] = value+128;
+}
+void toGuchar(uint value, guchar * pixel) {
+    pixel[0] = value;
+    pixel[1] = value;
+    pixel[2] = value;
+}
+void toGuchar(int value, guchar * pixel) {
+    pixel[0] = value+128;
+    pixel[1] = value+128;
+    pixel[2] = value+128;
+}
+void toGuchar(float value, guchar * pixel) {
+    pixel[0] = value;
+    pixel[1] = value;
+    pixel[2] = value;
+}
+void toGuchar(color_uchar value, guchar * pixel) {
+    pixel[0] = value.red;
+    pixel[1] = value.green;
+    pixel[2] = value.blue;
+}
+void toGuchar(color_float value, guchar * pixel) {
+    pixel[0] = value.red*255;
+    pixel[1] = value.green*255;
+    pixel[2] = value.blue*255;
+}
+void toGuchar(float2 value, guchar * pixel) {
+    pixel[0] = value.x*255;
+    pixel[1] = value.y*255;
+    pixel[2] = 0;
+}
+void toGuchar(float3 value, guchar * pixel) {
+    pixel[0] = value.x*255;
+    pixel[1] = value.y*255;
+    pixel[2] = value.z*255;
+}
 
+/* --- Spesialized level/window --- */
+
+template <class T>
+uchar levelWindow(T value, float level, float window) {
+    float result;
+    if(value < level-window*0.5f) {
+        result = 0.0f;
+    } else if(value > level+window*0.5f) {
+        result = 1.0f;
+    } else {
+        result = (float)(value-(level-window*0.5f)) / window;
+    }
+    result = round(result*255);
+    return result;
+}
+
+void toGuchar(uchar value, guchar * pixel, float level, float window) {
+    uchar n = levelWindow(value, level, window);
+    pixel[0] = n;
+    pixel[1] = n;
+    pixel[2] = n;
+}
+void toGuchar(char value, guchar * pixel, float level, float window) {
+    uchar n = levelWindow(value, level, window);
+    pixel[0] = n;
+    pixel[1] = n;
+    pixel[2] = n;
+}
+void toGuchar(ushort value, guchar * pixel, float level, float window) {
+    uchar n = levelWindow(value, level, window);
+    pixel[0] = n;
+    pixel[1] = n;
+    pixel[2] = n;
+}
+void toGuchar(short value, guchar * pixel, float level, float window) {
+    uchar n = levelWindow(value, level, window);
+    pixel[0] = n;
+    pixel[1] = n;
+    pixel[2] = n;
+}
+void toGuchar(uint value, guchar * pixel, float level, float window) {
+    uchar n = levelWindow(value, level, window);
+    pixel[0] = n;
+    pixel[1] = n;
+    pixel[2] = n;
+}
+void toGuchar(int value, guchar * pixel, float level, float window) {
+    uchar n = levelWindow(value, level, window);
+    pixel[0] = n;
+    pixel[1] = n;
+    pixel[2] = n;
+}
+void toGuchar(float value, guchar * pixel, float level, float window) {
+    uchar n = levelWindow(value, level, window);
+    pixel[0] = n;
+    pixel[1] = n;
+    pixel[2] = n;
+}
+void toGuchar(color_float value, guchar * pixel, float level, float window) {
+    pixel[0] = levelWindow(value.red, level, window);
+    pixel[1] = levelWindow(value.green, level, window);
+    pixel[2] = levelWindow(value.blue, level, window);
+}
+void toGuchar(float2 value, guchar * pixel, float level, float window) {
+    pixel[0] = levelWindow(value.x, level, window);
+    pixel[1] = levelWindow(value.y, level, window);
+    pixel[2] = 0;
+}
+void toGuchar(float3 value, guchar * pixel, float level, float window) {
+    pixel[0] = levelWindow(value.x, level, window);
+    pixel[1] = levelWindow(value.y, level, window);
+    pixel[2] = levelWindow(value.z, level, window);
+}
+
+/* --- Spesialized toT functions --- */
+
+void toT(bool * r, uchar * p) {
+    *r = p[0] > 128;
+}
+void toT(uchar * r, uchar * p) {
+    *r = p[0];
+}
+void toT(char * r, uchar * p) {
+    *r = p[0]-128;
+}
+void toT(ushort * r, uchar * p) {
+    *r = (float)p[0]/255.0f;
+}
+void toT(short * r, uchar * p) {
+    *r = (float)p[0]/255.0f;
+}
+void toT(uint * r, uchar * p) {
+    *r = (float)p[0]/255.0f;
+}
+void toT(int * r, uchar * p) {
+    *r = (float)p[0]/255.0f;
+}
+void toT(float * r, uchar * p) {
+    *r = (float)p[0]/255.0f;
+}
+void toT(color_uchar * c, uchar * p) {
+    c->red = p[0];
+    c->green = p[1];
+    c->blue = p[2];
+}
+void toT(color_float * c, uchar * p) {
+    c->red = (float)p[0]/255.0f;
+    c->green = (float)p[1]/255.0f;
+    c->blue = (float)p[2]/255.0f;
+}
+void toT(float2 * c, uchar * p) {
+    c->x = (float)p[0]/255.0f;
+    c->y = (float)p[1]/255.0f;
+}
+void toT(float3 * c, uchar * p) {
+    c->x = (float)p[0]/255.0f;
+    c->y = (float)p[1]/255.0f;
+    c->z = (float)p[2]/255.0f;
+}
 
 /* --- Spesialized pixbufToData methods --- */
-template <>
-void Image<uchar>::pixbufToData(GtkImage * image) {
+template <class T>
+void Image<T>::pixbufToData(GtkImage * image) {
 	gdk_threads_enter ();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
     for(int i = 0; i < this->width*this->height; i++) {
         guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
         unsigned char * c = (unsigned char *)((pixels + i * gdk_pixbuf_get_n_channels(pixBuf)));
-        this->data[i] = c[0];
-    }
-    gdk_threads_leave();
-}
-
-template <>
-void Image<color_uchar>::pixbufToData(GtkImage * image) {
-	gdk_threads_enter ();
-    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
-
-    for(int i = 0; i < this->width*this->height; i++) {
-        guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
-        unsigned char * c = (unsigned char *)((pixels + i * gdk_pixbuf_get_n_channels(pixBuf)));
-        this->data[i].red = c[0];
-        this->data[i].green = c[1];
-        this->data[i].blue = c[2];
-    }
-    gdk_threads_leave();
-}
-
-template <>
-void Image<float>::pixbufToData(GtkImage * image) {
-	gdk_threads_enter ();
-    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
-
-    for(int i = 0; i < this->width*this->height; i++) {
-        guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
-        unsigned char * c = (unsigned char *)((pixels + i * gdk_pixbuf_get_n_channels(pixBuf)));
-        this->data[i] = (float)c[0]/255.0f;
+        toT(&this->data[i], c);
     }
     gdk_threads_leave();
 }
 
 /* --- Spesialized dataToPixbuf methods --- */
 
-template <>
-void Image<uchar>::dataToPixbuf(GtkWidget * image) {
+template <class T>
+void Image<T>::dataToPixbuf(GtkWidget * image) {
     gdk_threads_enter();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
    for(int i = 0; i < this->width*this->height; i++) {
     guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
     guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
-    uchar intensity = this->data[i];
-    p[0] = intensity;
-    p[1] = intensity;
-    p[2] = intensity;
+    toGuchar(this->data[i], p);
    }
    gdk_threads_leave();
 }
 
-template <>
-void Volume<uchar>::dataToPixbuf(GtkWidget * image, int slice, slice_plane direction) {
+template <class T>
+void Image<T>::dataToPixbuf(GtkWidget * image, float level, float window) {
+    gdk_threads_enter();
+    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
+   for(int i = 0; i < this->width*this->height; i++) {
+    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
+    guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
+    toGuchar(this->data[i], p, level, window);
+   }
+   gdk_threads_leave();
+}
+
+template <class T>
+void Volume<T>::dataToPixbuf(GtkWidget * image, int slice, slice_plane direction) {
     gdk_threads_enter();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
     int xSize;
@@ -192,7 +355,7 @@ void Volume<uchar>::dataToPixbuf(GtkWidget * image, int slice, slice_plane direc
     guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
     int i = x + y *xSize;
     guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
-    uchar intensity;
+    T intensity;
     switch(direction) {
         case X:
             intensity = this->data[slice + x*this->width + y*this->width*this->height];
@@ -205,67 +368,59 @@ void Volume<uchar>::dataToPixbuf(GtkWidget * image, int slice, slice_plane direc
             break;
     }
 
-    p[0] = intensity;
-    p[1] = intensity;
-    p[2] = intensity;
+    toGuchar(intensity, p);
    }}
    gdk_threads_leave();
 }
 
-
-
-template <>
-void Image<color_uchar>::dataToPixbuf(GtkWidget * image) {
+template <class T>
+void Volume<T>::dataToPixbuf(GtkWidget * image, int slice, slice_plane direction, float level, float window) {
     gdk_threads_enter();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
-   for(int i = 0; i < this->width*this->height; i++) {
-    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
-    guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
-    color_uchar intensity = this->data[i];
-    p[0] = intensity.red;
-    p[1] = intensity.green;
-    p[2] = intensity.blue;
-   }
-   gdk_threads_leave();
-}
-
-template <>
-void Image<float>::dataToPixbuf(GtkWidget * image) {
-    gdk_threads_enter();
-    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
-   for(int i = 0; i < this->width*this->height; i++) {
-    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
-    guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
-    guchar intensity = (guchar)round(this->data[i]*255.0f);
-    p[0] = intensity;
-    p[1] = intensity;
-    p[2] = intensity;
-   }
-   gdk_threads_leave();
-}
-
-template <>
-void Image<float>::dataToPixbuf(GtkWidget * image, float level, float window) {
-    gdk_threads_enter();
-    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
-   for(int i = 0; i < this->width*this->height; i++) {
-    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
-    guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
-    float v = this->data[i];
-    if(v < level-window*0.5f) {
-        v = 0.0f;
-    } else if(v > level+window*0.5f) {
-        v = 1.0f;
-    } else {
-        v = (v-(level-window*0.5f)) / window;
+    int xSize;
+    int ySize;
+    switch(direction) {
+        case X:
+            // x direction
+            xSize = this->height;
+            ySize = this->depth;
+            break;
+        case Y:
+            // y direction
+            xSize = this->width;
+            ySize = this->depth;
+            break;
+        case Z:
+            // z direction
+            xSize = this->width;
+            ySize = this->height;
+            break;
     }
-    guchar intensity = (guchar)round(v*255.0f);
-    p[0] = intensity;
-    p[1] = intensity;
-    p[2] = intensity;
-   }
+            
+            
+   for(int x = 0; x < xSize; x++) {
+   for(int y = 0; y < ySize; y++) {
+    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
+    int i = x + y *xSize;
+    guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
+    T intensity;
+    switch(direction) {
+        case X:
+            intensity = this->data[slice + x*this->width + y*this->width*this->height];
+            break;
+        case Y:
+            intensity = this->data[x + slice*this->width + y*this->width*this->height];
+            break;
+        case Z:
+            intensity = this->data[x + y*this->width + slice*this->width*this->height];
+            break;
+    }
+
+    toGuchar(intensity, p, level, window);
+   }}
    gdk_threads_leave();
 }
+
 
 /* --- Constructors & destructors --- */
 
@@ -332,7 +487,6 @@ Volume<T>::Volume(const char * filename) {
         } else if(line.substr(0, 11) == "ElementType") {
             typeFound = true;
             std::string typeName = line.substr(11+3);
-            std::cout << typeName << std::endl;
             if(typeName == "MET_SHORT") {
                 readTypeSize = sizeof(short);
                 isSigned = true;
@@ -760,6 +914,31 @@ Window<T> Volume<T>::show(int slice, slice_plane direction) {
     this->dataToPixbuf(image, slice, direction);
     return setupGUI(image);
 }
+
+template <class T>
+Window<T> Volume<T>::show(int slice, slice_plane direction,float level, float window) {
+    int displayWidth;
+    int displayHeight;
+    switch(direction) {
+        case X:
+            displayWidth = this->height;
+            displayHeight = this->depth;
+            break;
+        case Y:
+            displayWidth = this->width;
+            displayHeight = this->depth;
+            break;
+        case Z:
+            displayWidth = this->width;
+            displayHeight = this->height;
+            break;
+    }
+    GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
+			8, displayWidth, displayHeight));
+    this->dataToPixbuf(image, slice, direction,level,window);
+    return setupGUI(image);
+}
+
 
 template <class T>
 int Image<T>::getWidth() {

@@ -5,15 +5,15 @@ int main(int argc, char ** argv) {
     Init();
 
     Volume<uchar> volume = Volume<uchar>("CT_Patient_005.mhd");
-    volume.show();
+    volume.show(128, Z, 70, 100);
 
-    Image<uchar> imageTest = Image<uchar>(500, 500);
+    Image<float> imageTest = Image<float>(500, 500);
     for(int i = 0; i < imageTest.getWidth(); i++) {
         for(int j = 0; j < imageTest.getHeight(); j++) {
-            imageTest.set(i,j,((float)(i+j)/(500+500))*255);
+            imageTest.set(i,j,((float)(i+j)/(500+500)));
         }
     }
-    imageTest.show();
+    imageTest.show(0.5, 0.5);
 
 	Image<color_uchar> image = Image<color_uchar>("images/test.png");
     Window<color_uchar> w = image.show();
