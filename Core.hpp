@@ -141,9 +141,9 @@ void toGuchar(int value, guchar * pixel) {
     pixel[2] = ((float)(value+2147483648)/4294967295)*255;
 }
 void toGuchar(float value, guchar * pixel) {
-    pixel[0] = value;
-    pixel[1] = value;
-    pixel[2] = value;
+    pixel[0] = value*255;
+    pixel[1] = value*255;
+    pixel[2] = value*255;
 }
 void toGuchar(color_uchar value, guchar * pixel) {
     pixel[0] = value.red;
@@ -252,16 +252,16 @@ void toT(char * r, uchar * p) {
     *r = p[0]-128;
 }
 void toT(ushort * r, uchar * p) {
-    *r = (float)p[0]/255.0f;
+    *r = ((float)p[0]/255.0f)*65535;
 }
 void toT(short * r, uchar * p) {
-    *r = (float)p[0]/255.0f;
+    *r = (((float)p[0]/255.0f)-0.5f)*65535;
 }
 void toT(uint * r, uchar * p) {
-    *r = (float)p[0]/255.0f;
+    *r = (((float)p[0]/255.0f))*4294967295;
 }
 void toT(int * r, uchar * p) {
-    *r = (float)p[0]/255.0f;
+    *r = (((float)p[0]/255.0f)-0.5f)*4294967295;
 }
 void toT(float * r, uchar * p) {
     *r = (float)p[0]/255.0f;
