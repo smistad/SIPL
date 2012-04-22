@@ -10,6 +10,7 @@
 #include <cmath>
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#include <gdk/gdkkeysyms.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -29,6 +30,14 @@ typedef struct float3 { float x,y,z; } float3; // not implemented
 typedef struct int2 { int x,y; } int2;
 typedef struct int3 { int x,y,z; } int3;
 enum slice_plane {X,Y,Z};
+
+void Init();
+
+void destroyWindow(GtkWidget * widget, gpointer window) ;
+void quitProgram(GtkWidget * widget, gpointer window) ;
+void signalDestroyWindow(GtkWidget * widget, gpointer window) ;
+void saveFileSignal(GtkWidget * widget, gpointer data) ;
+void saveDialog(GtkWidget * widget, gpointer image) ;
 
 template <class T>
 class Window;
@@ -91,6 +100,7 @@ class Window {
     public:
         Window(GtkWidget * gtkWindow, GtkWidget * gtkImage, Image<T> * image);
         Window(GtkWidget * gtkWindow, GtkWidget * gtkImage, Volume<T> * volume);
+        void key_pressed(GtkWidget * widget, GdkEventKey * event, gpointer user_data) ;
         void destroy();
         void update();
         void hide();
@@ -103,70 +113,30 @@ class Window {
 };
 
 /* --- Spesialized conversion functions --- */
-
-void toGuchar(bool value, guchar * pixel) {
-    uchar intensity = value ? 255 : 0;
-    pixel[0] = intensity;
-    pixel[1] = intensity;
-    pixel[2] = intensity;
-}
-void toGuchar(uchar value, guchar * pixel) {
-    pixel[0] = value;
-    pixel[1] = value;
-    pixel[2] = value;
-}
-void toGuchar(char value, guchar * pixel) {
-    pixel[0] = value+128;
-    pixel[1] = value+128;
-    pixel[2] = value+128;
-}
-void toGuchar(ushort value, guchar * pixel) {
-    pixel[0] = ((float)value/65535)*255;
-    pixel[1] = ((float)value/65535)*255;
-    pixel[2] = ((float)value/65535)*255;
-}
-void toGuchar(short value, guchar * pixel) {
-    pixel[0] = ((float)(value+32768)/65535)*255;
-    pixel[1] = ((float)(value+32768)/65535)*255;
-    pixel[2] = ((float)(value+32768)/65535)*255;
-}
-void toGuchar(uint value, guchar * pixel) {
-    pixel[0] = ((float)value/4294967295)*255;
-    pixel[1] = ((float)value/4294967295)*255;
-    pixel[2] = ((float)value/4294967295)*255;
-}
-void toGuchar(int value, guchar * pixel) {
-    pixel[0] = ((float)(value+2147483648)/4294967295)*255;
-    pixel[1] = ((float)(value+2147483648)/4294967295)*255;
-    pixel[2] = ((float)(value+2147483648)/4294967295)*255;
-}
-void toGuchar(float value, guchar * pixel) {
-    pixel[0] = value*255;
-    pixel[1] = value*255;
-    pixel[2] = value*255;
-}
-void toGuchar(color_uchar value, guchar * pixel) {
-    pixel[0] = value.red;
-    pixel[1] = value.green;
-    pixel[2] = value.blue;
-}
-void toGuchar(color_float value, guchar * pixel) {
-    pixel[0] = value.red*255;
-    pixel[1] = value.green*255;
-    pixel[2] = value.blue*255;
-}
-void toGuchar(float2 value, guchar * pixel) {
-    pixel[0] = value.x*255;
-    pixel[1] = value.y*255;
-    pixel[2] = 0;
-}
-void toGuchar(float3 value, guchar * pixel) {
-    pixel[0] = value.x*255;
-    pixel[1] = value.y*255;
-    pixel[2] = value.z*255;
-}
+void toGuchar(bool value, guchar * pixel) ;
+void toGuchar(uchar value, guchar * pixel) ;
+void toGuchar(char value, guchar * pixel) ;
+void toGuchar(ushort value, guchar * pixel) ;
+void toGuchar(short value, guchar * pixel) ;
+void toGuchar(uint value, guchar * pixel) ;
+void toGuchar(int value, guchar * pixel) ;
+void toGuchar(float value, guchar * pixel) ;
+void toGuchar(color_uchar value, guchar * pixel) ;
+void toGuchar(color_float value, guchar * pixel) ;
+void toGuchar(float2 value, guchar * pixel) ;
+void toGuchar(float3 value, guchar * pixel) ;
 
 /* --- Spesialized level/window --- */
+void toGuchar(uchar value, guchar * pixel, float level, float window) ;
+void toGuchar(char value, guchar * pixel, float level, float window) ;
+void toGuchar(ushort value, guchar * pixel, float level, float window) ;
+void toGuchar(short value, guchar * pixel, float level, float window) ;
+void toGuchar(uint value, guchar * pixel, float level, float window) ;
+void toGuchar(int value, guchar * pixel, float level, float window) ;
+void toGuchar(float value, guchar * pixel, float level, float window) ;
+void toGuchar(color_float value, guchar * pixel, float level, float window) ;
+void toGuchar(float2 value, guchar * pixel, float level, float window) ;
+void toGuchar(float3 value, guchar * pixel, float level, float window) ;
 
 template <class T>
 uchar levelWindow(T value, float level, float window) {
@@ -182,109 +152,20 @@ uchar levelWindow(T value, float level, float window) {
     return result;
 }
 
-void toGuchar(uchar value, guchar * pixel, float level, float window) {
-    uchar n = levelWindow(value, level, window);
-    pixel[0] = n;
-    pixel[1] = n;
-    pixel[2] = n;
-}
-void toGuchar(char value, guchar * pixel, float level, float window) {
-    uchar n = levelWindow(value, level, window);
-    pixel[0] = n;
-    pixel[1] = n;
-    pixel[2] = n;
-}
-void toGuchar(ushort value, guchar * pixel, float level, float window) {
-    uchar n = levelWindow(value, level, window);
-    pixel[0] = n;
-    pixel[1] = n;
-    pixel[2] = n;
-}
-void toGuchar(short value, guchar * pixel, float level, float window) {
-    uchar n = levelWindow(value, level, window);
-    pixel[0] = n;
-    pixel[1] = n;
-    pixel[2] = n;
-}
-void toGuchar(uint value, guchar * pixel, float level, float window) {
-    uchar n = levelWindow(value, level, window);
-    pixel[0] = n;
-    pixel[1] = n;
-    pixel[2] = n;
-}
-void toGuchar(int value, guchar * pixel, float level, float window) {
-    uchar n = levelWindow(value, level, window);
-    pixel[0] = n;
-    pixel[1] = n;
-    pixel[2] = n;
-}
-void toGuchar(float value, guchar * pixel, float level, float window) {
-    uchar n = levelWindow(value, level, window);
-    pixel[0] = n;
-    pixel[1] = n;
-    pixel[2] = n;
-}
-void toGuchar(color_float value, guchar * pixel, float level, float window) {
-    pixel[0] = levelWindow(value.red, level, window);
-    pixel[1] = levelWindow(value.green, level, window);
-    pixel[2] = levelWindow(value.blue, level, window);
-}
-void toGuchar(float2 value, guchar * pixel, float level, float window) {
-    pixel[0] = levelWindow(value.x, level, window);
-    pixel[1] = levelWindow(value.y, level, window);
-    pixel[2] = 0;
-}
-void toGuchar(float3 value, guchar * pixel, float level, float window) {
-    pixel[0] = levelWindow(value.x, level, window);
-    pixel[1] = levelWindow(value.y, level, window);
-    pixel[2] = levelWindow(value.z, level, window);
-}
-
 /* --- Spesialized toT functions --- */
 
-void toT(bool * r, uchar * p) {
-    *r = p[0] > 128;
-}
-void toT(uchar * r, uchar * p) {
-    *r = p[0];
-}
-void toT(char * r, uchar * p) {
-    *r = p[0]-128;
-}
-void toT(ushort * r, uchar * p) {
-    *r = ((float)p[0]/255.0f)*65535;
-}
-void toT(short * r, uchar * p) {
-    *r = (((float)p[0]/255.0f)-0.5f)*65535;
-}
-void toT(uint * r, uchar * p) {
-    *r = (((float)p[0]/255.0f))*4294967295;
-}
-void toT(int * r, uchar * p) {
-    *r = (((float)p[0]/255.0f)-0.5f)*4294967295;
-}
-void toT(float * r, uchar * p) {
-    *r = (float)p[0]/255.0f;
-}
-void toT(color_uchar * c, uchar * p) {
-    c->red = p[0];
-    c->green = p[1];
-    c->blue = p[2];
-}
-void toT(color_float * c, uchar * p) {
-    c->red = (float)p[0]/255.0f;
-    c->green = (float)p[1]/255.0f;
-    c->blue = (float)p[2]/255.0f;
-}
-void toT(float2 * c, uchar * p) {
-    c->x = (float)p[0]/255.0f;
-    c->y = (float)p[1]/255.0f;
-}
-void toT(float3 * c, uchar * p) {
-    c->x = (float)p[0]/255.0f;
-    c->y = (float)p[1]/255.0f;
-    c->z = (float)p[2]/255.0f;
-}
+void toT(bool * r, uchar * p) ;
+void toT(uchar * r, uchar * p) ;
+void toT(char * r, uchar * p) ;
+void toT(ushort * r, uchar * p) ;
+void toT(short * r, uchar * p) ;
+void toT(uint * r, uchar * p) ;
+void toT(int * r, uchar * p) ;
+void toT(float * r, uchar * p) ;
+void toT(color_uchar * r, uchar * p) ;
+void toT(color_float * r, uchar * p) ;
+void toT(float2 * r, uchar * p) ;
+void toT(float3 * r, uchar * p) ;
 
 /* --- Spesialized pixbufToData methods --- */
 template <class T>
@@ -300,7 +181,6 @@ void Image<T>::pixbufToData(GtkImage * image) {
 }
 
 /* --- Spesialized dataToPixbuf methods --- */
-
 template <class T>
 void Image<T>::dataToPixbuf(GtkWidget * image) {
     gdk_threads_enter();
@@ -423,9 +303,16 @@ void Volume<T>::dataToPixbuf(GtkWidget * image, int slice, slice_plane direction
 
 
 /* --- Constructors & destructors --- */
-
 template <class T>
 Image<T>::Image(const char * filename) {
+    // Check if file exists
+    FILE * file = fopen(filename, "r");
+    if(file == NULL) {
+        std::cout << "Error: " << filename << " not found" << std::endl;
+        gtk_main_quit();
+        exit(0);
+    }
+    fclose(file);
 	gdk_threads_enter ();
 	GtkWidget * image = gtk_image_new_from_file(filename);
 	gdk_threads_leave ();
@@ -441,7 +328,8 @@ Volume<T>::Volume(const char * filename, int width, int height, int depth) {
     this->data = new T[width*height*depth];
     FILE * file = fopen(filename, "rb");
     if(file == NULL) {
-        std::cout << "File " << filename << " not found" << std::endl;
+        std::cout << "Error: File " << filename << " not found" << std::endl;
+        gtk_main_quit();
         exit(0);
     }
     fread(this->data, sizeof(T), width*height*depth, file);
@@ -510,6 +398,7 @@ Volume<T>::Volume(const char * filename) {
                 isSigned = true;
             } else {
                 std::cout << "Error: Trying to read volume of unsupported data type" << std::endl;
+                gtk_main_quit();
                 exit(-1);
             }
         } else if(line.substr(0, 5) == "NDims") {
@@ -521,17 +410,20 @@ Volume<T>::Volume(const char * filename) {
     mhdFile.close();
     if(!sizeFound || !rawFilenameFound || !typeFound || !dimensionsFound) {
         std::cout << "Error reading the mhd file" << std::endl;
+        gtk_main_quit();
         exit(-1);
     }
 
     if(readTypeSize != sizeof(T)) {
         std::cout << readTypeSize << std::endl;
         std::cout << "Error: mismatch between datatype to read and that of Volume object (size). Conversion not supported yet." << std::endl;
+        gtk_main_quit();
         exit(-1);
     }
 
     if(((T)(-1) > 0 && isSigned) || ((T)(-1) < 0 && !isSigned)) {
         std::cout << "Error: mismatch between datatype to read and that of Volume object (sign). Conversion not supported yet." << std::endl;
+        gtk_main_quit();
         exit(-1);
     }
 
@@ -540,7 +432,8 @@ Volume<T>::Volume(const char * filename) {
     FILE * file = fopen(rawFilename.c_str(), "rb");
     if(file == NULL) {
         std::cout << "File " << rawFilename << " not found" << std::endl;
-        exit(0);
+        gtk_main_quit();
+        exit(-1);
     }
     fread(this->data, sizeof(T), width*height*depth, file);
     fclose(file);
@@ -574,39 +467,7 @@ Volume<T>::~Volume() {
 
 /* Init and Quit stuff */
 
-bool init = false;
-pthread_t gtkThread;
-void * initGTK(void * t) {
-	g_thread_init(NULL);
-	gdk_threads_init ();
-	gdk_threads_enter ();
-	gtk_init(0, (char ***) "");
-	init = true;
-	gtk_main();
-    gdk_threads_leave();
-    return 0;
-}
-
-void quit(void) {
-	pthread_join(gtkThread, NULL);
-}
-
-void Init() {
-	if (!init) {
-
-		int rc = pthread_create(&gtkThread, NULL, initGTK, NULL);
-
-	    if (rc){
-	       printf("ERROR; return code from pthread_create() is %d\n", rc);
-           exit(-1);
-	    }
-	}
-
-	while(!init); // wait for the thread to created
-    atexit(quit);
-}
-
-std::string intToString(int inInt) {
+static std::string intToString(int inInt) {
     std::stringstream ss;
     std::string s;
 	ss << inInt;
@@ -627,6 +488,7 @@ void Volume<T>::save(const char * filepath) {
     FILE * file = fopen(filepath, "wb");
     if(file == NULL) {
         std::cout << "Could not write RAW file to " << filepath << std::endl;
+        gtk_main_quit();
         exit(-1);
     }
 
@@ -674,66 +536,12 @@ template <class T>
 void Window<T>::destroy() {
 	gtk_widget_destroy(GTK_WIDGET(this->gtkWindow));
 }
-unsigned char windowCount = 0;
-void destroyWindow(GtkWidget * widget, gpointer window) {
-	windowCount--;
-	if (windowCount == 0) {
-		gtk_main_quit();
-        exit(0);
-	}
-}
+static unsigned char windowCount = 0;
 
-void quitProgram(GtkWidget * widget, gpointer window) {
-    gtk_main_quit();
-    exit(0);
-}
-
-void signalDestroyWindow(GtkWidget * widget, gpointer window) {
-	windowCount--;
-	if (windowCount == 0) {
-		gtk_main_quit();
-        exit(0);
-	} else {
-        gtk_widget_hide(GTK_WIDGET(window));
-    }
-}
 struct _saveData {
 	GtkWidget * fs;
 	GtkImage * image;
 };
-
-void saveFileSignal(GtkWidget * widget, gpointer data) {
-	// Get extension to determine image type
-    std::string filepath(gtk_file_selection_get_filename (GTK_FILE_SELECTION (((_saveData *)data)->fs)));
-	gdk_pixbuf_save(gtk_image_get_pixbuf(
-			((_saveData *)data)->image),
-			filepath.c_str(),
-			filepath.substr(filepath.rfind('.')+1).c_str(),
-			NULL, "quality", "100", NULL);
-
-	gtk_widget_destroy(GTK_WIDGET(((_saveData *)data)->fs));
-}
-
-void saveDialog(GtkWidget * widget, gpointer image) {
-	GtkWidget * fileSelection = gtk_file_selection_new("Save an image");
-
-	_saveData * data = (_saveData *)malloc(sizeof(_saveData));
-	data->fs = fileSelection;
-	data->image = (GtkImage *)image;
-
-	/* Connect the ok_button to file_ok_sel function */
-	g_signal_connect (G_OBJECT (GTK_FILE_SELECTION (fileSelection)->ok_button),
-			      "clicked", G_CALLBACK (saveFileSignal), data);
-
-	/* Connect the cancel_button to destroy the widget */
-	g_signal_connect_swapped (G_OBJECT (GTK_FILE_SELECTION (fileSelection)->cancel_button),
-		                      "clicked", G_CALLBACK (gtk_widget_destroy),
-				      G_OBJECT (fileSelection));
-
-
-	gtk_widget_show(fileSelection);
-}
-
 
 template <class T>
 Window<T> Image<T>::setupGUI(GtkWidget * image) {
@@ -799,6 +607,19 @@ Window<T> Image<T>::setupGUI(GtkWidget * image) {
 }
 
 template <class T>
+void Window<T>::key_pressed(GtkWidget * widget, GdkEventKey * event, gpointer user_data) {
+    switch(event->keyval) {
+        case GDK_KEY_Up:
+            std::cout << "up" << std::endl;
+            break;
+        case GDK_KEY_Down:
+            std::cout << "down" << std::endl;
+            break;
+    }
+}
+
+
+template <class T>
 Window<T> Volume<T>::setupGUI(GtkWidget * image) {
 
 	gdk_threads_enter();
@@ -849,6 +670,16 @@ Window<T> Volume<T>::setupGUI(GtkWidget * image) {
 			G_CALLBACK(destroyWindow),
 			&winObj
 	);
+
+    /*
+    typedef void (Window<T>::*memPointer)(GtkWidget*,GdkEventKey*,gpointer);
+    memPointer mp = &Window<T>::key_pressed;
+    g_signal_connect(
+            G_OBJECT(window),
+            "key_press_event",
+            G_CALLBACK(winObj.*mp),
+            NULL
+    );*/
 
 	GtkWidget * fixed = gtk_fixed_new ();
 	gtk_container_add (GTK_CONTAINER (window), fixed);
