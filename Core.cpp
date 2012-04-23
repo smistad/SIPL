@@ -12,12 +12,42 @@ void * initGTK(void * t) {
     gdk_threads_leave();
     return 0;
 }
-
-void quit(void) {
+bool endNotCalled = true;
+void End() {
+    endNotCalled = false;
 	pthread_join(gtkThread, NULL);
 }
 
+int validateSlice(int slice, slice_plane direction, int3 size) {
+    if(slice < 0)
+        return 0;
+
+    switch(direction) {
+        case X:
+            if(slice > size.x-1)
+                return size.x-1;
+            break;
+        case Y:
+            if(slice > size.y-1)
+                return size.y-1;
+            break;
+        case Z:
+            if(slice > size.z-1)
+                return size.z-1;
+            break;
+    }
+    return slice;
+}
+
+
+void quit(void) {
+    if(endNotCalled)
+        std::cout << "You forgot to call SIPL::End() in your program!" << std::endl;
+}
+
+int windowCount;
 void Init() {
+    windowCount = 0;
 	if (!init) {
 
 		int rc = pthread_create(&gtkThread, NULL, initGTK, NULL);
@@ -29,6 +59,10 @@ void Init() {
 	}
 	while(!init); // wait for the thread to created
     atexit(quit);
+}
+int increaseWindowCount() {
+    windowCount ++;
+    return windowCount;
 }
 void destroyWindow(GtkWidget * widget, gpointer window) {
 	windowCount--;

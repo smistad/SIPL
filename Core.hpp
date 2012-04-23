@@ -6,7 +6,6 @@
 #ifndef SIPL_H_
 #define SIPL_H_
 
-#include <stdlib.h>
 #include <cmath>
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
@@ -18,26 +17,27 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-
 namespace SIPL {
 typedef unsigned char uchar;
-typedef unsigned short ushort; // not implemented
-typedef unsigned int uint; // not implemented
-typedef struct color_float { float red, blue, green;} color_float ; // not implemented
+typedef unsigned short ushort;
+typedef unsigned int uint; 
+typedef struct color_float { float red, blue, green;} color_float ; 
 typedef struct color_uchar { unsigned char red, blue, green;} color_uchar ;
-typedef struct float2 { float x,y; } float2; // not implemented
-typedef struct float3 { float x,y,z; } float3; // not implemented
-typedef struct int2 { int x,y; } int2;
-typedef struct int3 { int x,y,z; } int3;
+typedef struct float2 { float x,y; } float2; 
+typedef struct float3 { float x,y,z; } float3; 
+typedef struct int2 { int x,y; } int2; // not for images/volumes
+typedef struct int3 { int x,y,z; } int3; // not for images/volumes
 enum slice_plane {X,Y,Z};
 
 void Init();
+void End();
 
 void destroyWindow(GtkWidget * widget, gpointer window) ;
 void quitProgram(GtkWidget * widget, gpointer window) ;
 void signalDestroyWindow(GtkWidget * widget, gpointer window) ;
 void saveFileSignal(GtkWidget * widget, gpointer data) ;
 void saveDialog(GtkWidget * widget, gpointer image) ;
+int increaseWindowCount() ;
 
 template <class T>
 class Window;
@@ -54,7 +54,9 @@ class Image {
         void set(int x, int y, T pixel);
         int getWidth();
         int getHeight();
+        int2 getSize();
         Window<T> show();
+        Window<T> showAuto();
         Window<T> show(float level, float window);
         void crop();  // not implemented
         void save(const char * filepath, const char * imageType);
@@ -81,7 +83,9 @@ class Volume {
         int getWidth();
         int getHeight();
         int getDepth();
+        int3 getSize();
         Window<T> show();
+        Window<T> showAuto();
         Window<T> show(int slice, slice_plane direction);
         Window<T> show(int slice, slice_plane direction, float level, float window);
         void crop();  // not implemented
@@ -92,7 +96,7 @@ class Volume {
     private:
         T * data;
         int width, height, depth;
-        Window<T> setupGUI(GtkWidget * image);
+        Window<T> setupGUI(GtkWidget * image, int slice, slice_plane direction);
 };
 
 template <class T>
@@ -101,9 +105,13 @@ class Window {
         Window(GtkWidget * gtkWindow, GtkWidget * gtkImage, Image<T> * image);
         Window(GtkWidget * gtkWindow, GtkWidget * gtkImage, Volume<T> * volume);
         void key_pressed(GtkWidget * widget, GdkEventKey * event, gpointer user_data) ;
+        static void wrapper_key_pressed(GtkWidget * widget, GdkEventKey * event, gpointer user_data);
         void destroy();
         void update();
         void hide();
+        int currentSlice;
+        slice_plane currentDirection;
+        ~Window();
     private:
         GtkWidget * gtkWindow;
         GtkWidget * gtkImage;
@@ -111,6 +119,10 @@ class Window {
         Volume<T> * volume;
         bool isVolume;
 };
+
+template <class T>
+Window<T>::~Window() {
+}
 
 /* --- Spesialized conversion functions --- */
 void toGuchar(bool value, guchar * pixel) ;
@@ -205,10 +217,13 @@ void Image<T>::dataToPixbuf(GtkWidget * image, float level, float window) {
    gdk_threads_leave();
 }
 
+int validateSlice(int slice, slice_plane direction, int3 size);
+
 template <class T>
 void Volume<T>::dataToPixbuf(GtkWidget * image, int slice, slice_plane direction) {
-    gdk_threads_enter();
+    //gdk_threads_enter();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
+    validateSlice(slice, direction, getSize());
     int xSize;
     int ySize;
     switch(direction) {
@@ -250,12 +265,12 @@ void Volume<T>::dataToPixbuf(GtkWidget * image, int slice, slice_plane direction
 
     toGuchar(intensity, p);
    }}
-   gdk_threads_leave();
+   //gdk_threads_leave();
 }
 
 template <class T>
 void Volume<T>::dataToPixbuf(GtkWidget * image, int slice, slice_plane direction, float level, float window) {
-    gdk_threads_enter();
+    //gdk_threads_enter();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
     int xSize;
     int ySize;
@@ -298,7 +313,7 @@ void Volume<T>::dataToPixbuf(GtkWidget * image, int slice, slice_plane direction
 
     toGuchar(intensity, p, level, window);
    }}
-   gdk_threads_leave();
+   //gdk_threads_leave();
 }
 
 
@@ -536,7 +551,6 @@ template <class T>
 void Window<T>::destroy() {
 	gtk_widget_destroy(GTK_WIDGET(this->gtkWindow));
 }
-static unsigned char windowCount = 0;
 
 struct _saveData {
 	GtkWidget * fs;
@@ -547,7 +561,7 @@ template <class T>
 Window<T> Image<T>::setupGUI(GtkWidget * image) {
 
 	gdk_threads_enter();
-	windowCount++;
+    int windowCount = increaseWindowCount();
 	GtkWidget * window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	Window<T> winObj = Window<T>(window,image,this);
 	gtk_window_set_title(GTK_WINDOW(window),
@@ -606,26 +620,40 @@ Window<T> Image<T>::setupGUI(GtkWidget * image) {
 
 }
 
+
 template <class T>
-void Window<T>::key_pressed(GtkWidget * widget, GdkEventKey * event, gpointer user_data) {
-    switch(event->keyval) {
-        case GDK_KEY_Up:
-            std::cout << "up" << std::endl;
-            break;
-        case GDK_KEY_Down:
-            std::cout << "down" << std::endl;
-            break;
-    }
+void Window<T>::wrapper_key_pressed(GtkWidget * widget, GdkEventKey * event, gpointer user_data) {
+    Window<T> * win = (Window<T> *)user_data;
+    win->key_pressed(widget, event, user_data);
 }
 
 
 template <class T>
-Window<T> Volume<T>::setupGUI(GtkWidget * image) {
+void Window<T>::key_pressed(GtkWidget * widget, GdkEventKey * event, gpointer user_data) {
+    switch(event->keyval) {
+        case GDK_KEY_Up:
+            this->currentSlice = validateSlice(this->currentSlice+1,this->currentDirection,this->volume->getSize());
+            this->volume->dataToPixbuf(this->gtkImage, this->currentSlice, this->currentDirection);
+            break;
+        case GDK_KEY_Down:
+            this->currentSlice = validateSlice(this->currentSlice-1,this->currentDirection,this->volume->getSize());
+            this->volume->dataToPixbuf(this->gtkImage, this->currentSlice, this->currentDirection);
+            break;
+    }
+    gtk_widget_queue_draw(this->gtkImage);
+}
+
+
+template <class T>
+Window<T> Volume<T>::setupGUI(GtkWidget * image, int slice, slice_plane direction) {
 
 	gdk_threads_enter();
-	windowCount++;
+    int windowCount = increaseWindowCount();
 	GtkWidget * window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	Window<T> winObj = Window<T>(window,image,this);
+	//Window<T> winObj = Window<T>(window,image,this);
+    Window<T> winObj = Window<T>(window,image,this);
+    winObj.currentSlice = slice;
+    winObj.currentDirection = direction;
 	gtk_window_set_title(GTK_WINDOW(window),
 			("Image #" + intToString(windowCount)).c_str()
 	);
@@ -668,18 +696,15 @@ Window<T> Volume<T>::setupGUI(GtkWidget * image) {
 			G_OBJECT(window),
 			"destroy",
 			G_CALLBACK(destroyWindow),
-			&winObj
+			NULL
 	);
 
-    /*
-    typedef void (Window<T>::*memPointer)(GtkWidget*,GdkEventKey*,gpointer);
-    memPointer mp = &Window<T>::key_pressed;
     g_signal_connect(
             G_OBJECT(window),
             "key_press_event",
-            G_CALLBACK(winObj.*mp),
-            NULL
-    );*/
+            G_CALLBACK(Window<T>::wrapper_key_pressed),
+            &winObj
+    );
 
 	GtkWidget * fixed = gtk_fixed_new ();
 	gtk_container_add (GTK_CONTAINER (window), fixed);
@@ -718,7 +743,7 @@ Window<T> Volume<T>::show(){
     GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, displayWidth, displayHeight));
     this->dataToPixbuf(image, slice, direction);
-    return setupGUI(image);
+    return setupGUI(image,slice,direction);
 }
 
 
@@ -743,7 +768,7 @@ Window<T> Volume<T>::show(int slice, slice_plane direction) {
     GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, displayWidth, displayHeight));
     this->dataToPixbuf(image, slice, direction);
-    return setupGUI(image);
+    return setupGUI(image,slice,direction);
 }
 
 template <class T>
@@ -794,6 +819,22 @@ int Volume<T>::getHeight() {
 template <class T>
 int Volume<T>::getDepth() {
     return this->depth;
+}
+
+template <class T>
+int2 Image<T>::getSize() {
+    int2 size;
+    size.x = width;
+    size.y = height;
+    return size;
+}
+template <class T>
+int3 Volume<T>::getSize() {
+    int3 size;
+    size.x = width;
+    size.y = height;
+    size.z = depth;
+    return size;
 }
 
 template <class T>

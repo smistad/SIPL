@@ -9,7 +9,7 @@ int main(int argc, char ** argv) {
     Image<float> im("images/lena.jpg");
     im.show();
 
-    // Create image manipulate the pixels and save it to disk
+    // Create image, manipulate the pixels and save it to disk
 
     // Calculate the gradient of the image and display the vector field using colors
     Image<float2> gradient(im.getWidth(), im.getHeight());
@@ -24,8 +24,8 @@ int main(int argc, char ** argv) {
     gradient.show();
 
     // Load volume and display one slice on the screen
+    Volume<uchar> v("CT_Patient_005.mhd");
+    v.show();
 
-
-
-	return 0;
+    End();
 }
