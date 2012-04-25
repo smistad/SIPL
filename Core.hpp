@@ -145,7 +145,48 @@ void toGuchar(color_float value, guchar * pixel) ;
 void toGuchar(float2 value, guchar * pixel) ;
 void toGuchar(float3 value, guchar * pixel) ;
 
+// Conversion from bool
+void convertImageType(bool *, bool);
+void convertImageType(uchar *, bool);
+void convertImageType(char *, bool);
+void convertImageType(ushort *, bool);
+void convertImageType(short *, bool);
+void convertImageType(uint *, bool);
+void convertImageType(int *, bool);
+void convertImageType(float *, bool);
+void convertImageType(color_uchar *, bool);
+void convertImageType(color_float *, bool);
+void convertImageType(float2 *, bool);
+void convertImageType(float3 *, bool);
+
+// Conversion from uchar
+void convertImageType(bool *, uchar);
+void convertImageType(uchar *, uchar);
+void convertImageType(char *, uchar);
+void convertImageType(ushort *, uchar);
+void convertImageType(short *, uchar);
+void convertImageType(uint *, uchar);
+void convertImageType(int *, uchar);
+void convertImageType(float *, uchar);
+void convertImageType(color_uchar *, uchar);
+void convertImageType(color_float *, uchar);
+void convertImageType(float2 *, uchar);
+void convertImageType(float3 *, uchar);
+
+
+// Conversion from color_float
+void convertImageType(bool *, color_float);
+void convertImageType(uchar *, color_float);
+void convertImageType(char *, color_float);
+void convertImageType(ushort *, color_float);
+void convertImageType(short *, color_float);
+void convertImageType(uint *, color_float);
+void convertImageType(int *, color_float);
 void convertImageType(float *, color_float);
+void convertImageType(color_uchar *, color_float);
+void convertImageType(color_float *, color_float);
+void convertImageType(float2 *, color_float);
+void convertImageType(float3 *, color_float);
 
 /* --- Spesialized level/window --- */
 void toGuchar(uchar value, guchar * pixel, float level, float window) ;

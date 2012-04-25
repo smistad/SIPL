@@ -295,7 +295,38 @@ void toT(float3 * c, uchar * p) {
     c->z = (float)p[2]/255.0f;
 }
 
+// Conversion from color_float
+void convertImageType(bool * to, color_float from) {
+    *to = 0.33f*(from.red+from.blue+from.green) > 0.5f;
+}
+void convertImageType(uchar * to, color_float from) {
+    *to = (0.33f*(from.red+from.blue+from.green))*255;
+}
+void convertImageType(char * to, color_float from) {
+    *to = (0.33f*(from.red+from.blue+from.green)-0.5f)*255;
+}
+void convertImageType(ushort * to, color_float from) {
+    *to = (0.33f*(from.red+from.blue+from.green))*65535;
+}
+void convertImageType(short * to, color_float from) {
+    *to = (0.33f*(from.red+from.blue+from.green)-0.5f)*65535;
+}
+void convertImageType(uint * to, color_float from) {
+    *to = (0.33f*(from.red+from.blue+from.green))*4294967295;
+}
+void convertImageType(int * to, color_float from) {
+    *to = (0.33f*(from.red+from.blue+from.green)-0.5f)*4294967295;
+}
 void convertImageType(float * to, color_float from) {
     *to = 0.33f*(from.red+from.blue+from.green);
+}
+void convertImageType(float2 * to, color_float from) {
+    to->x = from.red;
+    to->y = from.green;
+}
+void convertImageType(float3 * to, color_float from) {
+    to->x = from.red;
+    to->y = from.green;
+    to->z = from.blue;
 }
 } // End namespace
