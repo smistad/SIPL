@@ -173,6 +173,75 @@ void convertImageType(color_float *, uchar);
 void convertImageType(float2 *, uchar);
 void convertImageType(float3 *, uchar);
 
+// Conversion from char
+void convertImageType(bool *, char);
+void convertImageType(uchar *, char);
+void convertImageType(char *, char);
+void convertImageType(ushort *, char);
+void convertImageType(short *, char);
+void convertImageType(uint *, char);
+void convertImageType(int *, char);
+void convertImageType(float *, char);
+void convertImageType(color_uchar *, char);
+void convertImageType(color_float *, char);
+void convertImageType(float2 *, char);
+void convertImageType(float3 *, char);
+
+// Conversion from ushort
+void convertImageType(bool *, ushort);
+void convertImageType(uchar *, ushort);
+void convertImageType(char *, ushort);
+void convertImageType(ushort *, ushort);
+void convertImageType(short *, ushort);
+void convertImageType(uint *, ushort);
+void convertImageType(int *, ushort);
+void convertImageType(float *, ushort);
+void convertImageType(color_uchar *, ushort);
+void convertImageType(color_float *, ushort);
+void convertImageType(float2 *, ushort);
+void convertImageType(float3 *, ushort);
+
+// Conversion from short
+void convertImageType(bool *, short);
+void convertImageType(uchar *, short);
+void convertImageType(char *, short);
+void convertImageType(ushort *, short);
+void convertImageType(short *, short);
+void convertImageType(uint *, short);
+void convertImageType(int *, short);
+void convertImageType(float *, short);
+void convertImageType(color_uchar *, short);
+void convertImageType(color_float *, short);
+void convertImageType(float2 *, short);
+void convertImageType(float3 *, short);
+
+// Conversion from float
+void convertImageType(bool *, float);
+void convertImageType(uchar *, float);
+void convertImageType(char *, float);
+void convertImageType(ushort *, float);
+void convertImageType(short *, float);
+void convertImageType(uint *, float);
+void convertImageType(int *, float);
+void convertImageType(float *, float);
+void convertImageType(color_uchar *, float);
+void convertImageType(color_float *, float);
+void convertImageType(float2 *, float);
+void convertImageType(float3 *, float);
+
+// Conversion from color_uchar
+void convertImageType(bool *, color_uchar);
+void convertImageType(uchar *, color_uchar);
+void convertImageType(char *, color_uchar);
+void convertImageType(ushort *, color_uchar);
+void convertImageType(short *, color_uchar);
+void convertImageType(uint *, color_uchar);
+void convertImageType(int *, color_uchar);
+void convertImageType(float *, color_uchar);
+void convertImageType(color_uchar *, color_uchar);
+void convertImageType(color_float *, color_uchar);
+void convertImageType(float2 *, color_uchar);
+void convertImageType(float3 *, color_uchar);
 
 // Conversion from color_float
 void convertImageType(bool *, color_float);
@@ -187,6 +256,34 @@ void convertImageType(color_uchar *, color_float);
 void convertImageType(color_float *, color_float);
 void convertImageType(float2 *, color_float);
 void convertImageType(float3 *, color_float);
+
+// Conversion from float2
+void convertImageType(bool *, float2);
+void convertImageType(uchar *, float2);
+void convertImageType(char *, float2);
+void convertImageType(ushort *, float2);
+void convertImageType(short *, float2);
+void convertImageType(uint *, float2);
+void convertImageType(int *, float2);
+void convertImageType(float *, float2);
+void convertImageType(color_uchar *, float2);
+void convertImageType(color_float *, float2);
+void convertImageType(float2 *, float2);
+void convertImageType(float3 *, float2);
+
+// Conversion from float3
+void convertImageType(bool *, float3);
+void convertImageType(uchar *, float3);
+void convertImageType(char *, float3);
+void convertImageType(ushort *, float3);
+void convertImageType(short *, float3);
+void convertImageType(uint *, float3);
+void convertImageType(int *, float3);
+void convertImageType(float *, float3);
+void convertImageType(color_uchar *, float3);
+void convertImageType(color_float *, float3);
+void convertImageType(float2 *, float3);
+void convertImageType(float3 *, float3);
 
 /* --- Spesialized level/window --- */
 void toGuchar(uchar value, guchar * pixel, float level, float window) ;
