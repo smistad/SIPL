@@ -49,7 +49,7 @@ class Image {
         Image(const char * filepath);
         Image(unsigned int width, unsigned int height);
         template <class U>
-        Image(Image<U> otherImage);
+        Image(Image<U> &otherImage);
         ~Image();
         T get(int x, int y) const;
         T get(int i) const;
@@ -80,7 +80,7 @@ class Volume {
         Volume(const char * filename, int width, int height, int depth); // for reading raw files
         Volume(int width, int height, int depth);
         template <class U>
-        Volume(Volume<U> otherVolume);
+        Volume(Volume<U> &otherVolume);
         ~Volume();
         T get(int x, int y, int z) const;
         T get(int i) const;
@@ -487,7 +487,7 @@ Image<T>::Image(const char * filename) {
 
 template <class T> 
 template <class U>
-Image<T>::Image(Image<U> otherImage) {
+Image<T>::Image(Image<U> &otherImage) {
     this->width = otherImage.getWidth();
     this->height = otherImage.getHeight();
     this->data = new T[this->height*this->width];
@@ -521,7 +521,7 @@ Image<T>& Image<T>::operator=(const Image<U> &otherImage) {
 
 template <class T> 
 template <class U>
-Volume<T>::Volume(Volume<U> otherImage) {
+Volume<T>::Volume(Volume<U> &otherImage) {
     this->width = otherImage.getWidth();
     this->height = otherImage.getHeight();
     this->depth = otherImage.getDepth();
