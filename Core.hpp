@@ -31,6 +31,7 @@ enum slice_plane {X,Y,Z};
 
 void Init();
 void End();
+void Quit();
 
 void destroyWindow(GtkWidget * widget, gpointer window) ;
 void quitProgram(GtkWidget * widget, gpointer window) ;
@@ -47,15 +48,17 @@ class Image {
     public:
         Image(const char * filepath);
         Image(unsigned int width, unsigned int height);
+        template <class U>
+        Image(Image<U> otherImage);
         ~Image();
-        T get(int x, int y);
-        T get(int i);
+        T get(int x, int y) const;
+        T get(int i) const;
         T * getData();
         void setData(T *);
         void set(int x, int y, T pixel);
-        int getWidth();
-        int getHeight();
-        int2 getSize();
+        int getWidth() const;
+        int getHeight() const;
+        int2 getSize() const;
         Window<T> show();
         Window<T> show(float level, float window);
         void crop();  // not implemented
@@ -63,6 +66,8 @@ class Image {
         void dataToPixbuf(GtkWidget * image);
         void dataToPixbuf(GtkWidget * image, float level, float wdinow);
         void pixbufToData(GtkImage * image);
+        template <class U>
+        Image<T> & operator=(const Image<U> &otherImage);
     private:
         T * data;
         int width, height;
@@ -139,6 +144,8 @@ void toGuchar(color_uchar value, guchar * pixel) ;
 void toGuchar(color_float value, guchar * pixel) ;
 void toGuchar(float2 value, guchar * pixel) ;
 void toGuchar(float3 value, guchar * pixel) ;
+
+void convertImageType(float *, color_float);
 
 /* --- Spesialized level/window --- */
 void toGuchar(uchar value, guchar * pixel, float level, float window) ;
@@ -326,8 +333,7 @@ Image<T>::Image(const char * filename) {
     FILE * file = fopen(filename, "r");
     if(file == NULL) {
         std::cout << "Error: " << filename << " not found" << std::endl;
-        gtk_main_quit();
-        exit(0);
+        Quit();
     }
     fclose(file);
 	gdk_threads_enter ();
@@ -339,6 +345,40 @@ Image<T>::Image(const char * filename) {
     this->pixbufToData((GtkImage *)image);
 }
 
+template <class T> 
+template <class U>
+Image<T>::Image(Image<U> otherImage) {
+    this->width = otherImage.getWidth();
+    this->height = otherImage.getHeight();
+    this->data = new T[this->height*this->width];
+
+    // Convert image with type U to this with type T
+    for(int i = 0; i < this->width*this->height; i++) {
+        T value;
+        convertImageType(&value, otherImage.get(i));
+        this->data[i] = value;
+    }
+
+}
+
+template <class T> 
+template <class U>
+Image<T>& Image<T>::operator=(const Image<U> &otherImage) {
+    if(this->width != otherImage.getWidth() || this->height != otherImage.getHeight()) {
+        std::cout << "Error: image size mismatch in assignment" << std::endl;
+        Quit();
+    }
+    
+    // Convert image with type U to this with type T
+    for(int i = 0; i < this->width*this->height; i++) {
+        T value;
+        convertImageType(&value, otherImage.get(i));
+        this->data[i] = value;
+    }
+
+    return *this;
+}
+
 template <class T>
 Volume<T>::Volume(const char * filename, int width, int height, int depth) {
     // Read raw file
@@ -346,8 +386,7 @@ Volume<T>::Volume(const char * filename, int width, int height, int depth) {
     FILE * file = fopen(filename, "rb");
     if(file == NULL) {
         std::cout << "Error: File " << filename << " not found" << std::endl;
-        gtk_main_quit();
-        exit(0);
+        Quit();
     }
     fread(this->data, sizeof(T), width*height*depth, file);
     fclose(file);
@@ -415,8 +454,7 @@ Volume<T>::Volume(const char * filename) {
                 isSigned = true;
             } else {
                 std::cout << "Error: Trying to read volume of unsupported data type" << std::endl;
-                gtk_main_quit();
-                exit(-1);
+                Quit();
             }
         } else if(line.substr(0, 5) == "NDims") {
             if(line.substr(5+3, 1) == "3") 
@@ -427,21 +465,18 @@ Volume<T>::Volume(const char * filename) {
     mhdFile.close();
     if(!sizeFound || !rawFilenameFound || !typeFound || !dimensionsFound) {
         std::cout << "Error reading the mhd file" << std::endl;
-        gtk_main_quit();
-        exit(-1);
+        Quit();
     }
 
     if(readTypeSize != sizeof(T)) {
         std::cout << readTypeSize << std::endl;
         std::cout << "Error: mismatch between datatype to read and that of Volume object (size). Conversion not supported yet." << std::endl;
-        gtk_main_quit();
-        exit(-1);
+        Quit();
     }
 
     if(((T)(-1) > 0 && isSigned) || ((T)(-1) < 0 && !isSigned)) {
         std::cout << "Error: mismatch between datatype to read and that of Volume object (sign). Conversion not supported yet." << std::endl;
-        gtk_main_quit();
-        exit(-1);
+        Quit();
     }
 
     // Read raw file
@@ -449,8 +484,7 @@ Volume<T>::Volume(const char * filename) {
     FILE * file = fopen(rawFilename.c_str(), "rb");
     if(file == NULL) {
         std::cout << "File " << rawFilename << " not found" << std::endl;
-        gtk_main_quit();
-        exit(-1);
+        Quit();
     }
     fread(this->data, sizeof(T), width*height*depth, file);
     fclose(file);
@@ -505,8 +539,7 @@ void Volume<T>::save(const char * filepath) {
     FILE * file = fopen(filepath, "wb");
     if(file == NULL) {
         std::cout << "Could not write RAW file to " << filepath << std::endl;
-        gtk_main_quit();
-        exit(-1);
+        Quit();
     }
 
     fwrite(this->data, sizeof(T), this->width*this->height*this->depth, file);
@@ -519,12 +552,12 @@ void Image<T>::set(int x, int y, T value) {
 }
 
 template <class T>
-T Image<T>::get(int x, int y) {
+T Image<T>::get(int x, int y) const {
     return this->data[x+y*this->width];
 }
 
 template <class T>
-T Image<T>::get(int i) {
+T Image<T>::get(int i) const {
     return this->data[i];
 }
 
@@ -830,12 +863,12 @@ Window<T> Volume<T>::show(int slice, slice_plane direction,float level, float wi
 
 
 template <class T>
-int Image<T>::getWidth() {
+int Image<T>::getWidth() const {
     return this->width;
 }
 
 template <class T>
-int Image<T>::getHeight() {
+int Image<T>::getHeight() const {
     return this->height;
 }
 
@@ -855,7 +888,7 @@ int Volume<T>::getDepth() {
 }
 
 template <class T>
-int2 Image<T>::getSize() {
+int2 Image<T>::getSize() const {
     int2 size;
     size.x = width;
     size.y = height;

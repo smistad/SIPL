@@ -18,6 +18,13 @@ void End() {
 	pthread_join(gtkThread, NULL);
 }
 
+void Quit() {
+    gtk_main_quit();
+    endNotCalled = false;
+	pthread_join(gtkThread, NULL);
+    exit(0);
+}
+
 int validateSlice(int slice, slice_plane direction, int3 size) {
     if(slice < 0)
         return 0;
@@ -288,5 +295,7 @@ void toT(float3 * c, uchar * p) {
     c->z = (float)p[2]/255.0f;
 }
 
-
+void convertImageType(float * to, color_float from) {
+    *to = 0.33f*(from.red+from.blue+from.green);
 }
+} // End namespace
