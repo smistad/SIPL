@@ -295,6 +295,11 @@ void toT(float3 * c, uchar * p) {
     c->z = (float)p[2]/255.0f;
 }
 
+// Conversion from short
+void convertImageType(float * to, short from) {
+    *to = ((float)from/65535.0f)+0.5f;
+}
+
 // Conversion from color_float
 void convertImageType(bool * to, color_float from) {
     *to = 0.33f*(from.red+from.blue+from.green) > 0.5f;

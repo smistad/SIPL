@@ -61,7 +61,6 @@ class Image {
         int2 getSize() const;
         Window<T> show();
         Window<T> show(float level, float window);
-        void crop();  // not implemented
         void save(const char * filepath, const char * imageType);
         void dataToPixbuf(GtkWidget * image);
         void dataToPixbuf(GtkWidget * image, float level, float wdinow);
@@ -80,25 +79,28 @@ class Volume {
         Volume(const char * filename); // for reading mhd files
         Volume(const char * filename, int width, int height, int depth); // for reading raw files
         Volume(int width, int height, int depth);
+        template <class U>
+        Volume(Volume<U> otherVolume);
         ~Volume();
-        T get(int x, int y, int z);
-        T get(int i);
+        T get(int x, int y, int z) const;
+        T get(int i) const;
         void set(int x, int y, int z, T value);
         T * getData();
         void setData(T *);
-        int getWidth();
-        int getHeight();
-        int getDepth();
-        int3 getSize();
+        int getWidth() const;
+        int getHeight() const;
+        int getDepth() const;
+        int3 getSize() const;
         Window<T> show();
         Window<T> show(int slice, slice_plane direction);
         Window<T> show(int slice, slice_plane direction, float level, float window);
         Window<T> show(float level, float window);
-        void crop();  // not implemented
         void save(const char * filepath);
         void saveSlice(int slice, slice_plane direction, const char * filepath, const char * imageType);
         void dataToPixbuf(GtkWidget * image, int slice, slice_plane direction);
         void dataToPixbuf(GtkWidget * image, int slice, slice_plane direction, float level, float window);
+        template <class U>
+        Volume<T> & operator=(const Volume<U> &otherVolume);
     private:
         T * data;
         int width, height, depth;
@@ -517,6 +519,43 @@ Image<T>& Image<T>::operator=(const Image<U> &otherImage) {
     return *this;
 }
 
+template <class T> 
+template <class U>
+Volume<T>::Volume(Volume<U> otherImage) {
+    this->width = otherImage.getWidth();
+    this->height = otherImage.getHeight();
+    this->depth = otherImage.getDepth();
+    this->data = new T[this->height*this->width*this->depth];
+
+    // Convert image with type U to this with type T
+    for(int i = 0; i < this->width*this->height*this->depth; i++) {
+        T value;
+        convertImageType(&value, otherImage.get(i));
+        this->data[i] = value;
+    }
+}
+
+template <class T> 
+template <class U>
+Volume<T>& Volume<T>::operator=(const Volume<U> &otherImage) {
+    if(this->width != otherImage.getWidth() || 
+        this->height != otherImage.getHeight() ||
+        this->depth != otherImage.getDepth()) {
+        std::cout << "Error: volume size mismatch in assignment" << std::endl;
+        Quit();
+    }
+    
+    // Convert image with type U to this with type T
+    for(int i = 0; i < this->width*this->height*this->depth; i++) {
+        T value;
+        convertImageType(&value, otherImage.get(i));
+        this->data[i] = value;
+    }
+
+    return *this;
+}
+
+
 template <class T>
 Volume<T>::Volume(const char * filename, int width, int height, int depth) {
     // Read raw file
@@ -705,12 +744,12 @@ void Volume<T>::set(int x, int y, int z, T value) {
 }
 
 template <class T>
-T Volume<T>::get(int x, int y, int z) {
+T Volume<T>::get(int x, int y, int z) const {
     return this->data[x+y*this->width+z*this->width*this->height];
 }
 
 template <class T>
-T Volume<T>::get(int i) {
+T Volume<T>::get(int i) const {
     return this->data[i];
 }
 
@@ -936,7 +975,7 @@ Window<T> Image<T>::show(float level, float window) {
 
 template <class T>
 Window<T> Volume<T>::show(){
-    int slice = this->height/2;
+    int slice = this->depth/2;
     slice_plane direction = Z;
     int displayWidth = this->width;
     int displayHeight = this->height;
@@ -944,6 +983,21 @@ Window<T> Volume<T>::show(){
 			8, displayWidth, displayHeight));
     this->dataToPixbuf(image, slice, direction);
     return setupGUI(image,slice,direction);
+}
+
+template <class T>
+Window<T> Volume<T>::show(float level, float window){
+    int slice = this->depth/2;
+    slice_plane direction = Z;
+    int displayWidth = this->width;
+    int displayHeight = this->height;
+    GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
+			8, displayWidth, displayHeight));
+    this->dataToPixbuf(image, slice, direction,level,window);
+    Window<T> w = setupGUI(image,slice,direction);
+    w.level = level;
+    w.window = window;
+    return w;
 }
 
 
@@ -1011,17 +1065,17 @@ int Image<T>::getHeight() const {
 }
 
 template <class T>
-int Volume<T>::getWidth() {
+int Volume<T>::getWidth() const {
     return this->width;
 }
 
 template <class T>
-int Volume<T>::getHeight() {
+int Volume<T>::getHeight() const {
     return this->height;
 }
 
 template <class T>
-int Volume<T>::getDepth() {
+int Volume<T>::getDepth() const {
     return this->depth;
 }
 
@@ -1033,7 +1087,7 @@ int2 Image<T>::getSize() const {
     return size;
 }
 template <class T>
-int3 Volume<T>::getSize() {
+int3 Volume<T>::getSize() const {
     int3 size;
     size.x = width;
     size.y = height;
