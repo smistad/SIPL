@@ -295,6 +295,51 @@ void toT(float3 * c, uchar * p) {
     c->z = (float)p[2]/255.0f;
 }
 
+// Conversion from bool
+void convertImageType(bool * to, bool from) {
+    *to = from;
+}
+void convertImageType(uchar * to, bool from) {
+    *to = from ? 255 : 0;
+}
+void convertImageType(char * to, bool from) {
+    *to = from ? 127 : -128;
+}
+void convertImageType(ushort * to, bool from) {
+    *to = from ? 1 : 0;
+}
+void convertImageType(short * to, bool from) {
+    *to = from ? 1 : 0;
+}
+void convertImageType(uint * to, bool from) {
+    *to = from ? 1 : 0;
+}
+void convertImageType(int * to, bool from) {
+    *to = from ? 1 : 0;
+}
+void convertImageType(float * to, bool from) {
+    *to = from ? 1 : 0;
+}
+void convertImageType(color_float * to, bool from) {
+    to->red = from ? 1 : 0;
+    to->blue = to->blue;
+    to->green = to->green;
+}
+void convertImageType(color_uchar * to, bool from) {
+    to->red = from ? 255 : 0;
+    to->blue = to->red;
+    to->green = to->red;
+}
+void convertImageType(float2 * to, bool from) {
+    to->x = from ? 1 : 0;
+    to->y = to->x;
+}
+void convertImageType(float3 * to, bool from) {
+    to->x = from ? 1 : 0;
+    to->y = to->x;
+    to->z = to->x;
+}
+
 // Conversion from short
 void convertImageType(float * to, short from) {
     *to = ((float)from/65535.0f)+0.5f;
