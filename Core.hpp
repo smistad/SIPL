@@ -49,6 +49,7 @@ class Image {
         Image(unsigned int width, unsigned int height);
         ~Image();
         T get(int x, int y);
+        T get(int i);
         T * getData();
         void setData(T *);
         void set(int x, int y, T pixel);
@@ -56,7 +57,6 @@ class Image {
         int getHeight();
         int2 getSize();
         Window<T> show();
-        Window<T> showAuto();
         Window<T> show(float level, float window);
         void crop();  // not implemented
         void save(const char * filepath, const char * imageType);
@@ -77,6 +77,7 @@ class Volume {
         Volume(int width, int height, int depth);
         ~Volume();
         T get(int x, int y, int z);
+        T get(int i);
         void set(int x, int y, int z, T value);
         T * getData();
         void setData(T *);
@@ -85,9 +86,9 @@ class Volume {
         int getDepth();
         int3 getSize();
         Window<T> show();
-        Window<T> showAuto();
         Window<T> show(int slice, slice_plane direction);
         Window<T> show(int slice, slice_plane direction, float level, float window);
+        Window<T> show(float level, float window);
         void crop();  // not implemented
         void save(const char * filepath);
         void saveSlice(int slice, slice_plane direction, const char * filepath, const char * imageType);
@@ -111,6 +112,7 @@ class Window {
         void hide();
         int currentSlice;
         slice_plane currentDirection;
+        float level, window;
         ~Window();
     private:
         GtkWidget * gtkWindow;
@@ -522,11 +524,34 @@ T Image<T>::get(int x, int y) {
 }
 
 template <class T>
+T Image<T>::get(int i) {
+    return this->data[i];
+}
+
+template <class T>
+void Volume<T>::set(int x, int y, int z, T value) {
+    this->data[x+y*this->width+z*this->width*this->height] = value;
+}
+
+template <class T>
+T Volume<T>::get(int x, int y, int z) {
+    return this->data[x+y*this->width+z*this->width*this->height];
+}
+
+template <class T>
+T Volume<T>::get(int i) {
+    return this->data[i];
+}
+
+
+
+template <class T>
 Window<T>::Window(GtkWidget * gtkWindow, GtkWidget * gtkImage, Image<T> * image) {
 	this->gtkWindow = gtkWindow;
     this->gtkImage = gtkImage;
     this->image = image;
     this->isVolume = false;
+    this->level = -1.0f;
 }
 
 template <class T>
@@ -535,6 +560,7 @@ Window<T>::Window(GtkWidget * gtkWindow, GtkWidget * gtkImage, Volume<T> * volum
     this->gtkImage = gtkImage;
     this->volume = volume;
     this->isVolume = true;
+    this->level = -1.0f;
 }
 
 template <class T>
@@ -633,12 +659,15 @@ void Window<T>::key_pressed(GtkWidget * widget, GdkEventKey * event, gpointer us
     switch(event->keyval) {
         case GDK_KEY_Up:
             this->currentSlice = validateSlice(this->currentSlice+1,this->currentDirection,this->volume->getSize());
-            this->volume->dataToPixbuf(this->gtkImage, this->currentSlice, this->currentDirection);
             break;
         case GDK_KEY_Down:
             this->currentSlice = validateSlice(this->currentSlice-1,this->currentDirection,this->volume->getSize());
-            this->volume->dataToPixbuf(this->gtkImage, this->currentSlice, this->currentDirection);
             break;
+    }
+    if(level == -1.0f) {
+        this->volume->dataToPixbuf(this->gtkImage, this->currentSlice, this->currentDirection);
+    } else {
+        this->volume->dataToPixbuf(this->gtkImage, this->currentSlice, this->currentDirection, level, window);
     }
     gtk_widget_queue_draw(this->gtkImage);
 }
@@ -655,7 +684,7 @@ Window<T> Volume<T>::setupGUI(GtkWidget * image, int slice, slice_plane directio
     winObj.currentSlice = slice;
     winObj.currentDirection = direction;
 	gtk_window_set_title(GTK_WINDOW(window),
-			("Image #" + intToString(windowCount)).c_str()
+			("Volume #" + intToString(windowCount)).c_str()
 	);
 
 	GtkWidget * toolbar = gtk_toolbar_new();
@@ -768,7 +797,8 @@ Window<T> Volume<T>::show(int slice, slice_plane direction) {
     GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, displayWidth, displayHeight));
     this->dataToPixbuf(image, slice, direction);
-    return setupGUI(image,slice,direction);
+    Window<T> w = setupGUI(image,slice,direction);
+    return w;
 }
 
 template <class T>
@@ -792,7 +822,10 @@ Window<T> Volume<T>::show(int slice, slice_plane direction,float level, float wi
     GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, displayWidth, displayHeight));
     this->dataToPixbuf(image, slice, direction,level,window);
-    return setupGUI(image);
+    Window<T> w = setupGUI(image,slice,direction);
+    w.level = level;
+    w.window = window;
+    return w;
 }
 
 
