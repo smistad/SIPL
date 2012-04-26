@@ -1,6 +1,7 @@
 /**
- *
- * @author Erik Smistad <smistad@idi.ntnu.no>
+ * Simple Image Processing Library
+ * Copyright Erik Smistad 2012
+ * See LICENSE file for information on use 
  */
 
 #ifndef SIPL_H_
