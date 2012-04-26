@@ -1,3 +1,8 @@
+/**
+ * Simple Image Processing Library
+ * Copyright Erik Smistad 2012
+ * See LICENSE file for information on use 
+ */
 #include "Core.hpp"
 
 namespace SIPL {
@@ -64,7 +69,7 @@ void Init() {
            exit(-1);
 	    }
 	}
-	while(!init); // wait for the thread to created
+	while(!init); // wait for the thread to be created
     atexit(quit);
 }
 int increaseWindowCount() {
@@ -74,21 +79,18 @@ int increaseWindowCount() {
 void destroyWindow(GtkWidget * widget, gpointer window) {
 	windowCount--;
 	if (windowCount == 0) {
-		gtk_main_quit();
-        exit(0);
+        Quit();
 	}
 }
 
 void quitProgram(GtkWidget * widget, gpointer window) {
-    gtk_main_quit();
-    exit(0);
+    Quit();
 }
 
 void signalDestroyWindow(GtkWidget * widget, gpointer window) {
 	windowCount--;
 	if (windowCount == 0) {
-		gtk_main_quit();
-        exit(0);
+        Quit();
 	} else {
         gtk_widget_hide(GTK_WIDGET(window));
     }
@@ -386,12 +388,144 @@ void convertImageType(float3 * to, uchar from) {
 }
 
 
+// Conversion from char
+void convertImageType(bool * to, char from) {
+    *to = from > 0;
+}
+void convertImageType(uchar * to, char from) {
+    *to = from+128;
+}
+void convertImageType(char * to, char from) {
+    *to = from;
+}
+void convertImageType(ushort * to, char from) {
+    *to = from;
+}
+void convertImageType(short * to, char from) {
+    *to = from;
+}
+void convertImageType(uint * to, char from) {
+    *to = from;
+}
+void convertImageType(int * to, char from) {
+    *to = from;
+}
+void convertImageType(float * to, char from) {
+    *to = (float)from/255.0f+0.5f;
+}
+void convertImageType(color_float * to, char from) {
+    to->red = (float)from/255.0f+0.5f;
+    to->blue = to->red;
+    to->green = to->red;
+}
+void convertImageType(color_uchar * to, char from) {
+    to->red = from+128;
+    to->blue = to->red;
+    to->green = to->red;
+}
+void convertImageType(float2 * to, char from) {
+    to->x = (float)from/255.0f+0.5f;
+    to->y = to->x;
+}
+void convertImageType(float3 * to, char from) {
+    to->x = (float)from/255.0f+0.5;
+    to->y = to->x;
+    to->z = to->x;
+}
+
+// Conversion from ushort
+void convertImageType(bool * to, ushort from) {
+    *to = from > 0;
+}
+void convertImageType(uchar * to, ushort from) {
+    *to = from/255;
+}
+void convertImageType(char * to, ushort from) {
+    *to = from/255-128;
+}
+void convertImageType(ushort * to, ushort from) {
+    *to = from;
+}
+void convertImageType(short * to, ushort from) {
+    *to = from-32768;
+}
+void convertImageType(uint * to, ushort from) {
+    *to = from;
+}
+void convertImageType(int * to, ushort from) {
+    *to = from;
+}
+void convertImageType(float * to, ushort from) {
+    *to = (float)from/65535.0f;
+}
+void convertImageType(color_float * to, ushort from) {
+    to->red = (float)from/65535.0f;
+    to->blue = to->red;
+    to->green = to->red;
+}
+void convertImageType(color_uchar * to, ushort from) {
+    to->red = ((float)from/65535)*255;
+    to->blue = to->red;
+    to->green = to->red;
+}
+void convertImageType(float2 * to, ushort from) {
+    to->x = (float)from/65535.0f;
+    to->y = to->x;
+}
+void convertImageType(float3 * to, ushort from) {
+    to->x = (float)from/65535.0f;
+    to->y = to->x;
+    to->z = to->x;
+}
+
 
 // Conversion from short
 void convertImageType(float * to, short from) {
     *to = ((float)from/65535.0f)+0.5f;
 }
 
+// Conversion from color_uchar
+void convertImageType(bool * to, color_uchar from) {
+    *to = 0.33f*(from.red+from.blue+from.green) > 128 ;
+}
+void convertImageType(uchar * to, color_uchar from) {
+    *to = (0.33f*(from.red+from.blue+from.green));
+}
+void convertImageType(char * to, color_uchar from) {
+    *to = (0.33f*(from.red+from.blue+from.green)-128);
+}
+void convertImageType(ushort * to, color_uchar from) {
+    *to = (0.33f*(from.red+from.blue+from.green)/255.0f)*65535;
+}
+void convertImageType(short * to, color_uchar from) {
+    *to = (0.33f*(from.red+from.blue+from.green)/255.0f - 0.5f)*65535;
+}
+void convertImageType(uint * to, color_uchar from) {
+    *to = (0.33f*(from.red+from.blue+from.green)/255.0f)*4294967295;
+}
+void convertImageType(int * to, color_uchar from) {
+    *to = (0.33f*(from.red+from.blue+from.green)/255.0f-0.5f)*4294967295;
+}
+void convertImageType(float * to, color_uchar from) {
+    *to = 0.33f*(from.red+from.blue+from.green)/255.0f;
+}
+void convertImageType(color_float * to, color_uchar from) {
+    to->red = (float)from.red/255.0f;
+    to->blue = (float)from.blue/255.0f;
+    to->green =(float)from.green/255.0f;
+}
+void convertImageType(color_uchar * to, color_uchar from) {
+    *to = from;
+}
+void convertImageType(float2 * to, color_uchar from) {
+    to->x = (float)from.red/255.0f;
+    to->y = (float)from.green/255.0f;
+}
+void convertImageType(float3 * to, color_uchar from) {
+    to->x = (float)from.red/255.0f;
+    to->y = (float)from.green/255.0f;
+    to->z = (float)from.blue/255.0f;
+}
 // Conversion from color_float
 void convertImageType(bool * to, color_float from) {
     *to = 0.33f*(from.red+from.blue+from.green) > 0.5f;
@@ -417,6 +551,14 @@ void convertImageType(int * to, color_float from) {
 void convertImageType(float * to, color_float from) {
     *to = 0.33f*(from.red+from.blue+from.green);
 }
+void convertImageType(color_float * to, color_float from) {
+    *to = from;
+}
+void convertImageType(color_uchar * to, color_float from) {
+    to->red = (float)from.red*255.0f;
+    to->blue = (float)from.blue*255.0f;
+    to->green = (float)from.green*255.0f;
+}
 void convertImageType(float2 * to, color_float from) {
     to->x = from.red;
     to->y = from.green;
@@ -425,5 +567,50 @@ void convertImageType(float3 * to, color_float from) {
     to->x = from.red;
     to->y = from.green;
     to->z = from.blue;
+}
+
+// Conversion from float2
+void convertImageType(float * to, float2 from) {
+    *to = sqrt(from.x*from.x+from.y*from.y);
+}
+void convertImageType(color_float * to, float2 from) {
+    to->red = from.x;
+    to->blue = from.y;
+    to->green = 0;
+}
+void convertImageType(color_uchar * to, float2 from) {
+    to->red = (float)from.x*255.0f;
+    to->blue = (float)from.y*255.0f;
+    to->green = 0;
+}
+void convertImageType(float2 * to, float2 from) {
+    *to = from;
+}
+void convertImageType(float3 * to, float2 from) {
+    to->x = from.x;
+    to->y = from.y;
+    to->z = 0;
+}
+
+// Conversion from float3
+void convertImageType(float * to, float3 from) {
+    *to = sqrt(from.x*from.x+from.y*from.y+from.z*from.z);
+}
+void convertImageType(color_float * to, float3 from) {
+    to->red = from.x;
+    to->blue = from.y;
+    to->green = from.z;
+}
+void convertImageType(color_uchar * to, float3 from) {
+    to->red = (float)from.x*255.0f;
+    to->blue = (float)from.y*255.0f;
+    to->green = (float)from.z*255.0f;
+}
+void convertImageType(float2 * to, float3 from) {
+    to->x = from.x;
+    to->y = from.y;
+}
+void convertImageType(float3 * to, float3 from) {
+    *to = from;
 }
 } // End namespace
