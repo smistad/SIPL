@@ -56,6 +56,7 @@ class Image {
         T * getData();
         void setData(T *);
         void set(int x, int y, T pixel);
+        void set(int i, T pixel);
         int getWidth() const;
         int getHeight() const;
         int2 getSize() const;
@@ -85,6 +86,7 @@ class Volume {
         T get(int x, int y, int z) const;
         T get(int i) const;
         void set(int x, int y, int z, T value);
+        void set(int i, T pixel);
         T * getData();
         void setData(T *);
         int getWidth() const;
@@ -713,7 +715,7 @@ void Image<T>::save(const char * filepath, const char * imageType = "jpeg") {
 			8, width, height));
 	this->dataToPixbuf(image);
 	gdk_pixbuf_save(gtk_image_get_pixbuf((GtkImage *) image), filepath, imageType,
-			NULL, "quality", "100", NULL);
+			NULL, NULL);
 }
 
 template <class T>
@@ -733,6 +735,18 @@ template <class T>
 void Image<T>::set(int x, int y, T value) {
     this->data[x+y*this->width] = value;
 }
+
+template <class T>
+void Image<T>::set(int i, T value) {
+    this->data[i] = value;
+}
+
+template <class T>
+void Volume<T>::set(int i, T value) {
+    this->data[i] = value;
+}
+
+
 
 template <class T>
 T Image<T>::get(int x, int y) const {
