@@ -994,6 +994,8 @@ Window<T> Volume<T>::show(){
 			8, displayWidth, displayHeight));
     this->dataToPixbuf(image, slice, direction);
 	Window<T> * winObj = new Window<T>(NULL,image,this);
+    winObj->currentSlice = slice;
+    winObj->currentDirection = direction;
 	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Volume<T>::setupGUI, winObj, NULL);
     return *winObj;
 }
