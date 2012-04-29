@@ -782,11 +782,19 @@ Window<T>::Window(GtkWidget * gtkWindow, GtkWidget * gtkImage, Volume<T> * volum
 template <class T>
 void Window<T>::update() {
     if(this->isVolume) {
-        // TODO: Update volume
+        if(this->level == -1.0f) {
+            volume->dataToPixbuf(this->gtkImage, this->currentSlice, this->currentDirection);
+        } else {
+            volume->dataToPixbuf(this->gtkImage,  this->currentSlice, this->currentDirection, this->level, this->window);
+        }
     } else {
-        image->dataToPixbuf(this->gtkImage);
-        gtk_widget_queue_draw(this->gtkImage);
+        if(this->level == -1.0f) {
+            image->dataToPixbuf(this->gtkImage);
+        } else {
+            image->dataToPixbuf(this->gtkImage, this->level, this->window);
+        }
     }
+    gtk_widget_queue_draw(this->gtkImage);
 }
 
 template <class T>
@@ -1138,6 +1146,7 @@ template <class T>
 T * Volume<T>::getData() {
     return this->data;
 }
+
 
 } // End SIPL namespace
 #endif /* SIPL_H_ */
