@@ -7,26 +7,32 @@
 
 namespace SIPL {
 bool init = false;
-pthread_t gtkThread;
+GThread * gtkThread;
+int windowCount;
 void * initGTK(void * t) {
-	gdk_threads_init ();
-	gdk_threads_enter ();
+	gdk_threads_init ();	
 	gtk_init(0, (char ***) "");
 	init = true;
+	gdk_threads_enter ();
 	gtk_main();
     gdk_threads_leave();
     return 0;
 }
 bool endNotCalled = true;
+bool endReached = false;
 void End() {
     endNotCalled = false;
-	pthread_join(gtkThread, NULL);
+	endReached = true;
+	
+	if(windowCount == 0)
+		gtk_main_quit();
+	g_thread_join(gtkThread);
 }
 
 void Quit() {
     gtk_main_quit();
     endNotCalled = false;
-	pthread_join(gtkThread, NULL);
+	g_thread_join(gtkThread);
     exit(0);
 }
 
@@ -57,17 +63,12 @@ void quit(void) {
         std::cout << "You forgot to call SIPL::End() in your program!" << std::endl;
 }
 
-int windowCount;
+
 void Init() {
     windowCount = 0;
 	if (!init) {
-
-		int rc = pthread_create(&gtkThread, NULL, initGTK, NULL);
-
-	    if (rc){
-	       printf("ERROR; return code from pthread_create() is %d\n", rc);
-           exit(-1);
-	    }
+		g_thread_init(NULL);
+		gtkThread = g_thread_create(initGTK, NULL, true, NULL);
 	}
 	while(!init); // wait for the thread to be created
     atexit(quit);
@@ -79,18 +80,22 @@ int increaseWindowCount() {
 void destroyWindow(GtkWidget * widget, gpointer window) {
 	windowCount--;
 	if (windowCount == 0) {
-        Quit();
+		gtk_main_quit();
+		endNotCalled = false;
+		exit(0);
 	}
 }
 
 void quitProgram(GtkWidget * widget, gpointer window) {
-    Quit();
+    gtk_main_quit();
+    endNotCalled = false;
+    exit(0);
 }
 
 void signalDestroyWindow(GtkWidget * widget, gpointer window) {
 	windowCount--;
-	if (windowCount == 0) {
-        Quit();
+	if (windowCount == 0 && endReached) {
+        gtk_main_quit();
 	} else {
         gtk_widget_hide(GTK_WIDGET(window));
     }

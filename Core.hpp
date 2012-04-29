@@ -7,7 +7,7 @@
 #ifndef SIPL_H_
 #define SIPL_H_
 
-#include <cmath>
+#include <math.h>
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gdk/gdkkeysyms.h>
@@ -16,7 +16,6 @@
 #include <sstream>
 #include <string>
 #include <stdlib.h>
-#include <pthread.h>
 
 namespace SIPL {
 typedef unsigned char uchar;
@@ -68,10 +67,10 @@ class Image {
         void pixbufToData(GtkImage * image);
         template <class U>
         Image<T> & operator=(const Image<U> &otherImage);
+		static gboolean setupGUI(gpointer data);
     private:
         T * data;
         int width, height;
-        Window<T> setupGUI(GtkWidget * image);
 };
 
 template <class T>
@@ -100,12 +99,12 @@ class Volume {
         void saveSlice(int slice, slice_plane direction, const char * filepath, const char * imageType);
         void dataToPixbuf(GtkWidget * image, int slice, slice_plane direction);
         void dataToPixbuf(GtkWidget * image, int slice, slice_plane direction, float level, float window);
+		static gboolean setupGUI(gpointer data);
         template <class U>
         Volume<T> & operator=(const Volume<U> &otherVolume);
     private:
         T * data;
         int width, height, depth;
-        Window<T> setupGUI(GtkWidget * image, int slice, slice_plane direction);
 };
 
 template <class T>
@@ -123,11 +122,13 @@ class Window {
         float level, window;
         ~Window();
     private:
-        GtkWidget * gtkWindow;
-        GtkWidget * gtkImage;
-        Image<T> * image;
+		GtkWidget * gtkWindow;
+		GtkWidget * gtkImage;
+		Image<T> * image;
         Volume<T> * volume;
         bool isVolume;
+        friend class Image<T>;
+        friend class Volume<T>;
 };
 
 template <class T>
@@ -299,7 +300,9 @@ void toGuchar(float value, guchar * pixel, float level, float window) ;
 void toGuchar(color_float value, guchar * pixel, float level, float window) ;
 void toGuchar(float2 value, guchar * pixel, float level, float window) ;
 void toGuchar(float3 value, guchar * pixel, float level, float window) ;
-
+inline double round( double d ) {
+    return floor( d + 0.5 );
+}
 template <class T>
 uchar levelWindow(T value, float level, float window) {
     float result;
@@ -706,7 +709,9 @@ static std::string intToString(int inInt) {
 
 template <class T>
 void Image<T>::save(const char * filepath, const char * imageType = "jpeg") {
-    GtkImage * image = this->dataToPixbuf();
+    GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
+			8, width, height));
+	this->dataToPixbuf(image);
 	gdk_pixbuf_save(gtk_image_get_pixbuf((GtkImage *) image), filepath, imageType,
 			NULL, "quality", "100", NULL);
 }
@@ -795,16 +800,14 @@ struct _saveData {
 };
 
 template <class T>
-Window<T> Image<T>::setupGUI(GtkWidget * image) {
-
+gboolean Image<T>::setupGUI(gpointer data) {
+	int windowCount = increaseWindowCount();
 	gdk_threads_enter();
-    int windowCount = increaseWindowCount();
 	GtkWidget * window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	Window<T> winObj = Window<T>(window,image,this);
-	gtk_window_set_title(GTK_WINDOW(window),
+		gtk_window_set_title(GTK_WINDOW(window),
 			("Image #" + intToString(windowCount)).c_str()
 	);
-
+	Window<T> * win = (Window<T> *)data;
 	GtkWidget * toolbar = gtk_toolbar_new();
 	gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar), GTK_ORIENTATION_HORIZONTAL);
 	gtk_toolbar_append_item (
@@ -814,7 +817,7 @@ Window<T> Image<T>::setupGUI(GtkWidget * image) {
              NULL,             /* tooltip private info */
              NULL,                 /* icon widget */
              GTK_SIGNAL_FUNC(saveDialog), /* a signal */
-             image);
+             win->gtkImage);
 	gtk_toolbar_append_item (
 			 GTK_TOOLBAR (toolbar), /* our toolbar */
              "Close",               /* button label */
@@ -832,30 +835,35 @@ Window<T> Image<T>::setupGUI(GtkWidget * image) {
              GTK_SIGNAL_FUNC (quitProgram), /* a signal */
              NULL);
 
-
+	
 	gtk_window_set_default_size(
 			GTK_WINDOW(window),
-			width,
-			height + 35
+			win->image->getWidth(),
+			win->image->getHeight() + 35
 	);
 	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
 	g_signal_connect_swapped(
 			G_OBJECT(window),
 			"destroy",
 			G_CALLBACK(destroyWindow),
-			&winObj
+			NULL
 	);
+
+	
 
 	GtkWidget * fixed = gtk_fixed_new ();
 	gtk_container_add (GTK_CONTAINER (window), fixed);
 	gtk_fixed_put(GTK_FIXED(fixed), toolbar, 0,0);
-	gtk_fixed_put(GTK_FIXED(fixed), image, 0, 35);
+	gtk_fixed_put(GTK_FIXED(fixed), win->gtkImage, 0, 35);
 	gtk_widget_show_all(window);
 
-	gdk_threads_leave();
-    return winObj;
+	
+	win->gtkWindow = window;
 
+	gdk_threads_leave();
+	return false;
 }
+
 
 
 template <class T>
@@ -885,15 +893,13 @@ void Window<T>::key_pressed(GtkWidget * widget, GdkEventKey * event, gpointer us
 
 
 template <class T>
-Window<T> Volume<T>::setupGUI(GtkWidget * image, int slice, slice_plane direction) {
+gboolean Volume<T>::setupGUI(gpointer data) {
 
+    Window<T> * winObj = (Window<T> *)data;
 	gdk_threads_enter();
     int windowCount = increaseWindowCount();
 	GtkWidget * window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	//Window<T> winObj = Window<T>(window,image,this);
-    Window<T> winObj = Window<T>(window,image,this);
-    winObj.currentSlice = slice;
-    winObj.currentDirection = direction;
+    winObj->gtkWindow = window;
 	gtk_window_set_title(GTK_WINDOW(window),
 			("Volume #" + intToString(windowCount)).c_str()
 	);
@@ -907,7 +913,7 @@ Window<T> Volume<T>::setupGUI(GtkWidget * image, int slice, slice_plane directio
              NULL,             /* tooltip private info */
              NULL,                 /* icon widget */
              GTK_SIGNAL_FUNC(saveDialog), /* a signal */
-             image);
+             winObj->gtkImage);
 	gtk_toolbar_append_item (
 			 GTK_TOOLBAR (toolbar), /* our toolbar */
              "Close",               /* button label */
@@ -928,8 +934,8 @@ Window<T> Volume<T>::setupGUI(GtkWidget * image, int slice, slice_plane directio
 
 	gtk_window_set_default_size(
 			GTK_WINDOW(window),
-			width,
-			height + 35
+			winObj->volume->getWidth(),
+			winObj->volume->getHeight() + 35
 	);
 	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
 	g_signal_connect_swapped(
@@ -943,17 +949,17 @@ Window<T> Volume<T>::setupGUI(GtkWidget * image, int slice, slice_plane directio
             G_OBJECT(window),
             "key_press_event",
             G_CALLBACK(Window<T>::wrapper_key_pressed),
-            &winObj
+            winObj
     );
 
 	GtkWidget * fixed = gtk_fixed_new ();
 	gtk_container_add (GTK_CONTAINER (window), fixed);
 	gtk_fixed_put(GTK_FIXED(fixed), toolbar, 0,0);
-	gtk_fixed_put(GTK_FIXED(fixed), image, 0, 35);
+	gtk_fixed_put(GTK_FIXED(fixed), winObj->gtkImage, 0, 35);
 	gtk_widget_show_all(window);
 
 	gdk_threads_leave();
-    return winObj;
+    return false;
 
 }
 
@@ -963,7 +969,9 @@ Window<T> Image<T>::show() {
     GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, width, height));
     this->dataToPixbuf(image);
-	return setupGUI(image);
+	Window<T> * winObj = new Window<T>(NULL,image,this);
+	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Image<T>::setupGUI, winObj, NULL);
+    return *winObj;
 }
 
 template <class T>
@@ -971,7 +979,9 @@ Window<T> Image<T>::show(float level, float window) {
     GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, width, height));
     this->dataToPixbuf(image, level, window);
-	return setupGUI(image);
+	Window<T> * winObj = new Window<T>(NULL,image,this);
+	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Image<T>::setupGUI, winObj, NULL);
+    return *winObj;
 }
 
 template <class T>
@@ -983,7 +993,9 @@ Window<T> Volume<T>::show(){
     GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, displayWidth, displayHeight));
     this->dataToPixbuf(image, slice, direction);
-    return setupGUI(image,slice,direction);
+	Window<T> * winObj = new Window<T>(NULL,image,this);
+	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Volume<T>::setupGUI, winObj, NULL);
+    return *winObj;
 }
 
 template <class T>
@@ -995,10 +1007,13 @@ Window<T> Volume<T>::show(float level, float window){
     GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, displayWidth, displayHeight));
     this->dataToPixbuf(image, slice, direction,level,window);
-    Window<T> w = setupGUI(image,slice,direction);
-    w.level = level;
-    w.window = window;
-    return w;
+	Window<T> * winObj = new Window<T>(NULL,image,this);
+    winObj->currentSlice = slice;
+    winObj->currentDirection = direction;
+    winObj->level = level;
+    winObj->window = window;
+	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Volume<T>::setupGUI, winObj, NULL);
+    return *winObj;
 }
 
 
@@ -1023,8 +1038,11 @@ Window<T> Volume<T>::show(int slice, slice_plane direction) {
     GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, displayWidth, displayHeight));
     this->dataToPixbuf(image, slice, direction);
-    Window<T> w = setupGUI(image,slice,direction);
-    return w;
+	Window<T> * winObj = new Window<T>(NULL,image,this);
+    winObj->currentSlice = slice;
+    winObj->currentDirection = direction;
+	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Volume<T>::setupGUI, winObj, NULL);
+    return *winObj;
 }
 
 template <class T>
@@ -1048,10 +1066,13 @@ Window<T> Volume<T>::show(int slice, slice_plane direction,float level, float wi
     GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, displayWidth, displayHeight));
     this->dataToPixbuf(image, slice, direction,level,window);
-    Window<T> w = setupGUI(image,slice,direction);
-    w.level = level;
-    w.window = window;
-    return w;
+	Window<T> * winObj = new Window<T>(NULL,image,this);
+    winObj->currentSlice = slice;
+    winObj->currentDirection = direction;
+    winObj->level = level;
+    winObj->window = window;
+	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Volume<T>::setupGUI, winObj, NULL);
+    return *winObj;
 }
 
 
