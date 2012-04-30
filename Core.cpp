@@ -18,20 +18,9 @@ void * initGTK(void * t) {
     gdk_threads_leave();
     return 0;
 }
-bool endNotCalled = true;
-bool endReached = false;
-void End() {
-    endNotCalled = false;
-	endReached = true;
-	
-	if(windowCount == 0)
-		gtk_main_quit();
-	g_thread_join(gtkThread);
-}
 
 void Quit() {
     gtk_main_quit();
-    endNotCalled = false;
 	g_thread_join(gtkThread);
     exit(0);
 }
@@ -57,14 +46,11 @@ int validateSlice(int slice, slice_plane direction, int3 size) {
     return slice;
 }
 
-
+bool endReached = false;
 void quit(void) {
+    endReached = true;
 	g_thread_join(gtkThread);
-    exit(0);
-    if(endNotCalled)
-        std::cout << "You forgot to call SIPL::End() in your program!" << std::endl;
 }
-
 
 void Init() {
     windowCount = 0;
@@ -81,16 +67,13 @@ int increaseWindowCount() {
 }
 void destroyWindow(GtkWidget * widget, gpointer window) {
 	windowCount--;
-	if (windowCount == 0) {
+	if (windowCount == 0 && endReached) {
 		gtk_main_quit();
-		endNotCalled = false;
-		exit(0);
 	}
 }
 
 void quitProgram(GtkWidget * widget, gpointer window) {
     gtk_main_quit();
-    endNotCalled = false;
     exit(0);
 }
 

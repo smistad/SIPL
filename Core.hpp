@@ -60,8 +60,8 @@ class Image {
         int getWidth() const;
         int getHeight() const;
         int2 getSize() const;
-        Window<T> show();
-        Window<T> show(float level, float window);
+        Window<T> * show();
+        Window<T> * show(float level, float window);
         void save(const char * filepath, const char * imageType);
         void dataToPixbuf(GtkWidget * image);
         void dataToPixbuf(GtkWidget * image, float level, float wdinow);
@@ -93,10 +93,10 @@ class Volume {
         int getHeight() const;
         int getDepth() const;
         int3 getSize() const;
-        Window<T> show();
-        Window<T> show(int slice, slice_plane direction);
-        Window<T> show(int slice, slice_plane direction, float level, float window);
-        Window<T> show(float level, float window);
+        Window<T> * show();
+        Window<T> * show(int slice, slice_plane direction);
+        Window<T> * show(int slice, slice_plane direction, float level, float window);
+        Window<T> * show(float level, float window);
         void save(const char * filepath);
         void saveSlice(int slice, slice_plane direction, const char * filepath, const char * imageType);
         void dataToPixbuf(GtkWidget * image, int slice, slice_plane direction);
@@ -987,27 +987,27 @@ gboolean Volume<T>::setupGUI(gpointer data) {
 
 
 template <class T>
-Window<T> Image<T>::show() {
+Window<T> * Image<T>::show() {
     GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, width, height));
     this->dataToPixbuf(image);
 	Window<T> * winObj = new Window<T>(NULL,image,this);
 	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Image<T>::setupGUI, winObj, NULL);
-    return *winObj;
+    return winObj;
 }
 
 template <class T>
-Window<T> Image<T>::show(float level, float window) {
+Window<T> * Image<T>::show(float level, float window) {
     GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, width, height));
     this->dataToPixbuf(image, level, window);
 	Window<T> * winObj = new Window<T>(NULL,image,this);
 	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Image<T>::setupGUI, winObj, NULL);
-    return *winObj;
+    return winObj;
 }
 
 template <class T>
-Window<T> Volume<T>::show(){
+Window<T> * Volume<T>::show(){
     int slice = this->depth/2;
     slice_plane direction = Z;
     int displayWidth = this->width;
@@ -1019,11 +1019,11 @@ Window<T> Volume<T>::show(){
     winObj->currentSlice = slice;
     winObj->currentDirection = direction;
 	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Volume<T>::setupGUI, winObj, NULL);
-    return *winObj;
+    return winObj;
 }
 
 template <class T>
-Window<T> Volume<T>::show(float level, float window){
+Window<T> * Volume<T>::show(float level, float window){
     int slice = this->depth/2;
     slice_plane direction = Z;
     int displayWidth = this->width;
@@ -1037,12 +1037,12 @@ Window<T> Volume<T>::show(float level, float window){
     winObj->level = level;
     winObj->window = window;
 	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Volume<T>::setupGUI, winObj, NULL);
-    return *winObj;
+    return winObj;
 }
 
 
 template <class T>
-Window<T> Volume<T>::show(int slice, slice_plane direction) {
+Window<T> * Volume<T>::show(int slice, slice_plane direction) {
     int displayWidth;
     int displayHeight;
     switch(direction) {
@@ -1066,11 +1066,11 @@ Window<T> Volume<T>::show(int slice, slice_plane direction) {
     winObj->currentSlice = slice;
     winObj->currentDirection = direction;
 	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Volume<T>::setupGUI, winObj, NULL);
-    return *winObj;
+    return winObj;
 }
 
 template <class T>
-Window<T> Volume<T>::show(int slice, slice_plane direction,float level, float window) {
+Window<T> * Volume<T>::show(int slice, slice_plane direction,float level, float window) {
     int displayWidth;
     int displayHeight;
     switch(direction) {
@@ -1096,7 +1096,7 @@ Window<T> Volume<T>::show(int slice, slice_plane direction,float level, float wi
     winObj->level = level;
     winObj->window = window;
 	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Volume<T>::setupGUI, winObj, NULL);
-    return *winObj;
+    return winObj;
 }
 
 
