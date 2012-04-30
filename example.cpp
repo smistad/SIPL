@@ -17,10 +17,10 @@ int main(int argc, char ** argv) {
     }
 
     // Save it
-    im->save("test->png", "png");
+    im->save("test.png", "png");
 
     // Convert image to grayscale and display it
-    Image<float> * im2 = new Image<float>(*im);
+    Image<float> * im2 = new Image<float>(im);
     im2->show();
 
     // View the image using a custom level(0->5) and window(0->25)
