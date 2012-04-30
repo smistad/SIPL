@@ -66,9 +66,11 @@ class Image {
         void dataToPixbuf(GtkWidget * image);
         void dataToPixbuf(GtkWidget * image, float level, float wdinow);
         void pixbufToData(GtkImage * image);
+		static gboolean setupGUI(gpointer data);
         template <class U>
         Image<T> & operator=(const Image<U> &otherImage);
-		static gboolean setupGUI(gpointer data);
+        bool inBounds(int i) const;
+        bool inBounds(int x, int y) const;
     private:
         T * data;
         int width, height;
@@ -104,6 +106,8 @@ class Volume {
 		static gboolean setupGUI(gpointer data);
         template <class U>
         Volume<T> & operator=(const Volume<U> &otherVolume);
+        bool inBounds(int i) const;
+        bool inBounds(int x, int y, int z) const;
     private:
         T * data;
         int width, height, depth;
@@ -733,16 +737,28 @@ void Volume<T>::save(const char * filepath) {
 
 template <class T>
 void Image<T>::set(int x, int y, T value) {
+    if(!this->inBounds(x,y)) {
+        std::cout << "Error: out of bounds at line " << __LINE__ << " in file " << __FILE__ << std::endl;
+        Quit();
+    }
     this->data[x+y*this->width] = value;
 }
 
 template <class T>
 void Image<T>::set(int i, T value) {
+    if(!this->inBounds(i)) {
+        std::cout << "Error: out of bounds at line " << __LINE__ << " in file " << __FILE__ << std::endl;
+        Quit();
+    }
     this->data[i] = value;
 }
 
 template <class T>
 void Volume<T>::set(int i, T value) {
+    if(!this->inBounds(i)) {
+        std::cout << "Error: out of bounds at line " << __LINE__ << " in file " << __FILE__ << std::endl;
+        Quit();
+    }
     this->data[i] = value;
 }
 
@@ -750,26 +766,46 @@ void Volume<T>::set(int i, T value) {
 
 template <class T>
 T Image<T>::get(int x, int y) const {
+    if(!this->inBounds(x,y)) {
+        std::cout << "Error: out of bounds at line " << __LINE__ << " in file " << __FILE__ << std::endl;
+        Quit();
+    }
     return this->data[x+y*this->width];
 }
 
 template <class T>
 T Image<T>::get(int i) const {
+    if(!this->inBounds(i)) {
+        std::cout << "Error: out of bounds at line " << __LINE__ << " in file " << __FILE__ << std::endl;
+        Quit();
+    }
     return this->data[i];
 }
 
 template <class T>
 void Volume<T>::set(int x, int y, int z, T value) {
+    if(!this->inBounds(x,y,z)) {
+        std::cout << "Error: out of bounds at line " << __LINE__ << " in file " << __FILE__ << std::endl;
+        Quit();
+    }
     this->data[x+y*this->width+z*this->width*this->height] = value;
 }
 
 template <class T>
 T Volume<T>::get(int x, int y, int z) const {
+    if(!this->inBounds(x,y,z)) {
+        std::cout << "Error: out of bounds at line " << __LINE__ << " in file " << __FILE__ << std::endl;
+        Quit();
+    }
     return this->data[x+y*this->width+z*this->width*this->height];
 }
 
 template <class T>
 T Volume<T>::get(int i) const {
+    if(!this->inBounds(i)) {
+        std::cout << "Error: out of bounds at line " << __LINE__ << " in file " << __FILE__ << std::endl;
+        Quit();
+    }
     return this->data[i];
 }
 
@@ -1159,6 +1195,28 @@ void Volume<T>::setData(T * data) {
 template <class T>
 T * Volume<T>::getData() {
     return this->data;
+}
+
+template <class T>
+bool Image<T>::inBounds(int i) const {
+    return i >= 0 && i < width*height;
+}
+
+template <class T>
+bool Image<T>::inBounds(int x, int y) const {
+    return x >= 0 && x < width && y >= 0 && y < height;
+}
+
+template <class T>
+bool Volume<T>::inBounds(int i) const {
+    return i >= 0 && i < width*height*depth;
+}
+
+template <class T>
+bool Volume<T>::inBounds(int x, int y, int z) const {
+    return x >= 0 && x < width 
+        && y >= 0 && y < height 
+        && z >= 0 && z < depth;
 }
 
 
