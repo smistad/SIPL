@@ -59,6 +59,8 @@ int validateSlice(int slice, slice_plane direction, int3 size) {
 
 
 void quit(void) {
+	g_thread_join(gtkThread);
+    exit(0);
     if(endNotCalled)
         std::cout << "You forgot to call SIPL::End() in your program!" << std::endl;
 }
