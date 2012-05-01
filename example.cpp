@@ -47,6 +47,10 @@ int main(int argc, char ** argv) {
     v->show(100, X, 60, 100);
     v->show(60, 100);
 
+    // Create and show maximum intensity projection (MIP) of the volume
+    v->showMIP();
+    v->showMIP(Y, 60, 100);
+
     // Convert volume to another data type
     Volume<float> * v2 = new Volume<float>(v);
 

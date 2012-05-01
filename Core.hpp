@@ -98,6 +98,9 @@ class Volume {
         Window<T> * show(int slice, slice_plane direction);
         Window<T> * show(int slice, slice_plane direction, float level, float window);
         Window<T> * show(float level, float window);
+        Window<T> * showMIP();
+        Window<T> * showMIP(slice_plane direction);
+        Window<T> * showMIP(slice_plane direction, float level, float window);
         void save(const char * filepath);
         void saveSlice(int slice, slice_plane direction, const char * filepath, const char * imageType);
         void dataToPixbuf(GtkWidget * image, int slice, slice_plane direction);
@@ -1050,6 +1053,156 @@ Window<T> * Volume<T>::show(){
     GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, displayWidth, displayHeight));
     this->dataToPixbuf(image, slice, direction);
+	Window<T> * winObj = new Window<T>(NULL,image,this);
+    winObj->currentSlice = slice;
+    winObj->currentDirection = direction;
+	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Volume<T>::setupGUI, winObj, NULL);
+    return winObj;
+}
+
+template <class T>
+Window<T> * Volume<T>::showMIP() {
+    return this->showMIP(X);
+}
+
+
+template <class T>
+Window<T> * Volume<T>::showMIP(slice_plane direction, float level, float window){
+    int slice = this->width/2;
+    int xSize;
+    int ySize;
+    int zSize;
+    switch(direction) {
+        case X:
+            // x direction
+            xSize = this->height;
+            ySize = this->depth;
+            zSize = this->width;
+            break;
+        case Y:
+            // y direction
+            xSize = this->width;
+            ySize = this->depth;
+            zSize = this->height;
+            break;
+        case Z:
+            // z direction
+            xSize = this->width;
+            ySize = this->height;
+            zSize = this->depth;
+            break;
+    }
+            
+    GtkWidget * image = gtk_image_new_from_pixbuf(
+            gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
+			8, xSize, ySize));
+            
+    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
+    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
+    int i = 0;
+    for(int y = ySize-1; y >= 0; y--) {
+        for(int x = 0; x < xSize; x++) {
+            T max;
+        switch(direction) {
+            case X:
+                max = this->data[x*this->width + y*this->width*this->height];
+                for(int z = 1; z < zSize; z++) {
+                    if(this->data[z + x*this->width + y*this->width*this->height] > max)
+                        max = this->data[z + x*this->width + y*this->width*this->height];
+                }
+                break;
+            case Y:
+                max = this->data[x + y*this->width*this->height];
+                for(int z = 1; z < zSize; z++) {
+                    if(this->data[x + z*this->width + y*this->width*this->height] > max)
+                        max = this->data[x + z*this->width + y*this->width*this->height];
+                }
+                break;
+            case Z:
+                max = this->data[x + y*this->width];
+                for(int z = 1; z < zSize; z++) {
+                    if(this->data[x + y*this->width + z*this->width*this->height] > max)
+                        max = this->data[x + y*this->width + z*this->width*this->height];
+                }
+                break;
+        }
+        guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
+        toGuchar(max, p, level, window);
+        i++;
+   }}
+
+	Window<T> * winObj = new Window<T>(NULL,image,this);
+    winObj->currentSlice = slice;
+    winObj->currentDirection = direction;
+	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Volume<T>::setupGUI, winObj, NULL);
+    return winObj;
+}
+
+template <class T>
+Window<T> * Volume<T>::showMIP(slice_plane direction){
+    int slice = this->width/2;
+    int xSize;
+    int ySize;
+    int zSize;
+    switch(direction) {
+        case X:
+            // x direction
+            xSize = this->height;
+            ySize = this->depth;
+            zSize = this->width;
+            break;
+        case Y:
+            // y direction
+            xSize = this->width;
+            ySize = this->depth;
+            zSize = this->height;
+            break;
+        case Z:
+            // z direction
+            xSize = this->width;
+            ySize = this->height;
+            zSize = this->depth;
+            break;
+    }
+            
+    GtkWidget * image = gtk_image_new_from_pixbuf(
+            gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
+			8, xSize, ySize));
+            
+    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
+    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
+    int i = 0;
+    for(int y = ySize-1; y >= 0; y--) {
+        for(int x = 0; x < xSize; x++) {
+            T max;
+        switch(direction) {
+            case X:
+                max = this->data[x*this->width + y*this->width*this->height];
+                for(int z = 1; z < zSize; z++) {
+                    if(this->data[z + x*this->width + y*this->width*this->height] > max)
+                        max = this->data[z + x*this->width + y*this->width*this->height];
+                }
+                break;
+            case Y:
+                max = this->data[x + y*this->width*this->height];
+                for(int z = 1; z < zSize; z++) {
+                    if(this->data[x + z*this->width + y*this->width*this->height] > max)
+                        max = this->data[x + z*this->width + y*this->width*this->height];
+                }
+                break;
+            case Z:
+                max = this->data[x + y*this->width];
+                for(int z = 1; z < zSize; z++) {
+                    if(this->data[x + y*this->width + z*this->width*this->height] > max)
+                        max = this->data[x + y*this->width + z*this->width*this->height];
+                }
+                break;
+        }
+        guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
+        toGuchar(max, p);
+        i++;
+   }}
+
 	Window<T> * winObj = new Window<T>(NULL,image,this);
     winObj->currentSlice = slice;
     winObj->currentDirection = direction;
