@@ -1060,11 +1060,33 @@ Window<T> * Volume<T>::show(){
     return winObj;
 }
 
+
+template <class T>
+T maximum(T a, T b) {
+    return a > b ? a : b;
+}
+
+template <>
+inline float2 maximum<float2>(float2 a, float2 b) {
+    float2 c;
+    c.x = a.x > b.x ? a.x : b.x;
+    c.y = a.y > b.y ? a.y : b.y;
+    return c;
+}
+
+template <>
+inline float3 maximum<float3>(float3 a, float3 b) {
+    float3 c;
+    c.x = a.x > b.x ? a.x : b.x;
+    c.y = a.y > b.y ? a.y : b.y;
+    c.z = a.z > b.z ? a.z : b.z;
+    return c;
+}
+
 template <class T>
 Window<T> * Volume<T>::showMIP() {
     return this->showMIP(X);
 }
-
 
 template <class T>
 Window<T> * Volume<T>::showMIP(slice_plane direction, float level, float window){
@@ -1107,22 +1129,19 @@ Window<T> * Volume<T>::showMIP(slice_plane direction, float level, float window)
             case X:
                 max = this->data[x*this->width + y*this->width*this->height];
                 for(int z = 1; z < zSize; z++) {
-                    if(this->data[z + x*this->width + y*this->width*this->height] > max)
-                        max = this->data[z + x*this->width + y*this->width*this->height];
+                    max = maximum<T>(max, this->data[z + x*this->width + y*this->width*this->height]);
                 }
                 break;
             case Y:
                 max = this->data[x + y*this->width*this->height];
                 for(int z = 1; z < zSize; z++) {
-                    if(this->data[x + z*this->width + y*this->width*this->height] > max)
-                        max = this->data[x + z*this->width + y*this->width*this->height];
+                    max = maximum<T>(max, this->data[x + z*this->width + y*this->width*this->height]);
                 }
                 break;
             case Z:
                 max = this->data[x + y*this->width];
                 for(int z = 1; z < zSize; z++) {
-                    if(this->data[x + y*this->width + z*this->width*this->height] > max)
-                        max = this->data[x + y*this->width + z*this->width*this->height];
+                    max = maximum<T>(max, this->data[x + y*this->width + z*this->width*this->height]);
                 }
                 break;
         }
@@ -1179,22 +1198,19 @@ Window<T> * Volume<T>::showMIP(slice_plane direction){
             case X:
                 max = this->data[x*this->width + y*this->width*this->height];
                 for(int z = 1; z < zSize; z++) {
-                    if(this->data[z + x*this->width + y*this->width*this->height] > max)
-                        max = this->data[z + x*this->width + y*this->width*this->height];
+                    max = maximum<T>(max, this->data[z + x*this->width + y*this->width*this->height]);
                 }
                 break;
             case Y:
                 max = this->data[x + y*this->width*this->height];
                 for(int z = 1; z < zSize; z++) {
-                    if(this->data[x + z*this->width + y*this->width*this->height] > max)
-                        max = this->data[x + z*this->width + y*this->width*this->height];
+                    max = maximum<T>(max, this->data[x + z*this->width + y*this->width*this->height]);
                 }
                 break;
             case Z:
                 max = this->data[x + y*this->width];
                 for(int z = 1; z < zSize; z++) {
-                    if(this->data[x + y*this->width + z*this->width*this->height] > max)
-                        max = this->data[x + y*this->width + z*this->width*this->height];
+                    max = maximum<T>(max, this->data[x + y*this->width + z*this->width*this->height]);
                 }
                 break;
         }
