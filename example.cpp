@@ -68,4 +68,5 @@ int main(int argc, char ** argv) {
         }
     }
     vGradient->show();
+    vGradient->save("test.raw");
 }
