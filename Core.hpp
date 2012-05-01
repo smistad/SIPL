@@ -30,7 +30,6 @@ typedef struct int3 { int x,y,z; } int3; // not for images/volumes
 enum slice_plane {X,Y,Z};
 
 void Init();
-void End();
 void Quit();
 
 void destroyWindow(GtkWidget * widget, gpointer window) ;
