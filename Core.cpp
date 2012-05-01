@@ -175,9 +175,9 @@ void toGuchar(float2 value, guchar * pixel) {
     pixel[2] = 0;
 }
 void toGuchar(float3 value, guchar * pixel) {
-    pixel[0] = value.x*255;
-    pixel[1] = value.y*255;
-    pixel[2] = value.z*255;
+    pixel[0] = fabs(value.x)*255;
+    pixel[1] = fabs(value.y)*255;
+    pixel[2] = fabs(value.z)*255;
 }
 
 
