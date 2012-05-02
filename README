@@ -1,6 +1,0 @@
-SIPL - Simple Image Processing Library
------------------------------------------
-How to run:
-Install package libgtk2.0-dev
-Compile and link with: g++ `pkg-config --libs --cflags gtk+-2.0  --libs gthread-2.0`
-
