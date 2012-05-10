@@ -49,6 +49,8 @@ int validateSlice(int slice, slice_plane direction, int3 size) {
 bool endReached = false;
 void quit(void) {
     endReached = true;
+    if(windowCount == 0)
+        gtk_main_quit();
 	g_thread_join(gtkThread);
 }
 
