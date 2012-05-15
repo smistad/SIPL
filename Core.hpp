@@ -136,6 +136,7 @@ class Window {
     private:
 		GtkWidget * gtkWindow;
 		GtkWidget * gtkImage;
+        GtkWidget * scrolledWindow;
 		Image<T> * image;
         Volume<T> * volume;
         bool isVolume;
@@ -1096,14 +1097,24 @@ gboolean Image<T>::setupGUI(gpointer data) {
             win
     );
 
-	GtkWidget * fixed = gtk_fixed_new ();
-	gtk_container_add (GTK_CONTAINER (window), fixed);
-	gtk_fixed_put(GTK_FIXED(fixed), toolbar, 0,0);
-	gtk_fixed_put(GTK_FIXED(fixed), win->gtkImage, 0, 35);
+    GtkWidget * vbox = gtk_vbox_new(FALSE, 1);
+
+	gtk_container_add (GTK_CONTAINER (window), vbox);
+    gtk_box_pack_start(GTK_BOX(vbox), toolbar,FALSE,FALSE,0);
+    GtkWidget * scrolledWindow = gtk_scrolled_window_new(NULL, NULL);
+    //gtk_widget_set_size_request(scrolledWindow, win->image->getWidth(), win->image->getHeight());
+        gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledWindow),
+                                                    GTK_POLICY_AUTOMATIC, 
+                                                                                        GTK_POLICY_AUTOMATIC);
+    gtk_scrolled_window_add_with_viewport((GtkScrolledWindow *)scrolledWindow, win->gtkImage);
+    gtk_box_pack_start(GTK_BOX(vbox), scrolledWindow,TRUE,TRUE,0);
+    gtk_widget_show(win->gtkImage);
+    gtk_widget_show(scrolledWindow);
 	gtk_widget_show_all(window);
 
 	
 	win->gtkWindow = window;
+    win->scrolledWindow = scrolledWindow;
 
 	gdk_threads_leave();
 	return false;
@@ -1117,15 +1128,42 @@ void Window<T>::wrapper_resize(GtkWidget * widget, GdkEvent * event, gpointer us
 
 template <class T>
 void Window<T>::resizeImage(GtkWidget * widget, GdkEvent * event) {
+    static int c = 0;
     std::cout << event->configure.width << ", " << event->configure.height-35 << std::endl;
-    // scale the gtkImage
+
+    // Try to zoom
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf(GTK_IMAGE(gtkImage));
 	int height = gdk_pixbuf_get_height(pixBuf);
 	int width = gdk_pixbuf_get_width(pixBuf);
     
-    gdk_pixbuf_scale(pixBuf, pixBuf, 0, 0, event->configure.width, event->configure.height-35, 0, 0, (double)event->configure.width/width, (double)(event->configure.height-35)/height, GDK_INTERP_BILINEAR);
-    //gtk_image_set_from_pixbuf(GTK_IMAGE(gtkImage), gdk_pixbuf_scale_simple(pixBuf, event->configure.width, event->configure.height-35, GDK_INTERP_BILINEAR));
-    gtk_widget_queue_draw(gtkImage);
+    //gdk_pixbuf_scale(pixBuf, pixBuf, 0, 0, event->configure.width, event->configure.height-35, 0, 0, 2, 2, GDK_INTERP_BILINEAR);
+    if(c == 0) {
+        std::cout << "resizing" << std::endl;
+    GdkPixbuf * newPixBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
+			8, 2*width, 2*height);
+    gdk_pixbuf_scale(newPixBuf, pixBuf, 0, 0, width, height, 0, 0, 2, 2, GDK_INTERP_BILINEAR);
+    gtkImage = gtk_image_new_from_pixbuf(newPixBuf);
+    gtk_widget_show(gtkImage);
+        c = 1;
+    }
+  
+
+    //gtk_widget_set_size_request(gtkImage, event->configure.width, event->configure.height-35);
+    scrolledWindow = gtk_scrolled_window_new(NULL, NULL);
+    gtk_widget_set_size_request(scrolledWindow, event->configure.width, event->configure.height-35);
+    /*
+        gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledWindow),
+                                                    GTK_POLICY_AUTOMATIC, 
+                                                                                        GTK_POLICY_AUTOMATIC);
+                                                                                        */
+    gtk_scrolled_window_add_with_viewport((GtkScrolledWindow *)scrolledWindow, gtkImage);
+
+    /*
+    GtkWidget * viewport = gtk_widget_get_ancestor(gtkImage, GTK_TYPE_VIEWPORT);
+    gtk_widget_set_size_request(viewport, event->configure.width, event->configure.height-35);
+    */
+    /*
+    */
 }
 
 
