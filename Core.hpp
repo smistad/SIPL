@@ -105,6 +105,8 @@ class Volume {
         void saveSlice(int slice, slice_plane direction, const char * filepath, const char * imageType);
         void dataToPixbuf(GtkWidget * image, int slice, slice_plane direction);
         void dataToPixbuf(GtkWidget * image, int slice, slice_plane direction, float level, float window);
+        void MIPToPixbuf(GtkWidget * image, float angle, slice_plane direction);
+        void MIPToPixbuf(GtkWidget * image, float angle, slice_plane direction, float level, float window);
 		static gboolean setupGUI(gpointer data);
         template <class U>
         Volume<T> & operator=(const Volume<U> &otherVolume);
@@ -135,6 +137,8 @@ class Window {
 		Image<T> * image;
         Volume<T> * volume;
         bool isVolume;
+        bool isMIP;
+        float angle;
         friend class Image<T>;
         friend class Volume<T>;
 };
@@ -477,6 +481,168 @@ void Volume<T>::dataToPixbuf(GtkWidget * image, int slice, slice_plane direction
    //gdk_threads_leave();
 }
 
+template <class T>
+T maximum(T a, T b, bool * change) {
+    *change = a > b;
+    return a > b ? a : b;
+}
+
+template <>
+inline float2 maximum<float2>(float2 a, float2 b, bool * change) {
+    float2 c;
+    c.x = a.x > b.x ? a.x : b.x;
+    c.y = a.y > b.y ? a.y : b.y;
+    return c;
+}
+
+template <>
+inline float3 maximum<float3>(float3 a, float3 b, bool * change) {
+    float3 c;
+    c.x = a.x > b.x ? a.x : b.x;
+    c.y = a.y > b.y ? a.y : b.y;
+    c.z = a.z > b.z ? a.z : b.z;
+    return c;
+}
+
+template <class T>
+void Volume<T>::MIPToPixbuf(GtkWidget * image, float angle, slice_plane direction) {
+    int xSize;
+    int ySize;
+    int zSize;
+    switch(direction) {
+        case X:
+            // x direction
+            xSize = this->height;
+            ySize = this->depth;
+            zSize = this->width;
+            break;
+        case Y:
+            // y direction
+            xSize = this->width;
+            ySize = this->depth;
+            zSize = this->height;
+            break;
+        case Z:
+            // z direction
+            xSize = this->width;
+            ySize = this->height;
+            zSize = this->depth;
+            break;
+    }
+
+    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
+    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
+    float cangle = cos(angle);
+    float sangle = sin(angle);
+    int xMultiple, yMultiple, zMultiple;
+    switch(direction) {
+        case X:
+            xMultiple = this->width;
+            yMultiple = this->width*this->height;
+            zMultiple = 1;
+            break;
+        case Y:
+            xMultiple = 1;
+            yMultiple = this->width*this->height;
+            zMultiple = this->width;
+            break;
+        case Z:
+            xMultiple = 1;
+            yMultiple = this->width;
+            zMultiple = this->width*this->height;
+            break;
+    }   
+    T * mip = new T[xSize*ySize]();
+    for(int x = 0; x < xSize; x++) {
+        int nu = round((x-(float)xSize/2.0f)*sangle) + (float)xSize/2.0f;
+    for(int y = 0; y < ySize; y++) {
+        int v = y;
+    for(int z = 0; z < zSize; z++) {
+        int u = round((z-(float)zSize/2.0f)*cangle) + nu;
+
+        if(u > 0 && u < xSize) {
+            bool change;
+            T newValue = maximum<T>(mip[u+v*xSize], this->data[x*xMultiple+y*yMultiple+z*zMultiple], &change);
+            if(!change) {
+                // New maximum
+                mip[u+v*xSize] = newValue;
+                guchar * p = pixels + (u+(ySize-1-v)*xSize) * gdk_pixbuf_get_n_channels(pixBuf);
+                toGuchar(newValue, p);
+            }
+        }
+    }}}
+
+}
+
+template <class T>
+void Volume<T>::MIPToPixbuf(GtkWidget * image, float angle, slice_plane direction, float level, float window) {
+    int xSize;
+    int ySize;
+    int zSize;
+    switch(direction) {
+        case X:
+            // x direction
+            xSize = this->height;
+            ySize = this->depth;
+            zSize = this->width;
+            break;
+        case Y:
+            // y direction
+            xSize = this->width;
+            ySize = this->depth;
+            zSize = this->height;
+            break;
+        case Z:
+            // z direction
+            xSize = this->width;
+            ySize = this->height;
+            zSize = this->depth;
+            break;
+    }
+
+    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
+    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
+    T * mip = new T[xSize*ySize]();
+    float cangle = cos(angle);
+    float sangle = sin(angle);
+    int xMultiple, yMultiple, zMultiple;
+    switch(direction) {
+        case X:
+            xMultiple = this->width;
+            yMultiple = this->width*this->height;
+            zMultiple = 1;
+            break;
+        case Y:
+            xMultiple = 1;
+            yMultiple = this->width*this->height;
+            zMultiple = this->width;
+            break;
+        case Z:
+            xMultiple = 1;
+            yMultiple = this->width;
+            zMultiple = this->width*this->height;
+            break;
+    }   
+    for(int x = 0; x < xSize; x++) {
+        int nu = round((x-(float)xSize/2.0f)*sangle) + (float)xSize/2.0f;
+    for(int y = 0; y < ySize; y++) {
+        int v = y;
+    for(int z = 0; z < zSize; z++) {
+        int u = round((z-(float)zSize/2.0f)*cangle) + nu;
+
+        if(u > 0 && u < xSize) {
+            bool change;
+            T newValue = maximum<T>(mip[u+v*xSize], this->data[x*xMultiple+y*yMultiple+z*zMultiple], &change);
+            if(!change) {
+                // New maximum
+                mip[u+v*xSize] = newValue;
+                guchar * p = pixels + (u+(ySize-1-v)*xSize) * gdk_pixbuf_get_n_channels(pixBuf);
+                toGuchar(newValue, p, level, window);
+            }
+        }
+    }}}
+
+}
 
 /* --- Constructors & destructors --- */
 template <class T>
@@ -834,10 +1000,18 @@ Window<T>::Window(GtkWidget * gtkWindow, GtkWidget * gtkImage, Volume<T> * volum
 template <class T>
 void Window<T>::update() {
     if(this->isVolume) {
-        if(this->level == -1.0f) {
-            volume->dataToPixbuf(this->gtkImage, this->currentSlice, this->currentDirection);
+        if(this->isMIP) {
+            if(this->level == -1.0f) {
+                volume->MIPToPixbuf(this->gtkImage, this->angle, this->currentDirection);
+            } else {
+                volume->MIPToPixbuf(this->gtkImage, this->angle, this->currentDirection, this->level, this->window);
+            }
         } else {
-            volume->dataToPixbuf(this->gtkImage,  this->currentSlice, this->currentDirection, this->level, this->window);
+            if(this->level == -1.0f) {
+                volume->dataToPixbuf(this->gtkImage, this->currentSlice, this->currentDirection);
+            } else {
+                volume->dataToPixbuf(this->gtkImage,  this->currentSlice, this->currentDirection, this->level, this->window);
+            }
         }
     } else {
         if(this->level == -1.0f) {
@@ -942,11 +1116,40 @@ void Window<T>::key_pressed(GtkWidget * widget, GdkEventKey * event, gpointer us
         case GDK_KEY_Down:
             this->currentSlice = validateSlice(this->currentSlice-1,this->currentDirection,this->volume->getSize());
             break;
+        case GDK_KEY_Left:
+            this->angle -= 0.1f;
+            break;
+        case GDK_KEY_Right:
+            this->angle += 0.1f;
+            break;
+        case GDK_KEY_x:
+            this->currentDirection = X;
+            this->angle = 0.0f;
+            this->currentSlice = validateSlice(this->currentSlice, this->currentDirection, this->volume->getSize());
+            break;
+        case GDK_KEY_y:
+            this->currentDirection = Y;
+            this->angle = 0.0f;
+            this->currentSlice = validateSlice(this->currentSlice, this->currentDirection, this->volume->getSize());
+            break;
+        case GDK_KEY_z:
+            this->currentDirection = Z;
+            this->angle = 0.0f;
+            this->currentSlice = validateSlice(this->currentSlice, this->currentDirection, this->volume->getSize());
+            break;
     }
-    if(level == -1.0f) {
-        this->volume->dataToPixbuf(this->gtkImage, this->currentSlice, this->currentDirection);
+    if(this->isMIP) {
+        if(level == -1.0f) {
+            this->volume->MIPToPixbuf(this->gtkImage, this->angle, this->currentDirection);
+        } else {
+            this->volume->MIPToPixbuf(this->gtkImage, this->angle, this->currentDirection, level, window);
+        }
     } else {
-        this->volume->dataToPixbuf(this->gtkImage, this->currentSlice, this->currentDirection, level, window);
+        if(level == -1.0f) {
+            this->volume->dataToPixbuf(this->gtkImage, this->currentSlice, this->currentDirection);
+        } else {
+            this->volume->dataToPixbuf(this->gtkImage, this->currentSlice, this->currentDirection, level, window);
+        }
     }
     gtk_widget_queue_draw(this->gtkImage);
 }
@@ -1056,38 +1259,17 @@ Window<T> * Volume<T>::show(){
 	Window<T> * winObj = new Window<T>(NULL,image,this);
     winObj->currentSlice = slice;
     winObj->currentDirection = direction;
+    winObj->isMIP = false;
 	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Volume<T>::setupGUI, winObj, NULL);
     return winObj;
 }
 
 
 template <class T>
-T maximum(T a, T b) {
-    return a > b ? a : b;
-}
-
-template <>
-inline float2 maximum<float2>(float2 a, float2 b) {
-    float2 c;
-    c.x = a.x > b.x ? a.x : b.x;
-    c.y = a.y > b.y ? a.y : b.y;
-    return c;
-}
-
-template <>
-inline float3 maximum<float3>(float3 a, float3 b) {
-    float3 c;
-    c.x = a.x > b.x ? a.x : b.x;
-    c.y = a.y > b.y ? a.y : b.y;
-    c.z = a.z > b.z ? a.z : b.z;
-    return c;
-}
-
-template <class T>
 Window<T> * Volume<T>::showMIP() {
     return this->showMIP(X);
 }
-
+/*
 template <class T>
 Window<T> * Volume<T>::showMIP(slice_plane direction, float level, float window){
     int slice = this->width/2;
@@ -1156,7 +1338,48 @@ Window<T> * Volume<T>::showMIP(slice_plane direction, float level, float window)
 	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Volume<T>::setupGUI, winObj, NULL);
     return winObj;
 }
+*/
 
+template <class T>
+Window<T> * Volume<T>::showMIP(slice_plane direction, float level, float window){
+    int xSize;
+    int ySize;
+    int zSize;
+    switch(direction) {
+        case X:
+            // x direction
+            xSize = this->height;
+            ySize = this->depth;
+            zSize = this->width;
+            break;
+        case Y:
+            // y direction
+            xSize = this->width;
+            ySize = this->depth;
+            zSize = this->height;
+            break;
+        case Z:
+            // z direction
+            xSize = this->width;
+            ySize = this->height;
+            zSize = this->depth;
+            break;
+    }
+            
+    GtkWidget * image = gtk_image_new_from_pixbuf(
+            gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
+			8, xSize, ySize));
+
+    Window<T> * winObj = new Window<T>(NULL,image,this);
+    winObj->currentDirection = direction;
+    winObj->angle = 0.0f;
+    winObj->level = level;
+    winObj->window = window;
+    winObj->isMIP = true;
+    this->MIPToPixbuf(image, winObj->angle, direction, level, window);
+	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Volume<T>::setupGUI, winObj, NULL);
+    return winObj;
+}
 template <class T>
 Window<T> * Volume<T>::showMIP(slice_plane direction){
     int slice = this->width/2;
@@ -1187,41 +1410,12 @@ Window<T> * Volume<T>::showMIP(slice_plane direction){
     GtkWidget * image = gtk_image_new_from_pixbuf(
             gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, xSize, ySize));
-            
-    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
-    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
-    int i = 0;
-    for(int y = ySize-1; y >= 0; y--) {
-        for(int x = 0; x < xSize; x++) {
-            T max;
-        switch(direction) {
-            case X:
-                max = this->data[x*this->width + y*this->width*this->height];
-                for(int z = 1; z < zSize; z++) {
-                    max = maximum<T>(max, this->data[z + x*this->width + y*this->width*this->height]);
-                }
-                break;
-            case Y:
-                max = this->data[x + y*this->width*this->height];
-                for(int z = 1; z < zSize; z++) {
-                    max = maximum<T>(max, this->data[x + z*this->width + y*this->width*this->height]);
-                }
-                break;
-            case Z:
-                max = this->data[x + y*this->width];
-                for(int z = 1; z < zSize; z++) {
-                    max = maximum<T>(max, this->data[x + y*this->width + z*this->width*this->height]);
-                }
-                break;
-        }
-        guchar * p = pixels + i * gdk_pixbuf_get_n_channels(pixBuf);
-        toGuchar(max, p);
-        i++;
-   }}
 
-	Window<T> * winObj = new Window<T>(NULL,image,this);
-    winObj->currentSlice = slice;
+    Window<T> * winObj = new Window<T>(NULL,image,this);
     winObj->currentDirection = direction;
+    winObj->angle = 0.0f;
+    winObj->isMIP = true;
+    this->MIPToPixbuf(image, winObj->angle, direction);
 	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Volume<T>::setupGUI, winObj, NULL);
     return winObj;
 }
@@ -1240,6 +1434,7 @@ Window<T> * Volume<T>::show(float level, float window){
     winObj->currentDirection = direction;
     winObj->level = level;
     winObj->window = window;
+    winObj->isMIP = false;
 	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Volume<T>::setupGUI, winObj, NULL);
     return winObj;
 }
@@ -1269,6 +1464,7 @@ Window<T> * Volume<T>::show(int slice, slice_plane direction) {
 	Window<T> * winObj = new Window<T>(NULL,image,this);
     winObj->currentSlice = slice;
     winObj->currentDirection = direction;
+    winObj->isMIP = false;
 	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Volume<T>::setupGUI, winObj, NULL);
     return winObj;
 }
@@ -1299,6 +1495,7 @@ Window<T> * Volume<T>::show(int slice, slice_plane direction,float level, float 
     winObj->currentDirection = direction;
     winObj->level = level;
     winObj->window = window;
+    winObj->isMIP = false;
 	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Volume<T>::setupGUI, winObj, NULL);
     return winObj;
 }
