@@ -124,6 +124,8 @@ class Window {
         Window(GtkWidget * gtkWindow, GtkWidget * gtkImage, Volume<T> * volume);
         void key_pressed(GtkWidget * widget, GdkEventKey * event, gpointer user_data) ;
         static void wrapper_key_pressed(GtkWidget * widget, GdkEventKey * event, gpointer user_data);
+        static void wrapper_resize(GtkWidget * widget, GdkEvent * event, gpointer user_data) ;
+        void resizeImage(GtkWidget * widget, GdkEvent * event) ;
         void destroy();
         void update();
         void hide();
@@ -1087,7 +1089,12 @@ gboolean Image<T>::setupGUI(gpointer data) {
 			NULL
 	);
 
-	
+    g_signal_connect(
+            G_OBJECT(window),
+            "configure-event",
+            G_CALLBACK(Window<T>::wrapper_resize),
+            win
+    );
 
 	GtkWidget * fixed = gtk_fixed_new ();
 	gtk_container_add (GTK_CONTAINER (window), fixed);
@@ -1102,6 +1109,24 @@ gboolean Image<T>::setupGUI(gpointer data) {
 	return false;
 }
 
+template <class T>
+void Window<T>::wrapper_resize(GtkWidget * widget, GdkEvent * event, gpointer user_data) {
+    Window<T> * win = (Window<T> *)user_data;
+    win->resizeImage(widget, event);
+}
+
+template <class T>
+void Window<T>::resizeImage(GtkWidget * widget, GdkEvent * event) {
+    std::cout << event->configure.width << ", " << event->configure.height-35 << std::endl;
+    // scale the gtkImage
+    GdkPixbuf * pixBuf = gtk_image_get_pixbuf(GTK_IMAGE(gtkImage));
+	int height = gdk_pixbuf_get_height(pixBuf);
+	int width = gdk_pixbuf_get_width(pixBuf);
+    
+    gdk_pixbuf_scale(pixBuf, pixBuf, 0, 0, event->configure.width, event->configure.height-35, 0, 0, (double)event->configure.width/width, (double)(event->configure.height-35)/height, GDK_INTERP_BILINEAR);
+    //gtk_image_set_from_pixbuf(GTK_IMAGE(gtkImage), gdk_pixbuf_scale_simple(pixBuf, event->configure.width, event->configure.height-35, GDK_INTERP_BILINEAR));
+    gtk_widget_queue_draw(gtkImage);
+}
 
 
 template <class T>
