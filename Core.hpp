@@ -483,7 +483,7 @@ void Volume<T>::dataToPixbuf(GtkWidget * image, int slice, slice_plane direction
 
 template <class T>
 T maximum(T a, T b, bool * change) {
-    *change = a > b;
+    *change = a < b;
     return a > b ? a : b;
 }
 
@@ -492,6 +492,7 @@ inline float2 maximum<float2>(float2 a, float2 b, bool * change) {
     float2 c;
     c.x = a.x > b.x ? a.x : b.x;
     c.y = a.y > b.y ? a.y : b.y;
+    *change = a.x < b.x || a.y < b.y;
     return c;
 }
 
@@ -501,6 +502,7 @@ inline float3 maximum<float3>(float3 a, float3 b, bool * change) {
     c.x = a.x > b.x ? a.x : b.x;
     c.y = a.y > b.y ? a.y : b.y;
     c.z = a.z > b.z ? a.z : b.z;
+    *change = a.x < b.x || a.y < b.y || a.z < b.z;
     return c;
 }
 
@@ -553,20 +555,21 @@ void Volume<T>::MIPToPixbuf(GtkWidget * image, float angle, slice_plane directio
             break;
     }   
     T * mip = new T[xSize*ySize]();
+    int n = gdk_pixbuf_get_n_channels(pixBuf);
     for(int x = 0; x < xSize; x++) {
-        int nu = round((x-(float)xSize/2.0f)*sangle) + (float)xSize/2.0f;
+        int nu = (x-(float)xSize/2.0f)*sangle + (float)xSize/2.0f;
     for(int y = 0; y < ySize; y++) {
         int v = y;
     for(int z = 0; z < zSize; z++) {
-        int u = round((z-(float)zSize/2.0f)*cangle) + nu;
+        int u = round((z-(float)zSize/2.0f)*cangle + nu);
 
         if(u > 0 && u < xSize) {
             bool change;
             T newValue = maximum<T>(mip[u+v*xSize], this->data[x*xMultiple+y*yMultiple+z*zMultiple], &change);
-            if(!change) {
+            if(change) {
                 // New maximum
                 mip[u+v*xSize] = newValue;
-                guchar * p = pixels + (u+(ySize-1-v)*xSize) * gdk_pixbuf_get_n_channels(pixBuf);
+                guchar * p = pixels + (u+(ySize-1-v)*xSize) * n;
                 toGuchar(newValue, p);
             }
         }
@@ -623,6 +626,7 @@ void Volume<T>::MIPToPixbuf(GtkWidget * image, float angle, slice_plane directio
             zMultiple = this->width*this->height;
             break;
     }   
+    int n = gdk_pixbuf_get_n_channels(pixBuf);
     for(int x = 0; x < xSize; x++) {
         int nu = round((x-(float)xSize/2.0f)*sangle) + (float)xSize/2.0f;
     for(int y = 0; y < ySize; y++) {
@@ -633,10 +637,10 @@ void Volume<T>::MIPToPixbuf(GtkWidget * image, float angle, slice_plane directio
         if(u > 0 && u < xSize) {
             bool change;
             T newValue = maximum<T>(mip[u+v*xSize], this->data[x*xMultiple+y*yMultiple+z*zMultiple], &change);
-            if(!change) {
+            if(change) {
                 // New maximum
                 mip[u+v*xSize] = newValue;
-                guchar * p = pixels + (u+(ySize-1-v)*xSize) * gdk_pixbuf_get_n_channels(pixBuf);
+                guchar * p = pixels + (u+(ySize-1-v)*xSize) * n;
                 toGuchar(newValue, p, level, window);
             }
         }
