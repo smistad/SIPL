@@ -124,8 +124,9 @@ class Window {
         Window(GtkWidget * gtkWindow, GtkWidget * gtkImage, Volume<T> * volume);
         void key_pressed(GtkWidget * widget, GdkEventKey * event, gpointer user_data) ;
         static void wrapper_key_pressed(GtkWidget * widget, GdkEventKey * event, gpointer user_data);
-        static void wrapper_resize(GtkWidget * widget, GdkEvent * event, gpointer user_data) ;
-        void resizeImage(GtkWidget * widget, GdkEvent * event) ;
+        void zoomOut();
+        void zoomIn();
+        void draw();
         void destroy();
         void update();
         void hide();
@@ -136,12 +137,13 @@ class Window {
     private:
 		GtkWidget * gtkWindow;
 		GtkWidget * gtkImage;
-        GtkWidget * scrolledWindow;
+        GtkWidget * scaledImage;
 		Image<T> * image;
         Volume<T> * volume;
         bool isVolume;
         bool isMIP;
         float angle;
+        float scale;
         friend class Image<T>;
         friend class Volume<T>;
 };
@@ -313,6 +315,7 @@ void toGuchar(uint value, guchar * pixel, float level, float window) ;
 void toGuchar(int value, guchar * pixel, float level, float window) ;
 void toGuchar(float value, guchar * pixel, float level, float window) ;
 void toGuchar(color_float value, guchar * pixel, float level, float window) ;
+void toGuchar(color_uchar value, guchar * pixel, float level, float window) ;
 void toGuchar(float2 value, guchar * pixel, float level, float window) ;
 void toGuchar(float3 value, guchar * pixel, float level, float window) ;
 inline double round( double d ) {
@@ -508,6 +511,17 @@ inline float3 maximum<float3>(float3 a, float3 b, bool * change) {
     *change = a.x < b.x || a.y < b.y || a.z < b.z;
     return c;
 }
+
+template <>
+inline color_uchar maximum<color_uchar>(color_uchar a, color_uchar b, bool * change) {
+    color_uchar c;
+    c.red = a.red > b.red ? a.red : b.red;
+    c.green = a.green > b.green ? a.green : b.green;
+    c.blue = a.blue > b.blue ? a.blue : b.blue;
+    *change = a.red < b.red || a.green < b.green || a.blue < b.blue;
+    return c;
+}
+
 
 template <class T>
 void Volume<T>::MIPToPixbuf(GtkWidget * image, float angle, slice_plane direction) {
@@ -993,6 +1007,7 @@ Window<T>::Window(GtkWidget * gtkWindow, GtkWidget * gtkImage, Image<T> * image)
     this->image = image;
     this->isVolume = false;
     this->level = -1.0f;
+    this->scale = 1.0f;
 }
 
 template <class T>
@@ -1002,6 +1017,7 @@ Window<T>::Window(GtkWidget * gtkWindow, GtkWidget * gtkImage, Volume<T> * volum
     this->volume = volume;
     this->isVolume = true;
     this->level = -1.0f;
+    this->scale = 1.0f;
 }
 
 template <class T>
@@ -1027,7 +1043,19 @@ void Window<T>::update() {
             image->dataToPixbuf(this->gtkImage, this->level, this->window);
         }
     }
-    gtk_widget_queue_draw(this->gtkImage);
+    this->draw();
+}
+
+template <class T>
+void Window<T>::draw() {
+    GdkPixbuf * pixBuf = gtk_image_get_pixbuf(GTK_IMAGE(gtkImage));
+	int height = gdk_pixbuf_get_height(pixBuf);
+	int width = gdk_pixbuf_get_width(pixBuf);
+    GdkPixbuf * newPixBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
+			8, scale*width, scale*height);
+    gdk_pixbuf_scale(pixBuf, newPixBuf, 0, 0, scale*width, scale*height, 0, 0, scale, scale, GDK_INTERP_BILINEAR);
+    gtk_image_set_from_pixbuf(GTK_IMAGE(scaledImage), newPixBuf);
+    gtk_widget_queue_draw(scaledImage);
 }
 
 template <class T>
@@ -1092,80 +1120,42 @@ gboolean Image<T>::setupGUI(gpointer data) {
 
     g_signal_connect(
             G_OBJECT(window),
-            "configure-event",
-            G_CALLBACK(Window<T>::wrapper_resize),
+            "key_press_event",
+            G_CALLBACK(Window<T>::wrapper_key_pressed),
             win
     );
+
 
     GtkWidget * vbox = gtk_vbox_new(FALSE, 1);
 
 	gtk_container_add (GTK_CONTAINER (window), vbox);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar,FALSE,FALSE,0);
-    GtkWidget * scrolledWindow = gtk_scrolled_window_new(NULL, NULL);
-    //gtk_widget_set_size_request(scrolledWindow, win->image->getWidth(), win->image->getHeight());
-        gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledWindow),
-                                                    GTK_POLICY_AUTOMATIC, 
-                                                                                        GTK_POLICY_AUTOMATIC);
-    gtk_scrolled_window_add_with_viewport((GtkScrolledWindow *)scrolledWindow, win->gtkImage);
+    GdkPixbuf * pixBuf = gtk_image_get_pixbuf(GTK_IMAGE(win->gtkImage));
+    win->scaledImage = gtk_image_new_from_pixbuf(pixBuf);
+    GtkWidget *  scrolledWindow = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledWindow),
+                                    GTK_POLICY_AUTOMATIC, 
+                                    GTK_POLICY_AUTOMATIC);
+    gtk_scrolled_window_add_with_viewport((GtkScrolledWindow *)scrolledWindow, win->scaledImage);
     gtk_box_pack_start(GTK_BOX(vbox), scrolledWindow,TRUE,TRUE,0);
-    gtk_widget_show(win->gtkImage);
-    gtk_widget_show(scrolledWindow);
 	gtk_widget_show_all(window);
-
-	
-	win->gtkWindow = window;
-    win->scrolledWindow = scrolledWindow;
 
 	gdk_threads_leave();
 	return false;
 }
 
 template <class T>
-void Window<T>::wrapper_resize(GtkWidget * widget, GdkEvent * event, gpointer user_data) {
-    Window<T> * win = (Window<T> *)user_data;
-    win->resizeImage(widget, event);
-}
+void Window<T>::zoomIn() {
+    scale = scale*2;
+    this->draw();
+ }
+
 
 template <class T>
-void Window<T>::resizeImage(GtkWidget * widget, GdkEvent * event) {
-    static int c = 0;
-    std::cout << event->configure.width << ", " << event->configure.height-35 << std::endl;
-
-    // Try to zoom
-    GdkPixbuf * pixBuf = gtk_image_get_pixbuf(GTK_IMAGE(gtkImage));
-	int height = gdk_pixbuf_get_height(pixBuf);
-	int width = gdk_pixbuf_get_width(pixBuf);
-    
-    //gdk_pixbuf_scale(pixBuf, pixBuf, 0, 0, event->configure.width, event->configure.height-35, 0, 0, 2, 2, GDK_INTERP_BILINEAR);
-    if(c == 0) {
-        std::cout << "resizing" << std::endl;
-    GdkPixbuf * newPixBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
-			8, 2*width, 2*height);
-    gdk_pixbuf_scale(newPixBuf, pixBuf, 0, 0, width, height, 0, 0, 2, 2, GDK_INTERP_BILINEAR);
-    gtkImage = gtk_image_new_from_pixbuf(newPixBuf);
-    gtk_widget_show(gtkImage);
-        c = 1;
-    }
-  
-
-    //gtk_widget_set_size_request(gtkImage, event->configure.width, event->configure.height-35);
-    scrolledWindow = gtk_scrolled_window_new(NULL, NULL);
-    gtk_widget_set_size_request(scrolledWindow, event->configure.width, event->configure.height-35);
-    /*
-        gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledWindow),
-                                                    GTK_POLICY_AUTOMATIC, 
-                                                                                        GTK_POLICY_AUTOMATIC);
-                                                                                        */
-    gtk_scrolled_window_add_with_viewport((GtkScrolledWindow *)scrolledWindow, gtkImage);
-
-    /*
-    GtkWidget * viewport = gtk_widget_get_ancestor(gtkImage, GTK_TYPE_VIEWPORT);
-    gtk_widget_set_size_request(viewport, event->configure.width, event->configure.height-35);
-    */
-    /*
-    */
+void Window<T>::zoomOut() {
+    scale = scale*0.5;
+    this->draw();
 }
-
 
 template <class T>
 void Window<T>::wrapper_key_pressed(GtkWidget * widget, GdkEventKey * event, gpointer user_data) {
@@ -1176,6 +1166,20 @@ void Window<T>::wrapper_key_pressed(GtkWidget * widget, GdkEventKey * event, gpo
 
 template <class T>
 void Window<T>::key_pressed(GtkWidget * widget, GdkEventKey * event, gpointer user_data) {
+    switch(event->keyval) {
+        case GDK_KEY_plus:
+        case GDK_KEY_KP_Add:
+            this->zoomIn();
+            return;
+            break;
+        case GDK_KEY_minus:
+        case GDK_KEY_KP_Subtract:
+            this->zoomOut();
+            return;
+            break;
+    }
+
+    if(this->isVolume) {
     switch(event->keyval) {
         case GDK_KEY_Up:
             this->currentSlice = validateSlice(this->currentSlice+1,this->currentDirection,this->volume->getSize());
@@ -1218,7 +1222,9 @@ void Window<T>::key_pressed(GtkWidget * widget, GdkEventKey * event, gpointer us
             this->volume->dataToPixbuf(this->gtkImage, this->currentSlice, this->currentDirection, level, window);
         }
     }
-    gtk_widget_queue_draw(this->gtkImage);
+    this->draw();
+    }
+
 }
 
 
@@ -1282,11 +1288,20 @@ gboolean Volume<T>::setupGUI(gpointer data) {
             winObj
     );
 
-	GtkWidget * fixed = gtk_fixed_new ();
-	gtk_container_add (GTK_CONTAINER (window), fixed);
-	gtk_fixed_put(GTK_FIXED(fixed), toolbar, 0,0);
-	gtk_fixed_put(GTK_FIXED(fixed), winObj->gtkImage, 0, 35);
+    GtkWidget * vbox = gtk_vbox_new(FALSE, 1);
+
+	gtk_container_add (GTK_CONTAINER (window), vbox);
+    gtk_box_pack_start(GTK_BOX(vbox), toolbar,FALSE,FALSE,0);
+    GdkPixbuf * pixBuf = gtk_image_get_pixbuf(GTK_IMAGE(winObj->gtkImage));
+    winObj->scaledImage = gtk_image_new_from_pixbuf(pixBuf);
+    GtkWidget *  scrolledWindow = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledWindow),
+                                    GTK_POLICY_AUTOMATIC, 
+                                    GTK_POLICY_AUTOMATIC);
+    gtk_scrolled_window_add_with_viewport((GtkScrolledWindow *)scrolledWindow, winObj->scaledImage);
+    gtk_box_pack_start(GTK_BOX(vbox), scrolledWindow,TRUE,TRUE,0);
 	gtk_widget_show_all(window);
+
 
 	gdk_threads_leave();
     return false;

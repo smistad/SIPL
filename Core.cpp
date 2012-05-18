@@ -228,6 +228,11 @@ void toGuchar(color_float value, guchar * pixel, float level, float window) {
     pixel[1] = levelWindow(value.green, level, window);
     pixel[2] = levelWindow(value.blue, level, window);
 }
+void toGuchar(color_uchar value, guchar * pixel, float level, float window) {
+    pixel[0] = levelWindow(value.red, level, window);
+    pixel[1] = levelWindow(value.green, level, window);
+    pixel[2] = levelWindow(value.blue, level, window);
+}
 void toGuchar(float2 value, guchar * pixel, float level, float window) {
     pixel[0] = levelWindow(fabs(value.x), level, window);
     pixel[1] = levelWindow(fabs(value.y), level, window);
