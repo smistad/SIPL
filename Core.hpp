@@ -580,7 +580,7 @@ void Volume<T>::MIPToPixbuf(GtkWidget * image, float angle, slice_plane directio
     for(int z = 0; z < zSize; z++) {
         int u = round((z-(float)zSize/2.0f)*cangle + nu);
 
-        if(u > 0 && u < xSize) {
+        if(u >= 0 && u < xSize) {
             bool change;
             T newValue = maximum<T>(mip[u+v*xSize], this->data[x*xMultiple+y*yMultiple+z*zMultiple], &change);
             if(change) {
@@ -651,7 +651,7 @@ void Volume<T>::MIPToPixbuf(GtkWidget * image, float angle, slice_plane directio
     for(int z = 0; z < zSize; z++) {
         int u = round((z-(float)zSize/2.0f)*cangle) + nu;
 
-        if(u > 0 && u < xSize) {
+        if(u >= 0 && u < xSize) {
             bool change;
             T newValue = maximum<T>(mip[u+v*xSize], this->data[x*xMultiple+y*yMultiple+z*zMultiple], &change);
             if(change) {
