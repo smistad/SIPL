@@ -112,6 +112,8 @@ class Volume {
         Volume<T> & operator=(const Volume<U> &otherVolume);
         bool inBounds(int i) const;
         bool inBounds(int x, int y, int z) const;
+        template <class U>
+        void convert(Volume<U> * otherImage) ;
     private:
         T * data;
         int width, height, depth;
@@ -235,6 +237,34 @@ void convertImageType(color_uchar *, short);
 void convertImageType(color_float *, short);
 void convertImageType(float2 *, short);
 void convertImageType(float3 *, short);
+
+// Conversion from uint
+void convertImageType(bool *, uint);
+void convertImageType(uchar *, uint);
+void convertImageType(char *, uint);
+void convertImageType(ushort *, uint);
+void convertImageType(short *, uint);
+void convertImageType(uint *, uint);
+void convertImageType(int *, uint);
+void convertImageType(float *, uint);
+void convertImageType(color_uchar *, uint);
+void convertImageType(color_float *, uint);
+void convertImageType(float2 *, uint);
+void convertImageType(float3 *, uint);
+
+// Conversion from int
+void convertImageType(bool *, int);
+void convertImageType(uchar *, int);
+void convertImageType(char *, int);
+void convertImageType(ushort *, int);
+void convertImageType(short *, int);
+void convertImageType(uint *, int);
+void convertImageType(int *, int);
+void convertImageType(float *, int);
+void convertImageType(color_uchar *, int);
+void convertImageType(color_float *, int);
+void convertImageType(float2 *, int);
+void convertImageType(float3 *, int);
 
 // Conversion from float
 void convertImageType(bool *, float);
@@ -718,6 +748,18 @@ Image<T>& Image<T>::operator=(const Image<U> &otherImage) {
     return *this;
 }
 
+
+template <class T> 
+template <class U>
+void Volume<T>::convert(Volume<U> * otherImage) {
+    // Convert image with type U to this with type T
+    for(int i = 0; i < this->width*this->height*this->depth; i++) {
+        T value;
+        convertImageType(&value, otherImage->get(i));
+        this->data[i] = value;
+    }
+}
+
 template <class T> 
 template <class U>
 Volume<T>::Volume(Volume<U> * otherImage) {
@@ -725,13 +767,7 @@ Volume<T>::Volume(Volume<U> * otherImage) {
     this->height = otherImage->getHeight();
     this->depth = otherImage->getDepth();
     this->data = new T[this->height*this->width*this->depth];
-
-    // Convert image with type U to this with type T
-    for(int i = 0; i < this->width*this->height*this->depth; i++) {
-        T value;
-        convertImageType(&value, otherImage->get(i));
-        this->data[i] = value;
-    }
+    this->convert(otherImage);
 }
 
 template <class T> 
@@ -744,12 +780,7 @@ Volume<T>& Volume<T>::operator=(const Volume<U> &otherImage) {
         Quit();
     }
     
-    // Convert image with type U to this with type T
-    for(int i = 0; i < this->width*this->height*this->depth; i++) {
-        T value;
-        convertImageType(&value, otherImage.get(i));
-        this->data[i] = value;
-    }
+    this->convert(otherImage);
 
     return *this;
 }
@@ -786,6 +817,7 @@ Volume<T>::Volume(const char * filename) {
          dimensionsFound = false;
     bool isSigned;
     int readTypeSize;
+    std::string typeName;
     do{
         std::getline(mhdFile, line);
         if(line.substr(0, 7) == "DimSize") {
@@ -806,7 +838,7 @@ Volume<T>::Volume(const char * filename) {
             rawFilenameFound = true;
         } else if(line.substr(0, 11) == "ElementType") {
             typeFound = true;
-            std::string typeName = line.substr(11+3);
+            typeName = line.substr(11+3);
             if(typeName == "MET_SHORT") {
                 readTypeSize = sizeof(short);
                 isSigned = true;
@@ -838,32 +870,36 @@ Volume<T>::Volume(const char * filename) {
         }
     } while(!mhdFile.eof());
 
+
     mhdFile.close();
     if(!sizeFound || !rawFilenameFound || !typeFound || !dimensionsFound) {
         std::cout << "Error reading the mhd file" << std::endl;
         Quit();
     }
 
-    if(readTypeSize != sizeof(T)) {
-        std::cout << readTypeSize << std::endl;
-        std::cout << "Error: mismatch between datatype to read and that of Volume object (size). Conversion not supported yet." << std::endl;
-        Quit();
+    this->data = new T[this->width*this->height*this->depth];
+    if(typeName == "MET_SHORT") {
+        Volume<short> * volume = new Volume<short>(rawFilename.c_str(), this->width, this->height, this->depth);
+        this->convert(volume); // Convert to wanted type
+    } else if(typeName == "MET_USHORT") {
+        Volume<ushort> * volume = new Volume<ushort>(rawFilename.c_str(), this->width, this->height, this->depth);
+        this->convert(volume); // Convert to wanted type
+    } else if(typeName == "MET_CHAR") {
+        Volume<char> * volume = new Volume<char>(rawFilename.c_str(), this->width, this->height, this->depth);
+        this->convert(volume); // Convert to wanted type
+    } else if(typeName == "MET_UCHAR") {
+        Volume<uchar> * volume = new Volume<uchar>(rawFilename.c_str(), this->width, this->height, this->depth);
+        this->convert(volume); // Convert to wanted type
+    } else if(typeName == "MET_INT") {
+        Volume<int> * volume = new Volume<int>(rawFilename.c_str(), this->width, this->height, this->depth);
+        this->convert(volume); // Convert to wanted type
+    } else if(typeName == "MET_UINT") {
+        Volume<uint> * volume = new Volume<uint>(rawFilename.c_str(), this->width, this->height, this->depth);
+        this->convert(volume); // Convert to wanted type
+    } else if(typeName == "MET_FLOAT") {
+        Volume<float> * volume = new Volume<float>(rawFilename.c_str(), this->width, this->height, this->depth);
+        this->convert(volume); // Convert to wanted type
     }
-
-    if(((T)(-1) > 0 && isSigned) || ((T)(-1) < 0 && !isSigned)) {
-        std::cout << "Error: mismatch between datatype to read and that of Volume object (sign). Conversion not supported yet." << std::endl;
-        Quit();
-    }
-
-    // Read raw file
-    this->data = new T[width*height*depth];
-    FILE * file = fopen(rawFilename.c_str(), "rb");
-    if(file == NULL) {
-        std::cout << "File " << rawFilename << " not found" << std::endl;
-        Quit();
-    }
-    fread(this->data, sizeof(T), width*height*depth, file);
-    fclose(file);
 }
 
 template <class T>
