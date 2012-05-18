@@ -481,6 +481,16 @@ void convertImageType(float * to, short from) {
     *to = ((float)from/65535.0f)+0.5f;
 }
 
+// Conversion from int
+void convertImageType(float * to, int from) {
+    *to = ((float)from/4294967295.0f)+0.5f;
+}
+
+// Conversion from uint
+void convertImageType(float * to, uint from) {
+    *to = ((float)from/4294967295.0f);
+}
+
 // Conversion from color_uchar
 void convertImageType(bool * to, color_uchar from) {
     *to = 0.33f*(from.red+from.blue+from.green) > 128 ;
@@ -564,6 +574,11 @@ void convertImageType(float3 * to, color_float from) {
     to->x = from.red;
     to->y = from.green;
     to->z = from.blue;
+}
+
+// Conversion from float
+void convertImageType(float * to, float from) {
+    *to = from;
 }
 
 // Conversion from float2
