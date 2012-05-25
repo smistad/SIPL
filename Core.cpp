@@ -63,6 +63,9 @@ void Init() {
 	while(!init); // wait for the thread to be created
     atexit(quit);
 }
+int getWindowCount() {
+    return windowCount;
+}
 int increaseWindowCount() {
     windowCount ++;
     return windowCount;

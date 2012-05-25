@@ -38,6 +38,7 @@ void signalDestroyWindow(GtkWidget * widget, gpointer window) ;
 void saveFileSignal(GtkWidget * widget, gpointer data) ;
 void saveDialog(GtkWidget * widget, gpointer image) ;
 int increaseWindowCount() ;
+int getWindowCount() ;
 
 template <class T>
 class Window;
@@ -1070,8 +1071,8 @@ struct _saveData {
 
 template <class T>
 gboolean Image<T>::setupGUI(gpointer data) {
-	int windowCount = increaseWindowCount();
 	gdk_threads_enter();
+    int windowCount = getWindowCount();
 	GtkWidget * window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 		gtk_window_set_title(GTK_WINDOW(window),
 			("Image #" + intToString(windowCount)).c_str()
@@ -1233,7 +1234,7 @@ gboolean Volume<T>::setupGUI(gpointer data) {
 
     Window<T> * winObj = (Window<T> *)data;
 	gdk_threads_enter();
-    int windowCount = increaseWindowCount();
+    int windowCount = getWindowCount();
 	GtkWidget * window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     winObj->gtkWindow = window;
 	gtk_window_set_title(GTK_WINDOW(window),
@@ -1311,6 +1312,7 @@ gboolean Volume<T>::setupGUI(gpointer data) {
 
 template <class T>
 Window<T> * Image<T>::show() {
+	int windowCount = increaseWindowCount();
     GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, width, height));
     this->dataToPixbuf(image);
@@ -1321,6 +1323,7 @@ Window<T> * Image<T>::show() {
 
 template <class T>
 Window<T> * Image<T>::show(float level, float window) {
+	int windowCount = increaseWindowCount();
     GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, width, height));
     this->dataToPixbuf(image, level, window);
@@ -1331,6 +1334,7 @@ Window<T> * Image<T>::show(float level, float window) {
 
 template <class T>
 Window<T> * Volume<T>::show(){
+	int windowCount = increaseWindowCount();
     int slice = this->depth/2;
     slice_plane direction = Z;
     int displayWidth = this->width;
@@ -1424,6 +1428,7 @@ Window<T> * Volume<T>::showMIP(slice_plane direction, float level, float window)
 
 template <class T>
 Window<T> * Volume<T>::showMIP(slice_plane direction, float level, float window){
+	int windowCount = increaseWindowCount();
     int xSize;
     int ySize;
     int zSize;
@@ -1464,6 +1469,7 @@ Window<T> * Volume<T>::showMIP(slice_plane direction, float level, float window)
 }
 template <class T>
 Window<T> * Volume<T>::showMIP(slice_plane direction){
+	int windowCount = increaseWindowCount();
     int slice = this->width/2;
     int xSize;
     int ySize;
@@ -1504,6 +1510,7 @@ Window<T> * Volume<T>::showMIP(slice_plane direction){
 
 template <class T>
 Window<T> * Volume<T>::show(float level, float window){
+	int windowCount = increaseWindowCount();
     int slice = this->depth/2;
     slice_plane direction = Z;
     int displayWidth = this->width;
@@ -1524,6 +1531,7 @@ Window<T> * Volume<T>::show(float level, float window){
 
 template <class T>
 Window<T> * Volume<T>::show(int slice, slice_plane direction) {
+	int windowCount = increaseWindowCount();
     int displayWidth;
     int displayHeight;
     switch(direction) {
@@ -1553,6 +1561,7 @@ Window<T> * Volume<T>::show(int slice, slice_plane direction) {
 
 template <class T>
 Window<T> * Volume<T>::show(int slice, slice_plane direction,float level, float window) {
+	int windowCount = increaseWindowCount();
     int displayWidth;
     int displayHeight;
     switch(direction) {
