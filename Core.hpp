@@ -1239,21 +1239,21 @@ void Window<T>::key_pressed(GtkWidget * widget, GdkEventKey * event, gpointer us
             gtkImage = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
                     8, this->volume->getHeight(), this->volume->getDepth()));
             this->currentDirection = X;
-            this->angle = 0.0f;
+            this->angle = 0.5f*M_PI;
             this->currentSlice = validateSlice(this->currentSlice, this->currentDirection, this->volume->getSize());
             break;
         case GDK_KEY_y:
             gtkImage = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
                     8, this->volume->getWidth(), this->volume->getDepth()));
             this->currentDirection = Y;
-            this->angle = 0.0f;
+            this->angle = 0.5f*M_PI;
             this->currentSlice = validateSlice(this->currentSlice, this->currentDirection, this->volume->getSize());
             break;
         case GDK_KEY_z:
             gtkImage = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
                     8, this->volume->getWidth(), this->volume->getHeight()));
             this->currentDirection = Z;
-            this->angle = 0.0f;
+            this->angle = 0.5f*M_PI;
             this->currentSlice = validateSlice(this->currentSlice, this->currentDirection, this->volume->getSize());
             break;
     }
@@ -1316,10 +1316,11 @@ gboolean Volume<T>::setupGUI(gpointer data) {
              NULL);
 
 
+    GdkPixbuf * pixBuf = gtk_image_get_pixbuf(GTK_IMAGE(winObj->gtkImage));
 	gtk_window_set_default_size(
 			GTK_WINDOW(window),
-			winObj->volume->getWidth(),
-			winObj->volume->getHeight() + 35
+			gdk_pixbuf_get_width(pixBuf),
+			gdk_pixbuf_get_height(pixBuf) + 35
 	);
 	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
 	g_signal_connect_swapped(
@@ -1340,7 +1341,6 @@ gboolean Volume<T>::setupGUI(gpointer data) {
 
 	gtk_container_add (GTK_CONTAINER (window), vbox);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar,FALSE,FALSE,0);
-    GdkPixbuf * pixBuf = gtk_image_get_pixbuf(GTK_IMAGE(winObj->gtkImage));
     winObj->scaledImage = gtk_image_new_from_pixbuf(pixBuf);
     GtkWidget *  scrolledWindow = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledWindow),
@@ -1441,7 +1441,7 @@ Window<T> * Volume<T>::showMIP(slice_plane direction, float level, float window)
 
     Window<T> * winObj = new Window<T>(NULL,image,this);
     winObj->currentDirection = direction;
-    winObj->angle = 0.0f;
+    winObj->angle = 0.5f*M_PI;
     winObj->level = level;
     winObj->window = window;
     winObj->isMIP = true;
@@ -1484,7 +1484,7 @@ Window<T> * Volume<T>::showMIP(slice_plane direction){
 
     Window<T> * winObj = new Window<T>(NULL,image,this);
     winObj->currentDirection = direction;
-    winObj->angle = 0.0f;
+    winObj->angle = 0.5f*M_PI;
     winObj->isMIP = true;
     this->MIPToPixbuf(image, winObj->angle, direction);
 	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Volume<T>::setupGUI, winObj, NULL);
