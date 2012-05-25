@@ -148,6 +148,7 @@ class Window {
         bool isMIP;
         float angle;
         float scale;
+        int windowNr;
         friend class Image<T>;
         friend class Volume<T>;
 };
@@ -1113,12 +1114,11 @@ struct _saveData {
 template <class T>
 gboolean Image<T>::setupGUI(gpointer data) {
 	gdk_threads_enter();
-    int windowCount = getWindowCount();
+	Window<T> * win = (Window<T> *)data;
 	GtkWidget * window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 		gtk_window_set_title(GTK_WINDOW(window),
-			("Image #" + intToString(windowCount)).c_str()
+			("Image #" + intToString(win->windowNr)).c_str()
 	);
-	Window<T> * win = (Window<T> *)data;
 	GtkWidget * toolbar = gtk_toolbar_new();
 	gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar), GTK_ORIENTATION_HORIZONTAL);
 	gtk_toolbar_append_item (
@@ -1285,7 +1285,7 @@ gboolean Volume<T>::setupGUI(gpointer data) {
 	GtkWidget * window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     winObj->gtkWindow = window;
 	gtk_window_set_title(GTK_WINDOW(window),
-			("Volume #" + intToString(windowCount)).c_str()
+			("Volume #" + intToString(winObj->windowNr)).c_str()
 	);
 
 	GtkWidget * toolbar = gtk_toolbar_new();
@@ -1364,6 +1364,7 @@ Window<T> * Image<T>::show() {
 			8, width, height));
     this->dataToPixbuf(image);
 	Window<T> * winObj = new Window<T>(NULL,image,this);
+    winObj->windowNr = windowCount;
 	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Image<T>::setupGUI, winObj, NULL);
     return winObj;
 }
@@ -1375,6 +1376,7 @@ Window<T> * Image<T>::show(float level, float window) {
 			8, width, height));
     this->dataToPixbuf(image, level, window);
 	Window<T> * winObj = new Window<T>(NULL,image,this);
+    winObj->windowNr = windowCount;
 	g_idle_add_full(G_PRIORITY_HIGH_IDLE, Image<T>::setupGUI, winObj, NULL);
     return winObj;
 }
@@ -1390,6 +1392,7 @@ Window<T> * Volume<T>::show(){
 			8, displayWidth, displayHeight));
     this->dataToPixbuf(image, slice, direction);
 	Window<T> * winObj = new Window<T>(NULL,image,this);
+    winObj->windowNr = windowCount;
     winObj->currentSlice = slice;
     winObj->currentDirection = direction;
     winObj->isMIP = false;
@@ -1440,6 +1443,7 @@ Window<T> * Volume<T>::showMIP(slice_plane direction, float level, float window)
 			8, xSize, ySize));
 
     Window<T> * winObj = new Window<T>(NULL,image,this);
+    winObj->windowNr = windowCount;
     winObj->currentDirection = direction;
     winObj->angle = 0.5f*M_PI;
     winObj->level = level;
@@ -1483,6 +1487,7 @@ Window<T> * Volume<T>::showMIP(slice_plane direction){
 			8, xSize, ySize));
 
     Window<T> * winObj = new Window<T>(NULL,image,this);
+    winObj->windowNr = windowCount;
     winObj->currentDirection = direction;
     winObj->angle = 0.5f*M_PI;
     winObj->isMIP = true;
@@ -1502,6 +1507,7 @@ Window<T> * Volume<T>::show(float level, float window){
 			8, displayWidth, displayHeight));
     this->dataToPixbuf(image, slice, direction,level,window);
 	Window<T> * winObj = new Window<T>(NULL,image,this);
+    winObj->windowNr = windowCount;
     winObj->currentSlice = slice;
     winObj->currentDirection = direction;
     winObj->level = level;
@@ -1535,6 +1541,7 @@ Window<T> * Volume<T>::show(int slice, slice_plane direction) {
 			8, displayWidth, displayHeight));
     this->dataToPixbuf(image, slice, direction);
 	Window<T> * winObj = new Window<T>(NULL,image,this);
+    winObj->windowNr = windowCount;
     winObj->currentSlice = slice;
     winObj->currentDirection = direction;
     winObj->isMIP = false;
@@ -1565,6 +1572,7 @@ Window<T> * Volume<T>::show(int slice, slice_plane direction,float level, float 
 			8, displayWidth, displayHeight));
     this->dataToPixbuf(image, slice, direction,level,window);
 	Window<T> * winObj = new Window<T>(NULL,image,this);
+    winObj->windowNr = windowCount;
     winObj->currentSlice = slice;
     winObj->currentDirection = direction;
     winObj->level = level;

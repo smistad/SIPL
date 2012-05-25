@@ -9,10 +9,12 @@ namespace SIPL {
 bool init = false;
 GThread * gtkThread;
 int windowCount;
+GMutex * windowCountMutex;
 void * initGTK(void * t) {
 	gdk_threads_init ();	
 	gtk_init(0, (char ***) "");
 	init = true;
+    windowCountMutex = g_mutex_new();
 	gdk_threads_enter ();
 	gtk_main();
     gdk_threads_leave();
@@ -45,11 +47,30 @@ int validateSlice(int slice, slice_plane direction, int3 size) {
     }
     return slice;
 }
-
+int getWindowCount() {
+    g_mutex_lock(windowCountMutex);
+    int wc = windowCount;
+    g_mutex_unlock(windowCountMutex);
+    return wc;
+}
+int increaseWindowCount() {
+    g_mutex_lock(windowCountMutex);
+    windowCount++;
+    int wc = windowCount;
+    g_mutex_unlock(windowCountMutex);
+    return wc;
+}
+int decreaseWindowCount() {
+    g_mutex_lock(windowCountMutex);
+    windowCount--;
+    int wc = windowCount;
+    g_mutex_unlock(windowCountMutex);
+    return wc;
+}
 bool endReached = false;
 void quit(void) {
     endReached = true;
-    if(windowCount == 0)
+    if(getWindowCount() == 0)
         gtk_main_quit();
 	g_thread_join(gtkThread);
 }
@@ -63,16 +84,9 @@ void Init() {
 	while(!init); // wait for the thread to be created
     atexit(quit);
 }
-int getWindowCount() {
-    return windowCount;
-}
-int increaseWindowCount() {
-    windowCount ++;
-    return windowCount;
-}
+
 void destroyWindow(GtkWidget * widget, gpointer window) {
-	windowCount--;
-	if (windowCount == 0 && endReached) {
+	if (decreaseWindowCount() == 0 && endReached) {
 		gtk_main_quit();
 	}
 }
@@ -83,8 +97,7 @@ void quitProgram(GtkWidget * widget, gpointer window) {
 }
 
 void signalDestroyWindow(GtkWidget * widget, gpointer window) {
-	windowCount--;
-	if (windowCount == 0 && endReached) {
+	if (decreaseWindowCount() == 0 && endReached) {
         gtk_main_quit();
 	} else {
         gtk_widget_hide(GTK_WIDGET(window));
