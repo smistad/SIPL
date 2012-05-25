@@ -1195,16 +1195,22 @@ void Window<T>::key_pressed(GtkWidget * widget, GdkEventKey * event, gpointer us
             this->angle += 0.1f;
             break;
         case GDK_KEY_x:
+            gtkImage = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
+                    8, this->volume->getHeight(), this->volume->getDepth()));
             this->currentDirection = X;
             this->angle = 0.0f;
             this->currentSlice = validateSlice(this->currentSlice, this->currentDirection, this->volume->getSize());
             break;
         case GDK_KEY_y:
+            gtkImage = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
+                    8, this->volume->getWidth(), this->volume->getDepth()));
             this->currentDirection = Y;
             this->angle = 0.0f;
             this->currentSlice = validateSlice(this->currentSlice, this->currentDirection, this->volume->getSize());
             break;
         case GDK_KEY_z:
+            gtkImage = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
+                    8, this->volume->getWidth(), this->volume->getHeight()));
             this->currentDirection = Z;
             this->angle = 0.0f;
             this->currentSlice = validateSlice(this->currentSlice, this->currentDirection, this->volume->getSize());
