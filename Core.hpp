@@ -62,7 +62,7 @@ class Image {
         int2 getSize() const;
         Window<T> * show();
         Window<T> * show(float level, float window);
-        void save(const char * filepath, const char * imageType);
+        void save(const char * filepath, const char * imageType = "jpeg");
         void dataToPixbuf(GtkWidget * image);
         void dataToPixbuf(GtkWidget * image, float level, float wdinow);
         void pixbufToData(GtkImage * image);
@@ -946,7 +946,7 @@ static std::string intToString(int inInt) {
 }
 
 template <class T>
-void Image<T>::save(const char * filepath, const char * imageType = "jpeg") {
+void Image<T>::save(const char * filepath, const char * imageType) {
     GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, width, height));
 	this->dataToPixbuf(image);
