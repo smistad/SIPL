@@ -609,6 +609,7 @@ void Volume<T>::MIPToPixbuf(GtkWidget * image, float angle, slice_plane directio
     T * mip = new T[xSize*ySize]();
     int n = gdk_pixbuf_get_n_channels(pixBuf);
     int rowstride = gdk_pixbuf_get_rowstride(pixBuf);
+    #pragma omp parallel for
     for(int x = 0; x < xSize; x++) {
         int nu = (x-(float)xSize/2.0f)*sangle + (float)xSize/2.0f;
     for(int y = 0; y < ySize; y++) {
@@ -681,13 +682,13 @@ void Volume<T>::MIPToPixbuf(GtkWidget * image, float angle, slice_plane directio
     }   
     int n = gdk_pixbuf_get_n_channels(pixBuf);
     int rowstride = gdk_pixbuf_get_rowstride(pixBuf);
+    #pragma omp parallel for
     for(int x = 0; x < xSize; x++) {
         int nu = round((x-(float)xSize/2.0f)*sangle) + (float)xSize/2.0f;
     for(int y = 0; y < ySize; y++) {
         int v = y;
     for(int z = 0; z < zSize; z++) {
         int u = round((z-(float)zSize/2.0f)*cangle) + nu;
-
         if(u >= 0 && u < xSize) {
             bool change;
             T newValue = maximum<T>(mip[u+v*xSize], this->data[x*xMultiple+y*yMultiple+z*zMultiple], &change);
