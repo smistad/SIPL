@@ -994,6 +994,9 @@ Window<T>::Window(GtkWidget * gtkWindow, GtkWidget * gtkImage, Volume<T> * volum
 
 template <class T>
 void Window<T>::update() {
+    // wait until the show method is finished creating the scaledImage widget
+    while(!GTK_IS_WIDGET(this->scaledImage));
+
     if(this->isVolume) {
         Volume<T> * volume = (Volume<T> *)(this->dataset);
         if(this->isMIP) {
@@ -1028,8 +1031,10 @@ void Window<T>::draw() {
     GdkPixbuf * newPixBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, scale*width, scale*height);
     gdk_pixbuf_scale(pixBuf, newPixBuf, 0, 0, scale*width, scale*height, 0, 0, scale, scale, GDK_INTERP_BILINEAR);
+    gdk_threads_enter();
     gtk_image_set_from_pixbuf(GTK_IMAGE(scaledImage), newPixBuf);
     gtk_widget_queue_draw(scaledImage);
+    gdk_threads_leave();
 }
 
 template <class T>
