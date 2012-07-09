@@ -744,10 +744,8 @@ Image<T>::Image(Image<U> * otherImage) {
 template <class T> 
 template <class U>
 Image<T>& Image<T>::operator=(const Image<U> &otherImage) {
-    if(this->width != otherImage.getWidth() || this->height != otherImage.getHeight()) {
-        std::cout << "Error: image size mismatch in assignment" << std::endl;
-        Quit();
-    }
+    if(this->width != otherImage.getWidth() || this->height != otherImage.getHeight())
+        throw ConversionException("image size mismatch in assignment", __LINE__, __FILE__);
     
     // Convert image with type U to this with type T
     for(int i = 0; i < this->width*this->height; i++) {
@@ -786,10 +784,8 @@ template <class U>
 Volume<T>& Volume<T>::operator=(const Volume<U> &otherImage) {
     if(this->width != otherImage.getWidth() || 
         this->height != otherImage.getHeight() ||
-        this->depth != otherImage.getDepth()) {
-        std::cout << "Error: volume size mismatch in assignment" << std::endl;
-        Quit();
-    }
+        this->depth != otherImage.getDepth())
+        throw ConversionException("volume size mismatch in assignment", __LINE__, __FILE__);
     
     this->convert(otherImage);
 
@@ -870,8 +866,7 @@ Volume<T>::Volume(const char * filename) {
                 readTypeSize = sizeof(float);
                 isSigned = true;
             } else {
-                std::cout << "Error: Trying to read volume of unsupported data type" << std::endl;
-                Quit();
+                throw IOException("Trying to read volume of unsupported data type", __LINE__, __FILE__);
             }
         } else if(line.substr(0, 5) == "NDims") {
             if(line.substr(5+3, 1) == "3") 
@@ -881,10 +876,8 @@ Volume<T>::Volume(const char * filename) {
 
 
     mhdFile.close();
-    if(!sizeFound || !rawFilenameFound || !typeFound || !dimensionsFound) {
-        std::cout << "Error reading the mhd file" << std::endl;
-        Quit();
-    }
+    if(!sizeFound || !rawFilenameFound || !typeFound || !dimensionsFound)
+        throw IOException("Error reading the mhd file", __LINE__, __FILE__);
 
     this->data = new T[this->width*this->height*this->depth];
     if(typeName == "MET_SHORT") {
