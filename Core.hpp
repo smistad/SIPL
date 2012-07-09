@@ -66,7 +66,9 @@ class Image : public Dataset<T> {
         ~Image();
         T get(int i) const;
         T get(int x, int y) const;
-        void set(int x, int y, T pixel);
+        T get(int2 pos) const;
+        void set(int x, int y, T value);
+        void set(int2, T value);
         void set(int i, T v);
         int2 getSize() const;
         Window<T> * show();
@@ -93,8 +95,10 @@ class Volume : public Dataset<T> {
         Volume(Volume<U> * otherVolume);
         ~Volume();
         T get(int x, int y, int z) const;
+        T get(int3 pos) const;
         T get(int i) const;
         void set(int x, int y, int z, T value);
+        void set(int3 pos, T v);
         void set(int i, T v);
         int getDepth() const;
         int3 getSize() const;
@@ -1031,10 +1035,8 @@ void Window<T>::draw() {
     GdkPixbuf * newPixBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, scale*width, scale*height);
     gdk_pixbuf_scale(pixBuf, newPixBuf, 0, 0, scale*width, scale*height, 0, 0, scale, scale, GDK_INTERP_BILINEAR);
-    gdk_threads_enter();
     gtk_image_set_from_pixbuf(GTK_IMAGE(scaledImage), newPixBuf);
     gtk_widget_queue_draw(scaledImage);
-    gdk_threads_leave();
 }
 
 template <class T>
@@ -1602,6 +1604,11 @@ void Image<T>::set(int x, int y, T value) {
 }
 
 template <class T>
+void Image<T>::set(int2 pos, T value) {
+    this->set(pos.x, pos.y, value);
+}
+
+template <class T>
 void Image<T>::set(int i, T value) {
     if(!this->inBounds(i)) {
         std::cout << "Error: out of bounds at line " << __LINE__ << " in file " << __FILE__ << std::endl;
@@ -1619,7 +1626,6 @@ void Volume<T>::set(int i, T value) {
     this->data[i] = value;
 }
 
-
 template <class T>
 T Image<T>::get(int x, int y) const {
     if(!this->inBounds(x,y)) {
@@ -1627,6 +1633,11 @@ T Image<T>::get(int x, int y) const {
         Quit();
     }
     return this->data[x+y*this->width];
+}
+
+template <class T>
+T Image<T>::get(int2 pos) const {
+    return this->get(pos.x, pos.y);
 }
 
 template <class T>
@@ -1658,6 +1669,11 @@ void Volume<T>::set(int x, int y, int z, T value) {
 }
 
 template <class T>
+void Volume<T>::set(int3 pos, T value) {
+    this->set(pos.x, pos.y, pos.z, value);
+}
+
+template <class T>
 T Volume<T>::get(int x, int y, int z) const {
     if(!this->inBounds(x,y,z)) {
         std::cout << "Error: out of bounds at line " << __LINE__ << " in file " << __FILE__ << std::endl;
@@ -1665,5 +1681,11 @@ T Volume<T>::get(int x, int y, int z) const {
     }
     return this->data[x+y*this->width+z*this->width*this->height];
 }
+
+template <class T>
+T Volume<T>::get(int3 pos) const {
+    return this->get(pos.x, pos.y, pos.z);
+}
+
 } // End SIPL namespace
 #endif /* SIPL_H_ */
