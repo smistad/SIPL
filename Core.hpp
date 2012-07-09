@@ -389,7 +389,6 @@ void toT(color_float * r, uchar * p) ;
 void toT(float2 * r, uchar * p) ;
 void toT(float3 * r, uchar * p) ;
 
-/* --- Spesialized pixbufToData methods --- */
 template <class T>
 void Image<T>::pixbufToData(GtkImage * image) {
 	gdk_threads_enter ();
@@ -402,7 +401,6 @@ void Image<T>::pixbufToData(GtkImage * image) {
     gdk_threads_leave();
 }
 
-/* --- Spesialized dataToPixbuf methods --- */
 template <class T>
 void Image<T>::dataToPixbuf(GtkWidget * image) {
     gdk_threads_enter();
