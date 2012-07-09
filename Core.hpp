@@ -46,6 +46,7 @@ class Window;
 template <class T>
 class Dataset {
     public:
+        ~Dataset();
         int getWidth() const;
         int getHeight() const;
         T * getData();
@@ -63,7 +64,6 @@ class Image : public Dataset<T> {
         Image(unsigned int width, unsigned int height);
         template <class U>
         Image(Image<U> * otherImage);
-        ~Image();
         T get(int i) const;
         T get(int x, int y) const;
         T get(int2 pos) const;
@@ -93,7 +93,6 @@ class Volume : public Dataset<T> {
         Volume(int width, int height, int depth);
         template <class U>
         Volume(Volume<U> * otherVolume);
-        ~Volume();
         T get(int x, int y, int z) const;
         T get(int3 pos) const;
         T get(int i) const;
@@ -931,14 +930,8 @@ Image<T>::Image(unsigned int width, unsigned int height) {
 }
 
 template <class T>
-Image<T>::~Image() {
+Dataset<T>::~Dataset() {
 	delete[] this->data;
-}
-
-
-template <class T>
-Volume<T>::~Volume() {
-    delete[] this->data;
 }
 
 /* Init and Quit stuff */
