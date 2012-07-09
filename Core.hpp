@@ -7,6 +7,7 @@
 #ifndef SIPL_H_
 #define SIPL_H_
 
+#include "Exceptions.hpp"
 #include <math.h>
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
@@ -712,10 +713,8 @@ template <class T>
 Image<T>::Image(const char * filename) {
     // Check if file exists
     FILE * file = fopen(filename, "r");
-    if(file == NULL) {
-        std::cout << "Error: " << filename << " not found" << std::endl;
-        Quit();
-    }
+    if(file == NULL) 
+        throw FileNotFoundException(filename, __LINE__, __FILE__);
     fclose(file);
 	gdk_threads_enter ();
 	GtkWidget * image = gtk_image_new_from_file(filename);
@@ -803,10 +802,8 @@ Volume<T>::Volume(const char * filename, int width, int height, int depth) {
     // Read raw file
     this->data = new T[width*height*depth];
     FILE * file = fopen(filename, "rb");
-    if(file == NULL) {
-        std::cout << "Error: File " << filename << " not found" << std::endl;
-        Quit();
-    }
+    if(file == NULL)
+        throw FileNotFoundException(filename, __LINE__, __FILE__);
     fread(this->data, sizeof(T), width*height*depth, file);
     fclose(file);
     this->width = width;
@@ -934,8 +931,6 @@ Dataset<T>::~Dataset() {
 	delete[] this->data;
 }
 
-/* Init and Quit stuff */
-
 static std::string intToString(int inInt) {
     std::stringstream ss;
     std::string s;
@@ -957,10 +952,8 @@ template <class T>
 void Volume<T>::save(const char * filepath) {
     // This might not work for the defined struct types?
     FILE * file = fopen(filepath, "wb");
-    if(file == NULL) {
-        std::cout << "Could not write RAW file to " << filepath << std::endl;
-        Quit();
-    }
+    if(file == NULL)
+        throw IOException(filepath, __LINE__, __FILE__);
 
     fwrite(this->data, sizeof(T), this->width*this->height*this->depth, file);
     fclose(file);
@@ -1587,10 +1580,8 @@ int Volume<T>::getTotalSize() const {
 
 template <class T>
 void Image<T>::set(int x, int y, T value) {
-    if(!this->inBounds(x,y)) {
-        std::cout << "Error: out of bounds at line " << __LINE__ << " in file " << __FILE__ << std::endl;
-        Quit();
-    }
+    if(!this->inBounds(x,y))
+        throw OutOfBoundsException(x, y, this->width, this->height, __LINE__, __FILE__);
     this->data[x+y*this->width] = value;
 }
 
@@ -1601,28 +1592,22 @@ void Image<T>::set(int2 pos, T value) {
 
 template <class T>
 void Image<T>::set(int i, T value) {
-    if(!this->inBounds(i)) {
-        std::cout << "Error: out of bounds at line " << __LINE__ << " in file " << __FILE__ << std::endl;
-        Quit();
-    }
+    if(!this->inBounds(i))
+        throw OutOfBoundsException(i, this->width*this->height, __LINE__, __FILE__);
     this->data[i] = value;
 }
 
 template <class T>
 void Volume<T>::set(int i, T value) {
-    if(!this->inBounds(i)) {
-        std::cout << "Error: out of bounds at line " << __LINE__ << " in file " << __FILE__ << std::endl;
-        Quit();
-    }
+    if(!this->inBounds(i))
+        throw OutOfBoundsException(i, this->width*this->height*this->depth, __LINE__, __FILE__);
     this->data[i] = value;
 }
 
 template <class T>
 T Image<T>::get(int x, int y) const {
-    if(!this->inBounds(x,y)) {
-        std::cout << "Error: out of bounds at line " << __LINE__ << " in file " << __FILE__ << std::endl;
-        Quit();
-    }
+    if(!this->inBounds(x,y))
+        throw OutOfBoundsException(x, y, this->width, this->height, __LINE__, __FILE__);
     return this->data[x+y*this->width];
 }
 
@@ -1633,29 +1618,22 @@ T Image<T>::get(int2 pos) const {
 
 template <class T>
 T Image<T>::get(int i) const {
-    if(!this->inBounds(i)) {
-        std::cout << "Error: out of bounds at line " << __LINE__ << " in file " << __FILE__ << std::endl;
-        Quit();
-    }
+    if(!this->inBounds(i))
+        throw OutOfBoundsException(i, this->width*this->height, __LINE__, __FILE__);
     return this->data[i];
 }
 
 template <class T>
 T Volume<T>::get(int i) const {
-    if(!this->inBounds(i)) {
-        std::cout << "Error: out of bounds at line " << __LINE__ << " in file " << __FILE__ << std::endl;
-        Quit();
-    }
+    if(!this->inBounds(i))
+        throw OutOfBoundsException(i, this->width*this->height*this->depth, __LINE__, __FILE__);
     return this->data[i];
 }
 
-
 template <class T>
 void Volume<T>::set(int x, int y, int z, T value) {
-    if(!this->inBounds(x,y,z)) {
-        std::cout << "Error: out of bounds at line " << __LINE__ << " in file " << __FILE__ << std::endl;
-        Quit();
-    }
+    if(!this->inBounds(x,y,z))
+        throw OutOfBoundsException(x, y, z, this->width, this->height, this->depth, __LINE__, __FILE__);
     this->data[x+y*this->width+z*this->width*this->height] = value;
 }
 
@@ -1666,10 +1644,8 @@ void Volume<T>::set(int3 pos, T value) {
 
 template <class T>
 T Volume<T>::get(int x, int y, int z) const {
-    if(!this->inBounds(x,y,z)) {
-        std::cout << "Error: out of bounds at line " << __LINE__ << " in file " << __FILE__ << std::endl;
-        Quit();
-    }
+    if(!this->inBounds(x,y,z))
+        throw OutOfBoundsException(x, y, z, this->width, this->height, this->depth, __LINE__, __FILE__);
     return this->data[x+y*this->width+z*this->width*this->height];
 }
 

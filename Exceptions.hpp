@@ -1,14 +1,17 @@
-#ifdef SIPL_EXCEPTIONS
+#ifndef SIPL_EXCEPTIONS
 #define SIPL_EXCEPTIONS
 
 #include <exception>
 #include <stdio.h>
 
-class SIPLException : public exception {
+class SIPLException : public std::exception {
     public:
-        SIPLException() {};
+        SIPLException() {
+            this->line = -1;
+        };
         SIPLException(char * message) {
-            this-message = message;
+            this->line = -1;
+            this->message = message;
         };
         SIPLException(int line, char * file) {
             this->line = line;
@@ -19,57 +22,89 @@ class SIPLException : public exception {
             this->line = line;
             this->file = file;
         };
-        virtual const char * what() {
+        virtual const char * what() const throw() {
             char * string = new char[255];
             if(line > -1) {
-                sprintf(string, "%s \n Exception throwned at line %d in file %s", message, line, file);
+                sprintf(string, "%s \nException thrown at line %d in file %s", message, line, file);
                 return string;
             } else {
                 return message;
             }
         };
+        void setLine(int line) {
+            this->line = line;
+        };
+        void setFile(const char * file) {
+            this->file = file;
+        };
+        void setMessage(char * message) {
+            this->message = message;
+        };
     private:
-        int line = -1;
-        int file;
-        const char * message;
+        int line;
+        const char * file;
+        char * message;
 };
 
 class IOException : public SIPLException {
     public:
-        IOException(char * filename, int line, char * file) {
+        IOException() {
+        };
+        IOException(const char * filename, int line, const char * file) {
             this->filename = filename;
             char * message = new char[255];
             sprintf(message, "IO Error with file %s", filename);
-            this->SIPLException(message, line, file);
+            this->setMessage(message);
+            this->setLine(line);
+            this->setFile(file);
         };
-        IOException(char * filename);
+        IOException(const char * filename) {
             this->filename = filename;
             char * message = new char[255];
             sprintf(message, "IO Error with file %s", filename);
-            this->SIPLException(message);
+            this->setMessage(message);
         };
-    private:
+    protected:
         const char * filename;
 };
 
 class FileNotFoundException : public IOException {
     public:
-        FileNotFoundException(char * filename) {
+        FileNotFoundException(const char * filename) {
             this->filename = filename;
             char * message = new char[255];
             sprintf(message, "The following file was not found: %s", filename);
-            this->SIPLException(message);
+            this->setMessage(message);
         };
-        FileNotFoundException(char * filename, int line, char * file) {
+        FileNotFoundException(const char * filename, int line, const char * file) {
             this->filename = filename;
             char * message = new char[255];
             sprintf(message, "The following file was not found: %s", filename);
-            this->SIPLException(message, line, file);
+            this->setMessage(message);
+            this->setLine(line);
+            this->setFile(file);
         };
 };
 
 class OutOfBoundsException : public SIPLException {
     public:
+        OutOfBoundsException(int x, int sizeX) {
+            this->x = x;
+            this->sizeX = sizeX;
+            char * message = new char[255];
+            sprintf(message, "Out of bounds exception. Requested position %d in image of size %d", x, sizeX);
+            this->setMessage(message);
+        };
+        OutOfBoundsException(int x, int sizeX, int line, const char * file) {
+            this->x = x;
+            this->sizeX = sizeX;
+            char * message = new char[255];
+            sprintf(message, "Out of bounds exception. Requested position %d in image of size %d", x, sizeX);
+            this->setMessage(message);
+            this->setLine(line);
+            this->setFile(file);
+        };
+
         OutOfBoundsException(int x, int y, int sizeX, int sizeY) {
             this->x = x;
             this->y = y;
@@ -77,16 +112,18 @@ class OutOfBoundsException : public SIPLException {
             this->sizeY = sizeY;
             char * message = new char[255];
             sprintf(message, "Out of bounds exception. Requested position %d, %d in image of size %d, %d", x, y, sizeX, sizeY);
-            this->SIPLException(message);
+            this->setMessage(message);
         };
-        OutOfBoundsException(int x, int y, int sizeX, int sizeY, int line, char * file) {
+        OutOfBoundsException(int x, int y, int sizeX, int sizeY, int line, const char * file) {
             this->x = x;
             this->y = y;
             this->sizeX = sizeX;
             this->sizeY = sizeY;
             char * message = new char[255];
             sprintf(message, "Out of bounds exception. Requested position %d, %d in image of size %d, %d", x, y, sizeX, sizeY);
-            this->SIPLException(message, line, file);
+            this->setMessage(message);
+            this->setLine(line);
+            this->setFile(file);
         };
         OutOfBoundsException(int x, int y, int z, int sizeX, int sizeY, int sizeZ) {
             this->x = x;
@@ -97,9 +134,9 @@ class OutOfBoundsException : public SIPLException {
             this->sizeZ = sizeZ;
             char * message = new char[255];
             sprintf(message, "Out of bounds exception. Requested position %d, %d, %d in volume of size %d, %d, %d", x, y, z, sizeX, sizeY, sizeZ);
-            this->SIPLException(message);
+            this->setMessage(message);
         };
-        OutOfBoundsException(int x, int y, int z, int sizeX, int sizeY, int sizeZ, int line, char * file) {
+        OutOfBoundsException(int x, int y, int z, int sizeX, int sizeY, int sizeZ, int line, const char * file) {
             this->x = x;
             this->y = y;
             this->y = z;
@@ -108,10 +145,12 @@ class OutOfBoundsException : public SIPLException {
             this->sizeZ = sizeZ;
             char * message = new char[255];
             sprintf(message, "Out of bounds exception. Requested position %d, %d, %d in volume of size %d, %d, %d", x, y, z, sizeX, sizeY, sizeZ);
-            this->SIPLException(message, line, file);
+            this->setMessage(message);
+            this->setLine(line);
+            this->setFile(file);
        };
     private:
-        int posX, posY, posZ;
+        int x, y, z; // position requested
         int sizeX, sizeY, sizeZ;
 };
 
