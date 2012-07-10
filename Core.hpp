@@ -8,6 +8,7 @@
 #define SIPL_H_
 
 #include "Exceptions.hpp"
+#include "Types.hpp"
 #include <math.h>
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
@@ -17,16 +18,6 @@
 #include <stdlib.h>
 
 namespace SIPL {
-typedef unsigned char uchar;
-typedef unsigned short ushort;
-typedef unsigned int uint; 
-typedef struct color_float { float red, blue, green;} color_float ; 
-typedef struct color_uchar { unsigned char red, blue, green;} color_uchar ;
-typedef struct float2 { float x,y; } float2; 
-typedef struct float3 { float x,y,z; } float3; 
-typedef struct int2 { int x,y; } int2; // not for images/volumes
-typedef struct int3 { int x,y,z; } int3; // not for images/volumes
-enum slice_plane {X,Y,Z};
 
 void Init();
 void Quit();

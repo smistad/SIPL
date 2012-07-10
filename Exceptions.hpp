@@ -1,3 +1,9 @@
+/**
+ * Simple Image Processing Library
+ * Copyright Erik Smistad 2012
+ * See LICENSE file for information on use 
+ */
+
 #ifndef SIPL_EXCEPTIONS
 #define SIPL_EXCEPTIONS
 
