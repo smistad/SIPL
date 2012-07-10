@@ -12,9 +12,7 @@
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gdk/gdkkeysyms.h>
-#include <iostream>
 #include <fstream>
-#include <sstream>
 #include <string>
 #include <stdlib.h>
 
@@ -924,14 +922,6 @@ Dataset<T>::~Dataset() {
 	delete[] this->data;
 }
 
-static std::string intToString(int inInt) {
-    std::stringstream ss;
-    std::string s;
-	ss << inInt;
-	s = ss.str();
-	return s;
-}
-
 template <class T>
 void Image<T>::save(const char * filepath, const char * imageType) {
     GtkWidget * image = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
@@ -1031,9 +1021,9 @@ gboolean Image<T>::setupGUI(gpointer data) {
 	gdk_threads_enter();
 	Window<T> * win = (Window<T> *)data;
 	GtkWidget * window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-		gtk_window_set_title(GTK_WINDOW(window),
-			("Image #" + intToString(win->windowNr)).c_str()
-	);
+    char * title = new char[20];
+    sprintf(title, "Image #%d", win->windowNr);
+    gtk_window_set_title(GTK_WINDOW(window), title);
 	GtkWidget * toolbar = gtk_toolbar_new();
 	gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar), GTK_ORIENTATION_HORIZONTAL);
 	gtk_toolbar_append_item (
@@ -1191,7 +1181,6 @@ void Window<T>::key_pressed(GtkWidget * widget, GdkEventKey * event, gpointer us
 
 }
 
-
 template <class T>
 gboolean Volume<T>::setupGUI(gpointer data) {
 
@@ -1200,9 +1189,9 @@ gboolean Volume<T>::setupGUI(gpointer data) {
     int windowCount = getWindowCount();
 	GtkWidget * window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     winObj->gtkWindow = window;
-	gtk_window_set_title(GTK_WINDOW(window),
-			("Volume #" + intToString(winObj->windowNr)).c_str()
-	);
+    char * title = new char[20];
+    sprintf(title, "Volume #%d", winObj->windowNr);
+    gtk_window_set_title(GTK_WINDOW(window), title);
 
 	GtkWidget * toolbar = gtk_toolbar_new();
 	gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar), GTK_ORIENTATION_HORIZONTAL);
