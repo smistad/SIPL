@@ -9,13 +9,14 @@
 
 #include <exception>
 #include <stdio.h>
+namespace SIPL {
 
 class SIPLException : public std::exception {
     public:
         SIPLException() {
             this->line = -1;
         };
-        SIPLException(char * message) {
+        SIPLException(const char * message) {
             this->line = -1;
             this->message = message;
         };
@@ -23,7 +24,7 @@ class SIPLException : public std::exception {
             this->line = line;
             this->file = file;
         };
-        SIPLException(char * message, int line, char * file) {
+        SIPLException(const char * message, int line, char * file) {
             this->message = message;
             this->line = line;
             this->file = file;
@@ -43,13 +44,13 @@ class SIPLException : public std::exception {
         void setFile(const char * file) {
             this->file = file;
         };
-        void setMessage(char * message) {
+        void setMessage(const char * message) {
             this->message = message;
         };
     private:
         int line;
         const char * file;
-        char * message;
+        const char * message;
 };
 
 class IOException : public SIPLException {
@@ -162,5 +163,7 @@ class OutOfBoundsException : public SIPLException {
 
 class ConversionException : public SIPLException {
 };
+
+}; // END NAMESPACE SIPL
 
 #endif
