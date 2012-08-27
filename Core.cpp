@@ -27,6 +27,10 @@ void Quit() {
     exit(0);
 }
 
+bool isInit() {
+    return init;
+}
+
 int validateSlice(int slice, slice_plane direction, int3 size) {
     if(slice < 0)
         return 0;

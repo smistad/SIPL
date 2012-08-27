@@ -20,6 +20,7 @@
 namespace SIPL {
 
 void Init();
+bool isInit();
 void Quit();
 
 void destroyWindow(GtkWidget * widget, gpointer window) ;
@@ -36,6 +37,7 @@ class Window;
 template <class T>
 class Dataset {
     public:
+        Dataset();
         ~Dataset();
         int getWidth() const;
         int getHeight() const;
@@ -698,6 +700,14 @@ void Volume<T>::MIPToPixbuf(GtkWidget * image, float angle, slice_plane directio
 }
 
 /* --- Constructors & destructors --- */
+template <class T>
+Dataset<T>::Dataset() {
+    if(!isInit()) {
+        Init();
+        while(!isInit()); // make sure it is ready when it leaves this constructor
+    }
+}
+
 template <class T>
 Image<T>::Image(const char * filename) {
     // Check if file exists
