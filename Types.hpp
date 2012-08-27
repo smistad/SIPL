@@ -17,6 +17,7 @@ typedef struct color_float { float red, blue, green;} color_float ;
 typedef struct color_uchar { unsigned char red, blue, green;} color_uchar ;
 enum slice_plane {X,Y,Z};
 
+class int2;
 // Vector classes
 class float2 {
     public:
@@ -36,13 +37,42 @@ class float2 {
             float l = this->length();
             return float2(x/l,y/l);
         };
-        float distance(float2 &other) const {
-            return sqrt((x-other.x)*(x-other.x)+(y-other.y)*(y-other.y));
+        float distance(float2 &other) const ;
+        float dot(float2 &other) const ;
+        float distance(int2 &other) const ;
+        float dot(int2 &other) const ;
+        template <class T>
+        float2 operator+(T v) const {
+            float2 n;
+            n.x = this->x + v;
+            n.y = this->y + v;
+            return n;
         };
-        float dot(float2 &other) const {
-            return x*other.x+y*other.y;
+        template <class T>
+        float2 operator-(T v) const {
+            float2 n;
+            n.x = this->x - v;
+            n.y = this->y - v;
+            return n;
         };
-};
+        template <class T>
+        float2 operator*(T v) const {
+            float2 n;
+            n.x = this->x * v;
+            n.y = this->y * v;
+            return n;
+        };
+        template <class T>
+        float2 operator/(T v) const {
+            float2 n;
+            n.x = this->x / v;
+            n.y = this->y / v;
+            return n;
+        };
+
+ };
+
+class int3;
 
 class float3 {
     public:
@@ -64,11 +94,41 @@ class float3 {
             float l = this->length();
             return float3(x / l, y / l, z / l);
         };
-        float distance(float3 &other) const {
-            return sqrt((x-other.x)*(x-other.x)+(y-other.y)*(y-other.y)+(z-other.z)*(z-other.z));
+        float distance(float3 &other) const ;
+        float distance(int3 &other) const ;
+        float dot(float3 &other) const ;
+        float dot(int3 &other) const ;
+        template <class T>
+        float3 operator+(T v) const {
+            float3 n;
+            n.x = this->x + v;
+            n.y = this->y + v;
+            n.z = this->z + v;
+            return n;
         };
-        float dot(float3 &other) const {
-            return x*other.x+y*other.y+z*other.z;
+        template <class T>
+        float3 operator-(T v) const {
+            float3 n;
+            n.x = this->x - v;
+            n.y = this->y - v;
+            n.z = this->z - v;
+            return n;
+        };
+        template <class T>
+        float3 operator*(T v) const {
+            float3 n;
+            n.x = this->x * v;
+            n.y = this->y * v;
+            n.z = this->z * v;
+            return n;
+        };
+        template <class T>
+        float3 operator/(T v) const {
+            float3 n;
+            n.x = this->x / v;
+            n.y = this->y / v;
+            n.z = this->z / v;
+            return n;
         };
 };
 
@@ -91,11 +151,37 @@ class int2 {
             float l = this->length();
             return float2(x / l, y / l);
         };
-        float distance(int2 &other) const {
-            return sqrt((x-other.x)*(x-other.x)+(y-other.y)*(y-other.y));
+        float distance(float2 &other) const ;
+        float dot(float2 &other) const ;
+        float distance(int2 &other) const ;
+        float dot(int2 &other) const ;
+        template <class T>
+        int2 operator+(T v) const {
+            int2 n;
+            n.x = this->x + v;
+            n.y = this->y + v;
+            return n;
         };
-        float dot(int2 &other) const {
-            return x*other.x+y*other.y;
+        template <class T>
+        int2 operator-(T v) const {
+            int2 n;
+            n.x = this->x - v;
+            n.y = this->y - v;
+            return n;
+        };
+        template <class T>
+        int2 operator*(T v) const {
+            int2 n;
+            n.x = this->x * v;
+            n.y = this->y * v;
+            return n;
+        };
+        template <class T>
+        int2 operator/(T v) const {
+            int2 n;
+            n.x = this->x / v;
+            n.y = this->y / v;
+            return n;
         };
 };
 
@@ -119,13 +205,288 @@ class int3 {
             float l = this->length();
             return float3(x / l, y / l, z / l);
         };
-        float distance(int3 &other) const {
-            return sqrt((x-other.x)*(x-other.x)+(y-other.y)*(y-other.y)+(z-other.z)*(z-other.z));
+        float distance(float3 &other) const ;
+        float distance(int3 &other) const ;
+        float dot(float3 &other) const ;
+        float dot(int3 &other) const ;
+        template <class T>
+        int3 operator+(T v) const {
+            int3 n;
+            n.x = this->x + v;
+            n.y = this->y + v;
+            n.z = this->z + v;
+            return n;
         };
-        float dot(int3 &other) const {
-            return x*other.x+y*other.y+z*other.z;
+        template <class T>
+        int3 operator-(T v) const {
+            int3 n;
+            n.x = this->x - v;
+            n.y = this->y - v;
+            n.z = this->z - v;
+            return n;
+        };
+        template <class T>
+        int3 operator*(T v) const {
+            int3 n;
+            n.x = this->x * v;
+            n.y = this->y * v;
+            n.z = this->z * v;
+            return n;
+        };
+        template <class T>
+        int3 operator/(T v) const {
+            int3 n;
+            n.x = this->x / v;
+            n.y = this->y / v;
+            n.z = this->z / v;
+            return n;
         };
 };
 
-} // end SIPL namespace
+
+// float2
+template <>
+float2 float2::operator+(float2 other) const {
+    float2 v;
+    v.x = this->x + other.x;
+    v.y = this->y + other.y;
+    return v;
+}
+template <>
+float2 float2::operator+(int2 other) const {
+    float2 v;
+    v.x = this->x + other.x;
+    v.y = this->y + other.y;
+    return v;
+}
+template <>
+float2 float2::operator-(float2 other) const {
+    float2 v;
+    v.x = this->x - other.x;
+    v.y = this->y - other.y;
+    return v;
+}
+template <>
+float2 float2::operator-(int2 other) const {
+    float2 v;
+    v.x = this->x - other.x;
+    v.y = this->y - other.y;
+    return v;
+}
+template <>
+float2 float2::operator*(float2 other) const {
+    float2 v;
+    v.x = this->x * other.x;
+    v.y = this->y * other.y;
+    return v;
+}
+template <>
+float2 float2::operator*(int2 other) const {
+    float2 v;
+    v.x = this->x * other.x;
+    v.y = this->y * other.y;
+    return v;
+}
+
+template <class T>
+float2 operator+(T scalar, float2 other) {
+    return other+scalar;
+}
+template <class T>
+float2 operator-(T scalar, float2 other) {
+    return other-scalar;
+}
+template <class T>
+float2 operator*(T scalar, float2 other) {
+    return other*scalar;
+}
+
+
+// float3
+template <>
+float3 float3::operator+(float3 other) const {
+    float3 v;
+    v.x = this->x + other.x;
+    v.y = this->y + other.y;
+    v.z = this->z + other.z;
+    return v;
+}
+template <>
+float3 float3::operator+(int3 other) const {
+    float3 v;
+    v.x = this->x + other.x;
+    v.y = this->y + other.y;
+    v.z = this->z + other.z;
+    return v;
+}
+template <>
+float3 float3::operator-(float3 other) const {
+    float3 v;
+    v.x = this->x - other.x;
+    v.y = this->y - other.y;
+    v.z = this->z - other.z;
+    return v;
+}
+template <>
+float3 float3::operator-(int3 other) const {
+    float3 v;
+    v.x = this->x - other.x;
+    v.y = this->y - other.y;
+    v.z = this->z - other.z;
+    return v;
+}
+template <>
+float3 float3::operator*(float3 other) const {
+    float3 v;
+    v.x = this->x * other.x;
+    v.y = this->y * other.y;
+    v.z = this->z * other.z;
+    return v;
+}
+template <>
+float3 float3::operator*(int3 other) const {
+    float3 v;
+    v.x = this->x * other.x;
+    v.y = this->y * other.y;
+    v.z = this->z * other.z;
+    return v;
+}
+
+template <class T>
+float3 operator+(T scalar, float3 other) {
+    return other+scalar;
+}
+template <class T>
+float3 operator-(T scalar, float3 other) {
+    return other-scalar;
+}
+template <class T>
+float3 operator*(T scalar, float3 other) {
+    return other*scalar;
+}
+
+// int2
+template <>
+int2 int2::operator+(float2 other) const {
+    int2 v;
+    v.x = this->x + other.x;
+    v.y = this->y + other.y;
+    return v;
+}
+template <>
+int2 int2::operator+(int2 other) const {
+    int2 v;
+    v.x = this->x + other.x;
+    v.y = this->y + other.y;
+    return v;
+}
+template <>
+int2 int2::operator-(float2 other) const {
+    int2 v;
+    v.x = this->x - other.x;
+    v.y = this->y - other.y;
+    return v;
+}
+template <>
+int2 int2::operator-(int2 other) const {
+    int2 v;
+    v.x = this->x - other.x;
+    v.y = this->y - other.y;
+    return v;
+}
+template <>
+int2 int2::operator*(float2 other) const {
+    int2 v;
+    v.x = this->x * other.x;
+    v.y = this->y * other.y;
+    return v;
+}
+template <>
+int2 int2::operator*(int2 other) const {
+    int2 v;
+    v.x = this->x * other.x;
+    v.y = this->y * other.y;
+    return v;
+}
+
+template <class T>
+int2 operator+(T scalar, int2 other) {
+    return other+scalar;
+}
+template <class T>
+int2 operator-(T scalar, int2 other) {
+    return other-scalar;
+}
+template <class T>
+int2 operator*(T scalar, int2 other) {
+    return other*scalar;
+}
+
+
+// float3
+template <>
+int3 int3::operator+(float3 other) const {
+    int3 v;
+    v.x = this->x + other.x;
+    v.y = this->y + other.y;
+    v.z = this->z + other.z;
+    return v;
+}
+template <>
+int3 int3::operator+(int3 other) const {
+    int3 v;
+    v.x = this->x + other.x;
+    v.y = this->y + other.y;
+    v.z = this->z + other.z;
+    return v;
+}
+template <>
+int3 int3::operator-(float3 other) const {
+    int3 v;
+    v.x = this->x - other.x;
+    v.y = this->y - other.y;
+    v.z = this->z - other.z;
+    return v;
+}
+template <>
+int3 int3::operator-(int3 other) const {
+    int3 v;
+    v.x = this->x - other.x;
+    v.y = this->y - other.y;
+    v.z = this->z - other.z;
+    return v;
+}
+template <>
+int3 int3::operator*(float3 other) const {
+    int3 v;
+    v.x = this->x * other.x;
+    v.y = this->y * other.y;
+    v.z = this->z * other.z;
+    return v;
+}
+template <>
+int3 int3::operator*(int3 other) const {
+    int3 v;
+    v.x = this->x * other.x;
+    v.y = this->y * other.y;
+    v.z = this->z * other.z;
+    return v;
+}
+
+template <class T>
+int3 operator+(T scalar, int3 other) {
+    return other+scalar;
+}
+template <class T>
+int3 operator-(T scalar, int3 other) {
+    return other-scalar;
+}
+template <class T>
+int3 operator*(T scalar, int3 other) {
+    return other*scalar;
+}
+
+
+
+}; // end SIPL namespace
 #endif
