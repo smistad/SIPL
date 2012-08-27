@@ -32,10 +32,9 @@ class float2 {
         float length() const {
             return sqrt(x*x+y*y);
         };
-        void normalize() {
+        float2 normalize() const {
             float l = this->length();
-            x = x / l;
-            y = y / l;
+            return float2(x/l,y/l);
         };
         float distance(float2 &other) const {
             return sqrt((x-other.x)*(x-other.x)+(y-other.y)*(y-other.y));
@@ -61,11 +60,9 @@ class float3 {
         float length() const {
             return sqrt(x*x+y*y+z*z);
         };
-        void normalize() {
+        float3 normalize() {
             float l = this->length();
-            x = x / l;
-            y = y / l;
-            z = z / l;
+            return float3(x / l, y / l, z / l);
         };
         float distance(float3 &other) const {
             return sqrt((x-other.x)*(x-other.x)+(y-other.y)*(y-other.y)+(z-other.z)*(z-other.z));
@@ -90,10 +87,9 @@ class int2 {
         float length() const {
             return sqrt(x*x+y*y);
         };
-        void normalize() {
+        float2 normalize() const {
             float l = this->length();
-            x = x / l;
-            y = y / l;
+            return float2(x / l, y / l);
         };
         float distance(int2 &other) const {
             return sqrt((x-other.x)*(x-other.x)+(y-other.y)*(y-other.y));
@@ -119,11 +115,9 @@ class int3 {
         float length() const {
             return sqrt(x*x+y*y+z*z);
         };
-        void normalize() {
+        float3 normalize() const {
             float l = this->length();
-            x = x / l;
-            y = y / l;
-            z = z / l;
+            return float3(x / l, y / l, z / l);
         };
         float distance(int3 &other) const {
             return sqrt((x-other.x)*(x-other.x)+(y-other.y)*(y-other.y)+(z-other.z)*(z-other.z));
