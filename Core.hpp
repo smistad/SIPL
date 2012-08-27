@@ -78,7 +78,7 @@ class Image : public Dataset<T> {
 template <class T>
 class Volume : public Dataset<T> {
     public:
-        Volume(const char * filename); // for reading mhd files
+        Volume(std::string filename); // for reading mhd files
         Volume(const char * filename, int width, int height, int depth); // for reading raw files
         Volume(int width, int height, int depth);
         template <class U>
@@ -421,8 +421,8 @@ void Volume<T>::dataToPixbuf(GtkWidget * image, int slice, slice_plane direction
     //gdk_threads_enter();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
     validateSlice(slice, direction, getSize());
-    int xSize;
-    int ySize;
+    int xSize = 0;
+    int ySize = 0;
     switch(direction) {
         case X:
             // x direction
@@ -471,8 +471,8 @@ template <class T>
 void Volume<T>::dataToPixbuf(GtkWidget * image, int slice, slice_plane direction, float level, float window) {
     //gdk_threads_enter();
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) image);
-    int xSize;
-    int ySize;
+    int xSize = 0;
+    int ySize = 0;
     switch(direction) {
         case X:
             // x direction
@@ -797,20 +797,18 @@ Volume<T>::Volume(const char * filename, int width, int height, int depth) {
 }
 
 template <class T>
-Volume<T>::Volume(const char * filename) {
+Volume<T>::Volume(std::string filename) {
     // Current limits of this method: T and the data type to be read has to be the same. Does not handle space after strings
 
     // Read mhd file
     std::fstream mhdFile;
-    mhdFile.open(filename, std::fstream::in);
+    mhdFile.open(filename.c_str(), std::fstream::in);
     std::string line;
     std::string rawFilename;
     bool sizeFound = false, 
          rawFilenameFound = false, 
          typeFound = false, 
          dimensionsFound = false;
-    bool isSigned;
-    int readTypeSize;
     std::string typeName;
     do{
         std::getline(mhdFile, line);
@@ -830,30 +828,32 @@ Volume<T>::Volume(const char * filename) {
         } else if(line.substr(0, 15) == "ElementDataFile") {
             rawFilename = line.substr(15+3);
             rawFilenameFound = true;
+
+            // Remove any trailing spaces
+            int pos = rawFilename.find(" ");
+            if(pos > 0)
+            rawFilename = rawFilename.substr(0,pos);
+            
+            // Get path name
+            pos = filename.rfind('/');
+            if(pos > 0)
+                rawFilename = filename.substr(0,pos+1) + rawFilename;
         } else if(line.substr(0, 11) == "ElementType") {
             typeFound = true;
             typeName = line.substr(11+3);
+            
+            // Remove any trailing spaces
+            int pos = typeName.find(" ");
+            if(pos > 0)
+            typeName = typeName.substr(0,pos);
+
             if(typeName == "MET_SHORT") {
-                readTypeSize = sizeof(short);
-                isSigned = true;
             } else if(typeName == "MET_USHORT") {
-                readTypeSize = sizeof(short);
-                isSigned = false;
             } else if(typeName == "MET_CHAR") {
-                readTypeSize = sizeof(char);
-                isSigned = true;
             } else if(typeName == "MET_UCHAR") {
-                readTypeSize = sizeof(char);
-                isSigned = false;
             } else if(typeName == "MET_INT") {
-                readTypeSize = sizeof(int);
-                isSigned = true;
             } else if(typeName == "MET_UINT") {
-                readTypeSize = sizeof(int);
-                isSigned = false;
             } else if(typeName == "MET_FLOAT") {
-                readTypeSize = sizeof(float);
-                isSigned = true;
             } else {
                 throw IOException("Trying to read volume of unsupported data type", __LINE__, __FILE__);
             }
@@ -1177,7 +1177,6 @@ gboolean Volume<T>::setupGUI(gpointer data) {
 
     Window<T> * winObj = (Window<T> *)data;
 	gdk_threads_enter();
-    int windowCount = getWindowCount();
 	GtkWidget * window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     winObj->gtkWindow = window;
     char * title = new char[20];
@@ -1353,28 +1352,23 @@ Window<T> * Volume<T>::showMIP(slice_plane direction, float level, float window)
 template <class T>
 Window<T> * Volume<T>::showMIP(slice_plane direction){
 	int windowCount = increaseWindowCount();
-    int slice = this->width/2;
-    int xSize;
-    int ySize;
-    int zSize;
+    int xSize = 0;
+    int ySize = 0;
     switch(direction) {
         case X:
             // x direction
             xSize = this->height;
             ySize = this->depth;
-            zSize = this->width;
             break;
         case Y:
             // y direction
             xSize = this->width;
             ySize = this->depth;
-            zSize = this->height;
             break;
         case Z:
             // z direction
             xSize = this->width;
             ySize = this->height;
-            zSize = this->depth;
             break;
     }
             
