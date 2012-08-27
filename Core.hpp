@@ -704,7 +704,6 @@ template <class T>
 Dataset<T>::Dataset() {
     if(!isInit()) {
         Init();
-        while(!isInit()); // make sure it is ready when it leaves this constructor
     }
 }
 
