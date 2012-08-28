@@ -289,15 +289,15 @@ float2 float2::operator*(int2 other) const {
 
 template <class T>
 float2 operator+(T scalar, float2 other) {
-    return other+scalar;
+    return other.operator+(scalar);
 }
 template <class T>
 float2 operator-(T scalar, float2 other) {
-    return other-scalar;
+    return other.operator-(scalar);
 }
 template <class T>
 float2 operator*(T scalar, float2 other) {
-    return other*scalar;
+    return other.operator*(scalar);
 }
 
 
@@ -353,15 +353,15 @@ float3 float3::operator*(int3 other) const {
 
 template <class T>
 float3 operator+(T scalar, float3 other) {
-    return other+scalar;
+    return other.operator+(scalar);
 }
 template <class T>
 float3 operator-(T scalar, float3 other) {
-    return other-scalar;
+    return other.operator-(scalar);
 }
 template <class T>
 float3 operator*(T scalar, float3 other) {
-    return other*scalar;
+    return other.operator*(scalar);
 }
 
 // int2
@@ -410,15 +410,15 @@ int2 int2::operator*(int2 other) const {
 
 template <class T>
 int2 operator+(T scalar, int2 other) {
-    return other+scalar;
+    return other.operator+(scalar);
 }
 template <class T>
 int2 operator-(T scalar, int2 other) {
-    return other-scalar;
+    return other.operator-(scalar);
 }
 template <class T>
 int2 operator*(T scalar, int2 other) {
-    return other*scalar;
+    return other.operator*(scalar);
 }
 
 
@@ -474,15 +474,15 @@ int3 int3::operator*(int3 other) const {
 
 template <class T>
 int3 operator+(T scalar, int3 other) {
-    return other+scalar;
+    return other.operator+(scalar);
 }
 template <class T>
 int3 operator-(T scalar, int3 other) {
-    return other-scalar;
+    return other.operator-(scalar);
 }
 template <class T>
 int3 operator*(T scalar, int3 other) {
-    return other*scalar;
+    return other.operator*(scalar);
 }
 
 
