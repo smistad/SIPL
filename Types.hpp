@@ -31,7 +31,7 @@ class float2 {
             this->y = y;
         };
         float length() const {
-            return sqrt(x*x+y*y);
+            return sqrt((float)(x*x+y*y));
         };
         float2 normalize() const {
             float l = this->length();
@@ -88,7 +88,7 @@ class float3 {
             this->z = z;
         };
         float length() const {
-            return sqrt(x*x+y*y+z*z);
+            return sqrt((float)(x*x+y*y+z*z));
         };
         float3 normalize() {
             float l = this->length();
@@ -145,7 +145,7 @@ class int2 {
             this->y = y;
         };
         float length() const {
-            return sqrt(x*x+y*y);
+            return sqrt((float)(x*x+y*y));
         };
         float2 normalize() const {
             float l = this->length();
@@ -199,7 +199,7 @@ class int3 {
             this->z = z;
         };
         float length() const {
-            return sqrt(x*x+y*y+z*z);
+            return sqrt((float)(x*x+y*y+z*z));
         };
         float3 normalize() const {
             float l = this->length();
