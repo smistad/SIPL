@@ -7,9 +7,11 @@
 #ifndef SIPL_H_
 #define SIPL_H_
 
+#define _USE_MATH_DEFINES // windows crap
+#include <cmath>
+
 #include "Exceptions.hpp"
 #include "Types.hpp"
-#include <math.h>
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gdk/gdkkeysyms.h>
