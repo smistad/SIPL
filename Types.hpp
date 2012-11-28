@@ -243,6 +243,16 @@ class int3 {
         };
 };
 
+class Region {
+    public:
+        int3 offset;
+        int3 size;
+        Region(int x_size, int y_size);
+        Region(int x_offset, int y_offset, int x_size, int y_size);
+        Region(int x_size, int y_size, int z_size);
+        Region(int x_offset, int y_offset, int z_offset, int x_size, int y_size, int z_size);
+};
+
 // float2
 template <> inline
 float2 float2::operator+(float2 other) const {
