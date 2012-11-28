@@ -47,7 +47,6 @@ class Dataset {
         void setData(T * data);
         virtual int getTotalSize() const=0;
         void fill(T value);
-        void set(Region region, T value);
     protected:
         T * data;
         int width, height;
@@ -58,6 +57,7 @@ class Image : public Dataset<T> {
     public:
         Image(const char * filepath);
         Image(unsigned int width, unsigned int height);
+        Image(int2 size);
         template <class U>
         Image(Image<U> * otherImage);
         T get(int i) const;
@@ -66,6 +66,7 @@ class Image : public Dataset<T> {
         void set(int x, int y, T value);
         void set(int2, T value);
         void set(int i, T v);
+        void set(Region region, T value);
         int2 getSize() const;
         Window<T> * show();
         Window<T> * show(float level, float window);
@@ -87,6 +88,7 @@ class Volume : public Dataset<T> {
         Volume(std::string filename); // for reading mhd files
         Volume(const char * filename, int width, int height, int depth); // for reading raw files
         Volume(int width, int height, int depth);
+        Volume(int3 size);
         template <class U>
         Volume(Volume<U> * otherVolume);
         T get(int x, int y, int z) const;
@@ -95,6 +97,7 @@ class Volume : public Dataset<T> {
         void set(int x, int y, int z, T value);
         void set(int3 pos, T v);
         void set(int i, T v);
+        void set(Region region, T value);
         int getDepth() const;
         int3 getSize() const;
         Window<T> * show();
@@ -915,11 +918,28 @@ Volume<T>::Volume(int width, int height, int depth) {
 }
 
 template <class T>
+Volume<T>::Volume(int3 size) {
+    this->data = new T[size.x*size.y*size.z];
+    this->width = size.x;
+    this->height = size.y;
+    this->depth = size.z;
+}
+
+
+template <class T>
 Image<T>::Image(unsigned int width, unsigned int height) {
     this->data = new T[width*height];
     this->width = width;
     this->height = height;
 }
+
+template <class T>
+Image<T>::Image(int2 size) {
+    this->data = new T[size.x*size.y];
+    this->width = size.x;
+    this->height = size.y;
+}
+
 
 template <class T>
 Dataset<T>::~Dataset() {
