@@ -118,6 +118,7 @@ class Volume : public Dataset<T> {
         template <class U>
         Volume<T> & operator=(const Volume<U> &otherVolume);
         bool inBounds(int x, int y, int z) const;
+        bool inBounds(int3 pos) const;
         bool inBounds(int i) const;
         template <class U>
         void convert(Volume<U> * otherImage) ;
@@ -611,6 +612,9 @@ void Volume<T>::MIPToPixbuf(GtkWidget * image, float angle, slice_plane directio
     T * mip = new T[xSize*ySize]();
     int n = gdk_pixbuf_get_n_channels(pixBuf);
     int rowstride = gdk_pixbuf_get_rowstride(pixBuf);
+    // Initialize image to black
+    for(int i = 0; i < n*xSize*ySize; i++)
+        pixels[i] = 0;
 
     #pragma omp parallel for
     for(int x = 0; x < xSize; x++) {
@@ -685,6 +689,11 @@ void Volume<T>::MIPToPixbuf(GtkWidget * image, float angle, slice_plane directio
     }   
     int n = gdk_pixbuf_get_n_channels(pixBuf);
     int rowstride = gdk_pixbuf_get_rowstride(pixBuf);
+
+    // Initialize image to black
+    for(int i = 0; i < n*xSize*ySize; i++)
+        pixels[i] = 0;
+
     #pragma omp parallel for
     for(int x = 0; x < xSize; x++) {
         int nu = round((x-(float)xSize/2.0f)*sangle) + (float)xSize/2.0f;
@@ -1567,6 +1576,14 @@ bool Volume<T>::inBounds(int x, int y, int z) const {
         && y >= 0 && y < this->height 
         && z >= 0 && z < this->depth;
 }
+
+template <class T>
+bool Volume<T>::inBounds(int3 pos) const {
+    return pos.x >= 0 && pos.x < this->width 
+        && pos.y >= 0 && pos.y < this->height 
+        && pos.z >= 0 && pos.z < this->depth;
+}
+
 
 template <class T>
 int Image<T>::getTotalSize() const {
