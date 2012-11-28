@@ -46,6 +46,8 @@ class Dataset {
         T * getData();
         void setData(T * data);
         virtual int getTotalSize() const=0;
+        void fill(T value);
+        void set(Region region, T value);
     protected:
         T * data;
         int width, height;
@@ -1630,6 +1632,12 @@ T Volume<T>::get(int x, int y, int z) const {
 template <class T>
 T Volume<T>::get(int3 pos) const {
     return this->get(pos.x, pos.y, pos.z);
+}
+
+template <class T>
+void Dataset<T>::fill(T value) {
+    for(int i = 0; i < getTotalSize(); i++)
+        data[i] = value;
 }
 
 } // End SIPL namespace
