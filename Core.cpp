@@ -6,7 +6,7 @@
 #include "Core.hpp"
 
 namespace SIPL {
-bool init = false;
+static bool init = false;
 GThread * gtkThread;
 int windowCount;
 GMutex * windowCountMutex;
@@ -85,7 +85,11 @@ void Init() {
 		g_thread_init(NULL);
 		gtkThread = g_thread_create(initGTK, NULL, true, NULL);
 	}
-	while(!init); // wait for the thread to be created
+	while(!init) // wait for the thread to be created
+	{
+		//needed to prevent never ending while
+		usleep(0);
+	}
     atexit(quit);
 }
 
