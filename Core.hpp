@@ -46,6 +46,7 @@ class Dataset {
         T * getData();
         void setData(T * data);
         virtual int getTotalSize() const=0;
+        void fill(T value);
     protected:
         T * data;
         int width, height;
@@ -56,6 +57,7 @@ class Image : public Dataset<T> {
     public:
         Image(const char * filepath);
         Image(unsigned int width, unsigned int height);
+        Image(int2 size);
         template <class U>
         Image(Image<U> * otherImage);
         T get(int i) const;
@@ -64,6 +66,7 @@ class Image : public Dataset<T> {
         void set(int x, int y, T value);
         void set(int2, T value);
         void set(int i, T v);
+        void set(Region region, T value);
         int2 getSize() const;
         Window<T> * show();
         Window<T> * show(float level, float window);
@@ -85,6 +88,7 @@ class Volume : public Dataset<T> {
         Volume(std::string filename); // for reading mhd files
         Volume(const char * filename, int width, int height, int depth); // for reading raw files
         Volume(int width, int height, int depth);
+        Volume(int3 size);
         template <class U>
         Volume(Volume<U> * otherVolume);
         T get(int x, int y, int z) const;
@@ -93,6 +97,7 @@ class Volume : public Dataset<T> {
         void set(int x, int y, int z, T value);
         void set(int3 pos, T v);
         void set(int i, T v);
+        void set(Region region, T value);
         int getDepth() const;
         int3 getSize() const;
         Window<T> * show();
@@ -113,6 +118,7 @@ class Volume : public Dataset<T> {
         template <class U>
         Volume<T> & operator=(const Volume<U> &otherVolume);
         bool inBounds(int x, int y, int z) const;
+        bool inBounds(int3 pos) const;
         bool inBounds(int i) const;
         template <class U>
         void convert(Volume<U> * otherImage) ;
@@ -606,6 +612,9 @@ void Volume<T>::MIPToPixbuf(GtkWidget * image, float angle, slice_plane directio
     T * mip = new T[xSize*ySize]();
     int n = gdk_pixbuf_get_n_channels(pixBuf);
     int rowstride = gdk_pixbuf_get_rowstride(pixBuf);
+    // Initialize image to black
+    for(int i = 0; i < n*xSize*ySize; i++)
+        pixels[i] = 0;
 
     #pragma omp parallel for
     for(int x = 0; x < xSize; x++) {
@@ -680,6 +689,11 @@ void Volume<T>::MIPToPixbuf(GtkWidget * image, float angle, slice_plane directio
     }   
     int n = gdk_pixbuf_get_n_channels(pixBuf);
     int rowstride = gdk_pixbuf_get_rowstride(pixBuf);
+
+    // Initialize image to black
+    for(int i = 0; i < n*xSize*ySize; i++)
+        pixels[i] = 0;
+
     #pragma omp parallel for
     for(int x = 0; x < xSize; x++) {
         int nu = round((x-(float)xSize/2.0f)*sangle) + (float)xSize/2.0f;
@@ -913,11 +927,28 @@ Volume<T>::Volume(int width, int height, int depth) {
 }
 
 template <class T>
+Volume<T>::Volume(int3 size) {
+    this->data = new T[size.x*size.y*size.z];
+    this->width = size.x;
+    this->height = size.y;
+    this->depth = size.z;
+}
+
+
+template <class T>
 Image<T>::Image(unsigned int width, unsigned int height) {
     this->data = new T[width*height];
     this->width = width;
     this->height = height;
 }
+
+template <class T>
+Image<T>::Image(int2 size) {
+    this->data = new T[size.x*size.y];
+    this->width = size.x;
+    this->height = size.y;
+}
+
 
 template <class T>
 Dataset<T>::~Dataset() {
@@ -1547,6 +1578,14 @@ bool Volume<T>::inBounds(int x, int y, int z) const {
 }
 
 template <class T>
+bool Volume<T>::inBounds(int3 pos) const {
+    return pos.x >= 0 && pos.x < this->width 
+        && pos.y >= 0 && pos.y < this->height 
+        && pos.z >= 0 && pos.z < this->depth;
+}
+
+
+template <class T>
 int Image<T>::getTotalSize() const {
     return this->width*this->height;
 }
@@ -1630,6 +1669,12 @@ T Volume<T>::get(int x, int y, int z) const {
 template <class T>
 T Volume<T>::get(int3 pos) const {
     return this->get(pos.x, pos.y, pos.z);
+}
+
+template <class T>
+void Dataset<T>::fill(T value) {
+    for(int i = 0; i < getTotalSize(); i++)
+        data[i] = value;
 }
 
 } // End SIPL namespace

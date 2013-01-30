@@ -37,10 +37,12 @@ class float2 {
             float l = this->length();
             return float2(x/l,y/l);
         };
-        float distance(float2 &other) const ;
-        float dot(float2 &other) const ;
-        float distance(int2 &other) const ;
-        float dot(int2 &other) const ;
+        float distance(float2 other) const ;
+        float dot(float2 other) const ;
+        float distance(int2 other) const ;
+        float dot(int2 other) const ;
+        bool operator==(float2 other) const;
+        bool operator==(int2 other) const;
         template <class T>
         float2 operator+(T v) const {
             float2 n;
@@ -94,10 +96,12 @@ class float3 {
             float l = this->length();
             return float3(x / l, y / l, z / l);
         };
-        float distance(float3 &other) const ;
-        float distance(int3 &other) const ;
-        float dot(float3 &other) const ;
-        float dot(int3 &other) const ;
+        float distance(float3 other) const ;
+        float distance(int3 other) const ;
+        float dot(float3 other) const ;
+        float dot(int3 other) const ;
+        bool operator==(float3 other) const;
+        bool operator==(int3 other) const;
         template <class T>
         float3 operator+(T v) const {
             float3 n;
@@ -151,10 +155,12 @@ class int2 {
             float l = this->length();
             return float2(x / l, y / l);
         };
-        float distance(float2 &other) const ;
-        float dot(float2 &other) const ;
-        float distance(int2 &other) const ;
-        float dot(int2 &other) const ;
+        float distance(float2 other) const ;
+        float dot(float2 other) const ;
+        float distance(int2 other) const ;
+        float dot(int2 other) const ;
+        bool operator==(int2 other) const;
+        bool operator==(float2 other) const;
         template <class T>
         int2 operator+(T v) const {
             int2 n;
@@ -205,10 +211,12 @@ class int3 {
             float l = this->length();
             return float3(x / l, y / l, z / l);
         };
-        float distance(float3 &other) const ;
-        float distance(int3 &other) const ;
-        float dot(float3 &other) const ;
-        float dot(int3 &other) const ;
+        float distance(float3 other) const ;
+        float distance(int3 other) const ;
+        float dot(float3 other) const ;
+        float dot(int3 other) const ;
+        bool operator==(int3 other) const;
+        bool operator==(float3 other) const;
         template <class T>
         int3 operator+(T v) const {
             int3 n;
@@ -241,6 +249,16 @@ class int3 {
             n.z = this->z / v;
             return n;
         };
+};
+
+class Region {
+    public:
+        int3 offset;
+        int3 size;
+        Region(int x_size, int y_size);
+        Region(int x_offset, int y_offset, int x_size, int y_size);
+        Region(int x_size, int y_size, int z_size);
+        Region(int x_offset, int y_offset, int z_offset, int x_size, int y_size, int z_size);
 };
 
 // float2
