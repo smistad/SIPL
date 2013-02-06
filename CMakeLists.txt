@@ -11,8 +11,11 @@ cmake_minimum_required(VERSION 2.8)
 
 # GTK
 ###########
-find_package (PkgConfig REQUIRED)
-pkg_check_modules (GTK2 REQUIRED gtk+-2.0 gthread-2.0)
+option(SIPL_USE_GTK "Link in library gtk." ON)
+if(SIPL_USE_GTK)
+    find_package (PkgConfig REQUIRED)
+    pkg_check_modules (GTK2 REQUIRED gtk+-2.0 gthread-2.0)
+endif()
 
 # OpenMP
 ###########
@@ -28,9 +31,12 @@ endif()
 #------------------------------------------------------------------------------
 # Where to look for includes and libraries
 #------------------------------------------------------------------------------
-include_directories (${GTK2_INCLUDE_DIRS})
-set(SIPL_INCLUDE_DIRS ${GTK2_INCLUDE_DIRS})
-link_directories (${GTK2_LIBRARY_DIRS})
+set(SIPL_INCLUDE_DIRS )
+if(SIPL_USE_GTK)
+    include_directories (${GTK2_INCLUDE_DIRS})
+    set(SIPL_INCLUDE_DIRS ${GTK2_INCLUDE_DIRS})
+    link_directories (${GTK2_LIBRARY_DIRS})
+endif()
 
 
 #------------------------------------------------------------------------------
@@ -39,14 +45,21 @@ link_directories (${GTK2_LIBRARY_DIRS})
 
 # SIPL library
 ###########
-add_library (SIPL Core.hpp Core.cpp Types.hpp Types.cpp )
-target_link_libraries (SIPL ${GTK2_LIBRARIES})
+if(SIPL_USE_GTK)
+    add_library (SIPL Core.hpp Core.cpp Types.hpp Types.cpp )
+    target_link_libraries (SIPL ${GTK2_LIBRARIES})
+else()
+    add_library (SIPL Types.hpp Types.cpp )
+    target_link_libraries (SIPL)
+endif()
 
 
 #------------------------------------------------------------------------------
 # Compiler options
 #------------------------------------------------------------------------------
-add_definitions (${GTK2_CFLAGS_OTHER})
+if(SIPL_USE_GTK)
+    add_definitions (${GTK2_CFLAGS_OTHER})
+endif()
 
 
 #------------------------------------------------------------------------------
