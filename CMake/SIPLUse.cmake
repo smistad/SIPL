@@ -3,8 +3,10 @@
 #------------------------------------------------------------------------------
 
 # GTK
-find_package (PkgConfig REQUIRED)
-pkg_check_modules (GTK2 REQUIRED gtk+-2.0 gthread-2.0)
+if(SIPL_USE_GTK)
+    find_package (PkgConfig REQUIRED)
+    pkg_check_modules (GTK2 REQUIRED gtk+-2.0 gthread-2.0)
+endif()
 
 #------------------------------------------------------------------------------
 # Where to look for includes and libraries
