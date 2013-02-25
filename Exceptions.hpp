@@ -20,11 +20,11 @@ class SIPLException : public std::exception {
             this->line = -1;
             this->message = message;
         };
-        SIPLException(int line, char * file) {
+        SIPLException(int line, const char * file) {
             this->line = line;
             this->file = file;
         };
-        SIPLException(const char * message, int line, char * file) {
+        SIPLException(const char * message, int line, const char * file) {
             this->message = message;
             this->line = line;
             this->file = file;

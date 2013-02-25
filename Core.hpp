@@ -814,7 +814,9 @@ Volume<T>::Volume(const char * filename, int width, int height, int depth) {
     FILE * file = fopen(filename, "rb");
     if(file == NULL)
         throw FileNotFoundException(filename, __LINE__, __FILE__);
-    fread(this->data, sizeof(T), width*height*depth, file);
+    std::size_t readSize = fread(this->data, sizeof(T), width*height*depth, file);
+    if(readSize != width*height*depth*sizeof(T))
+    	throw IOException(filename, __LINE__, __FILE__);
     fclose(file);
     this->width = width;
     this->height = height;
