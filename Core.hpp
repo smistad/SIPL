@@ -839,6 +839,7 @@ Volume<T>::Volume(std::string filename) {
          typeFound = false, 
          dimensionsFound = false;
     std::string typeName;
+    this->spacing = float3(1.0f,1.0f,1.0f);
     do{
         std::getline(mhdFile, line);
         if(line.substr(0, 7) == "DimSize") {
@@ -889,7 +890,19 @@ Volume<T>::Volume(std::string filename) {
         } else if(line.substr(0, 5) == "NDims") {
             if(line.substr(5+3, 1) == "3") 
                 dimensionsFound = true;
+		} else if(line.substr(0, 14) == "ElementSpacing") {
+            std::string sizeString = line.substr(14+3);
+            std::string sizeX = sizeString.substr(0,sizeString.find(" "));
+            sizeString = sizeString.substr(sizeString.find(" ")+1);
+            std::string sizeY = sizeString.substr(0,sizeString.find(" "));
+            sizeString = sizeString.substr(sizeString.find(" ")+1);
+            std::string sizeZ = sizeString.substr(0,sizeString.find(" "));
+
+            spacing.x = atof(sizeX.c_str());
+            spacing.y = atof(sizeY.c_str());
+            spacing.z = atof(sizeZ.c_str());
         }
+
     } while(!mhdFile.eof());
 
 
