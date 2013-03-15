@@ -16,6 +16,7 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gdk/gdkkeysyms.h>
 #include <fstream>
+#include <typeinfo>
 #include <string>
 #include <stdlib.h>
 
@@ -123,8 +124,11 @@ class Volume : public Dataset<T> {
         template <class U>
         void convert(Volume<U> * otherImage) ;
         int getTotalSize() const;
+		float3 getSpacing() const;
+		void setSpacing(float3 spacing);
     private:
         int depth;
+        float3 spacing;
 };
 
 template <class T>
@@ -967,6 +971,44 @@ void Image<T>::save(const char * filepath, const char * imageType) {
 template <class T>
 void Volume<T>::save(const char * filepath) {
     // This might not work for the defined struct types?
+	std::string filename = filepath;
+	if(filename.substr(-3) == "mhd") {
+		// Create MHD file
+		std::ofstream file;
+		file.open(filename.c_str());
+		file << "ObjectType = Image\n";
+		file << "NDims = 3\n";
+		file << "DimSize = " << this->width << " " <<
+				this->height << " " << this->depth << "\n";
+		std::string type;
+		if(typeid(T) == typeid(uchar)) {
+			type = "MET_UCHAR";
+		} else if(typeid(T) == typeid(char)) {
+			type = "MET_CHAR";
+		} else if(typeid(T) == typeid(ushort)) {
+			type = "MET_USHORT";
+		} else if(typeid(T) == typeid(short)) {
+			type = "MET_SHORT";
+		} else if(typeid(T) == typeid(uint)) {
+			type = "MET_UINT";
+		} else if(typeid(T) == typeid(int)) {
+			type = "MET_INT";
+		} else if(typeid(T) == typeid(float)) {
+			type = "MET_FLOAT";
+		} else {
+			throw SIPL::SIPLException("Unsupported type to write mhd file.", __LINE__, __FILE__);
+		}
+		file << "ElementType = " << type << "\n";
+		file << "ElementSpacing = " << this->spacing.x << " " <<
+				this->spacing.y << " " << this->spacing.z << "\n";
+		// Remove path
+		int pos = filename.rfind("/");
+		// set filename extension to .raw
+		filename = filename.substr(0, filename.size()-3) + "raw";
+		std::string filenameWithoutPath = filename.substr(pos+1);
+		file << "ElementDataFile = " << filenameWithoutPath << "\n";
+		file.close();
+	}
     FILE * file = fopen(filepath, "wb");
     if(file == NULL)
         throw IOException(filepath, __LINE__, __FILE__);
@@ -1677,5 +1719,17 @@ void Dataset<T>::fill(T value) {
         data[i] = value;
 }
 
-} // End SIPL namespace
+template <class T>
+float3 Volume<T>::getSpacing() const {
+	return spacing;
+}
+
+template <class T>
+void Volume<T>::setSpacing(float3 spacing) {
+	this->spacing = spacing;
+}
+
+}
+
+ // End SIPL namespace
 #endif /* SIPL_H_ */
