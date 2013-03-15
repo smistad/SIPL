@@ -793,6 +793,7 @@ Volume<T>::Volume(Volume<U> * otherImage) {
     this->width = otherImage->getWidth();
     this->height = otherImage->getHeight();
     this->depth = otherImage->getDepth();
+    this->spacing = otherImage->getSpacing();
     this->data = new T[this->height*this->width*this->depth];
     this->convert(otherImage);
 }
@@ -823,6 +824,7 @@ Volume<T>::Volume(const char * filename, int width, int height, int depth) {
     this->width = width;
     this->height = height;
     this->depth = depth;
+    this->spacing = float3(1.0f,1.0f,1.0f);
 }
 
 template <class T>
@@ -941,6 +943,7 @@ Volume<T>::Volume(int width, int height, int depth) {
     this->width = width;
     this->height = height;
     this->depth = depth;
+    this->spacing = float3(1.0f,1.0f,1.0f);
 }
 
 template <class T>
@@ -949,6 +952,7 @@ Volume<T>::Volume(int3 size) {
     this->width = size.x;
     this->height = size.y;
     this->depth = size.z;
+    this->spacing = float3(1.0f,1.0f,1.0f);
 }
 
 
@@ -980,12 +984,11 @@ void Image<T>::save(const char * filepath, const char * imageType) {
 	gdk_pixbuf_save(gtk_image_get_pixbuf((GtkImage *) image), filepath, imageType,
 			NULL, NULL);
 }
-
 template <class T>
 void Volume<T>::save(const char * filepath) {
     // This might not work for the defined struct types?
 	std::string filename = filepath;
-	if(filename.substr(-3) == "mhd") {
+	if(filename.substr(filename.size()-3) == "mhd") {
 		// Create MHD file
 		std::ofstream file;
 		file.open(filename.c_str());
@@ -1022,7 +1025,7 @@ void Volume<T>::save(const char * filepath) {
 		file << "ElementDataFile = " << filenameWithoutPath << "\n";
 		file.close();
 	}
-    FILE * file = fopen(filepath, "wb");
+    FILE * file = fopen(filename.c_str(), "wb");
     if(file == NULL)
         throw IOException(filepath, __LINE__, __FILE__);
 
