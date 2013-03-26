@@ -12,6 +12,7 @@
 
 #include "Exceptions.hpp"
 #include "Types.hpp"
+#include "IntensityTransformations.hpp"
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gdk/gdkkeysyms.h>
@@ -86,7 +87,7 @@ class Image : public Dataset<T> {
 template <class T>
 class Volume : public Dataset<T> {
     public:
-        Volume(std::string filename); // for reading mhd files
+        Volume(std::string filename, IntensityTransformation IT = IntensityTransformation(NONE)); // for reading mhd files
         Volume(const char * filename, int width, int height, int depth); // for reading raw files
         Volume(int width, int height, int depth);
         Volume(int3 size);
@@ -828,8 +829,7 @@ Volume<T>::Volume(const char * filename, int width, int height, int depth) {
 }
 
 template <class T>
-Volume<T>::Volume(std::string filename) {
-    // Current limits of this method: T and the data type to be read has to be the same. Does not handle space after strings
+Volume<T>::Volume(std::string filename, IntensityTransformation IT) {
 
     // Read mhd file
     std::fstream mhdFile;
@@ -915,25 +915,32 @@ Volume<T>::Volume(std::string filename) {
     this->data = new T[this->width*this->height*this->depth];
     if(typeName == "MET_SHORT") {
         Volume<short> * volume = new Volume<short>(rawFilename.c_str(), this->width, this->height, this->depth);
-        this->convert(volume); // Convert to wanted type
+        IT.transform(volume->getData(), this->data, volume->getTotalSize(), 0);
+        delete volume;
     } else if(typeName == "MET_USHORT") {
         Volume<ushort> * volume = new Volume<ushort>(rawFilename.c_str(), this->width, this->height, this->depth);
-        this->convert(volume); // Convert to wanted type
+        IT.transform(volume->getData(), this->data, volume->getTotalSize(), 0);
+        delete volume;
     } else if(typeName == "MET_CHAR") {
         Volume<char> * volume = new Volume<char>(rawFilename.c_str(), this->width, this->height, this->depth);
-        this->convert(volume); // Convert to wanted type
+        IT.transform(volume->getData(), this->data, volume->getTotalSize(), 0);
+        delete volume;
     } else if(typeName == "MET_UCHAR") {
         Volume<uchar> * volume = new Volume<uchar>(rawFilename.c_str(), this->width, this->height, this->depth);
-        this->convert(volume); // Convert to wanted type
+        IT.transform(volume->getData(), this->data, volume->getTotalSize(), 0);
+        delete volume;
     } else if(typeName == "MET_INT") {
         Volume<int> * volume = new Volume<int>(rawFilename.c_str(), this->width, this->height, this->depth);
-        this->convert(volume); // Convert to wanted type
+        IT.transform(volume->getData(), this->data, volume->getTotalSize(), 0);
+        delete volume;
     } else if(typeName == "MET_UINT") {
         Volume<uint> * volume = new Volume<uint>(rawFilename.c_str(), this->width, this->height, this->depth);
-        this->convert(volume); // Convert to wanted type
+        IT.transform(volume->getData(), this->data, volume->getTotalSize(), 0);
+        delete volume;
     } else if(typeName == "MET_FLOAT") {
         Volume<float> * volume = new Volume<float>(rawFilename.c_str(), this->width, this->height, this->depth);
-        this->convert(volume); // Convert to wanted type
+        IT.transform(volume->getData(), this->data, volume->getTotalSize(), 0);
+        delete volume;
     }
 }
 
