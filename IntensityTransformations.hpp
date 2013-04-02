@@ -7,13 +7,19 @@
 #include <iostream>
 namespace SIPL {
 
-enum TransformationType { NONE, HOUNSEFIELD, GRAYSCALE, NORMALIZED };
+enum TransformationType { NONE, HOUNSEFIELD, GRAYSCALE, NORMALIZED, CUSTOM };
 
 class IntensityTransformation {
 private:
 	TransformationType type;
+	void(*func)(void *, void *, unsigned int, unsigned int);
 public:
 	IntensityTransformation() { this->type = NONE; };
+	IntensityTransformation(void(*func)(void *, void *, unsigned int, unsigned int)) {
+		this->func = func;
+		this->type = CUSTOM;
+	};
+
 	IntensityTransformation(TransformationType type) { this->type = type; };
 	template <class S, class T>
 	void transform(S * from, T * to, unsigned int length, unsigned int start = 0) {
@@ -36,6 +42,9 @@ public:
 
 			break;
 		case GRAYSCALE:
+			break;
+		case CUSTOM:
+			func(from,to,length,start);
 			break;
 		case NORMALIZED:
 			if(typeid(T) != typeid(float)) {
@@ -66,7 +75,7 @@ public:
 		}
 	}
 	template <class S, class T>
-	void copy(S * from, T * to, unsigned int length, unsigned int start) {
+	static void copy(S * from, T * to, unsigned int length, unsigned int start) {
 		for(int i = start; i < length+start; i++) {
 			to[i] = from[i];
 		}
