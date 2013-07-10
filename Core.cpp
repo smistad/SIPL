@@ -4,7 +4,7 @@
  * See LICENSE file for information on use 
  */
 #include "Core.hpp"
-
+ 
 namespace SIPL {
 bool init = false;
 GThread * gtkThread;
@@ -382,7 +382,7 @@ void convertImageType(int * to, uchar from) {
     *to = from;
 }
 void convertImageType(float * to, uchar from) {
-    *to = (float)from/255.0f;
+    *to = (float)from;
 }
 void convertImageType(color_float * to, uchar from) {
     to->red = (float)from/255.0f;
@@ -428,7 +428,7 @@ void convertImageType(int * to, char from) {
     *to = from;
 }
 void convertImageType(float * to, char from) {
-    *to = (float)from/255.0f+0.5f;
+    *to = (float)from;
 }
 void convertImageType(color_float * to, char from) {
     to->red = (float)from/255.0f+0.5f;
@@ -473,7 +473,7 @@ void convertImageType(int * to, ushort from) {
     *to = from;
 }
 void convertImageType(float * to, ushort from) {
-    *to = (float)from/65535.0f;
+    *to = (float)from;
 }
 void convertImageType(color_float * to, ushort from) {
     to->red = (float)from/65535.0f;
@@ -519,7 +519,7 @@ void convertImageType(int * to, short from) {
     *to = from;
 }
 void convertImageType(float * to, short from) {
-    *to = ((float)from/65535.0f)+0.5f;
+    *to = (float)from;
 }
 void convertImageType(color_float * to, short from) {
     to->red = (float)from/65535.0f;
@@ -564,7 +564,7 @@ void convertImageType(int * to, int from) {
     *to = from;
 }
 void convertImageType(float * to, int from) {
-    *to = ((float)from/4294967295.0f)+0.5f;
+    *to = (float)from;
 }
 void convertImageType(color_float * to, int from) {
     to->red = (float)from/65535.0f;
@@ -610,7 +610,7 @@ void convertImageType(int * to, uint from) {
     *to = from;
 }
 void convertImageType(float * to, uint from) {
-    *to = ((float)from/4294967295.0f);
+    *to = (float)from;
 }
 void convertImageType(color_float * to, uint from) {
     to->red = (float)from/65535.0f;
