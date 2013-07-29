@@ -644,6 +644,8 @@ Volume<T>::Volume(std::string filename, IntensityTransformation IT) {
     // Read mhd file
     std::fstream mhdFile;
     mhdFile.open(filename.c_str(), std::fstream::in);
+    if(!mhdFile.is_open())
+        throw IOException(filename.c_str(),__LINE__,__FILE__);
     std::string line;
     std::string rawFilename;
     bool sizeFound = false, 
