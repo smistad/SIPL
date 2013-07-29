@@ -61,7 +61,7 @@ class Image : public Dataset<T> {
         Image(unsigned int width, unsigned int height);
         Image(int2 size);
         template <class U>
-        Image(Image<U> * otherImage);
+        Image(Image<U> * otherImage, IntensityTransformation IT = IntensityTransformation(DEFAULT));
         T get(int i) const;
         T get(int x, int y) const;
         T get(int2 pos) const;
@@ -87,12 +87,12 @@ class Image : public Dataset<T> {
 template <class T>
 class Volume : public Dataset<T> {
     public:
-        Volume(std::string filename, IntensityTransformation IT = IntensityTransformation(NONE)); // for reading mhd files
+        Volume(std::string filename, IntensityTransformation IT = IntensityTransformation(DEFAULT)); // for reading mhd files
         Volume(const char * filename, int width, int height, int depth); // for reading raw files
         Volume(int width, int height, int depth);
         Volume(int3 size);
         template <class U>
-        Volume(Volume<U> * otherVolume);
+        Volume(Volume<U> * otherVolume, IntensityTransformation IT = IntensityTransformation(DEFAULT));
         T get(int x, int y, int z) const;
         T get(int3 pos) const;
         T get(int i) const;
@@ -122,8 +122,6 @@ class Volume : public Dataset<T> {
         bool inBounds(int x, int y, int z) const;
         bool inBounds(int3 pos) const;
         bool inBounds(int i) const;
-        template <class U>
-        void convert(Volume<U> * otherImage) ;
         int getTotalSize() const;
 		float3 getSpacing() const;
 		void setSpacing(float3 spacing);
@@ -181,173 +179,6 @@ void toGuchar(color_float value, guchar * pixel) ;
 void toGuchar(float2 value, guchar * pixel) ;
 void toGuchar(float3 value, guchar * pixel) ;
 
-// Conversion from bool
-void convertImageType(bool *, bool);
-void convertImageType(uchar *, bool);
-void convertImageType(char *, bool);
-void convertImageType(ushort *, bool);
-void convertImageType(short *, bool);
-void convertImageType(uint *, bool);
-void convertImageType(int *, bool);
-void convertImageType(float *, bool);
-void convertImageType(color_uchar *, bool);
-void convertImageType(color_float *, bool);
-void convertImageType(float2 *, bool);
-void convertImageType(float3 *, bool);
-
-// Conversion from uchar
-void convertImageType(bool *, uchar);
-void convertImageType(uchar *, uchar);
-void convertImageType(char *, uchar);
-void convertImageType(ushort *, uchar);
-void convertImageType(short *, uchar);
-void convertImageType(uint *, uchar);
-void convertImageType(int *, uchar);
-void convertImageType(float *, uchar);
-void convertImageType(color_uchar *, uchar);
-void convertImageType(color_float *, uchar);
-void convertImageType(float2 *, uchar);
-void convertImageType(float3 *, uchar);
-
-// Conversion from char
-void convertImageType(bool *, char);
-void convertImageType(uchar *, char);
-void convertImageType(char *, char);
-void convertImageType(ushort *, char);
-void convertImageType(short *, char);
-void convertImageType(uint *, char);
-void convertImageType(int *, char);
-void convertImageType(float *, char);
-void convertImageType(color_uchar *, char);
-void convertImageType(color_float *, char);
-void convertImageType(float2 *, char);
-void convertImageType(float3 *, char);
-
-// Conversion from ushort
-void convertImageType(bool *, ushort);
-void convertImageType(uchar *, ushort);
-void convertImageType(char *, ushort);
-void convertImageType(ushort *, ushort);
-void convertImageType(short *, ushort);
-void convertImageType(uint *, ushort);
-void convertImageType(int *, ushort);
-void convertImageType(float *, ushort);
-void convertImageType(color_uchar *, ushort);
-void convertImageType(color_float *, ushort);
-void convertImageType(float2 *, ushort);
-void convertImageType(float3 *, ushort);
-
-// Conversion from short
-void convertImageType(bool *, short);
-void convertImageType(uchar *, short);
-void convertImageType(char *, short);
-void convertImageType(ushort *, short);
-void convertImageType(short *, short);
-void convertImageType(uint *, short);
-void convertImageType(int *, short);
-void convertImageType(float *, short);
-void convertImageType(color_uchar *, short);
-void convertImageType(color_float *, short);
-void convertImageType(float2 *, short);
-void convertImageType(float3 *, short);
-
-// Conversion from uint
-void convertImageType(bool *, uint);
-void convertImageType(uchar *, uint);
-void convertImageType(char *, uint);
-void convertImageType(ushort *, uint);
-void convertImageType(short *, uint);
-void convertImageType(uint *, uint);
-void convertImageType(int *, uint);
-void convertImageType(float *, uint);
-void convertImageType(color_uchar *, uint);
-void convertImageType(color_float *, uint);
-void convertImageType(float2 *, uint);
-void convertImageType(float3 *, uint);
-
-// Conversion from int
-void convertImageType(bool *, int);
-void convertImageType(uchar *, int);
-void convertImageType(char *, int);
-void convertImageType(ushort *, int);
-void convertImageType(short *, int);
-void convertImageType(uint *, int);
-void convertImageType(int *, int);
-void convertImageType(float *, int);
-void convertImageType(color_uchar *, int);
-void convertImageType(color_float *, int);
-void convertImageType(float2 *, int);
-void convertImageType(float3 *, int);
-
-// Conversion from float
-void convertImageType(bool *, float);
-void convertImageType(uchar *, float);
-void convertImageType(char *, float);
-void convertImageType(ushort *, float);
-void convertImageType(short *, float);
-void convertImageType(uint *, float);
-void convertImageType(int *, float);
-void convertImageType(float *, float);
-void convertImageType(color_uchar *, float);
-void convertImageType(color_float *, float);
-void convertImageType(float2 *, float);
-void convertImageType(float3 *, float);
-
-// Conversion from color_uchar
-void convertImageType(bool *, color_uchar);
-void convertImageType(uchar *, color_uchar);
-void convertImageType(char *, color_uchar);
-void convertImageType(ushort *, color_uchar);
-void convertImageType(short *, color_uchar);
-void convertImageType(uint *, color_uchar);
-void convertImageType(int *, color_uchar);
-void convertImageType(float *, color_uchar);
-void convertImageType(color_uchar *, color_uchar);
-void convertImageType(color_float *, color_uchar);
-void convertImageType(float2 *, color_uchar);
-void convertImageType(float3 *, color_uchar);
-
-// Conversion from color_float
-void convertImageType(bool *, color_float);
-void convertImageType(uchar *, color_float);
-void convertImageType(char *, color_float);
-void convertImageType(ushort *, color_float);
-void convertImageType(short *, color_float);
-void convertImageType(uint *, color_float);
-void convertImageType(int *, color_float);
-void convertImageType(float *, color_float);
-void convertImageType(color_uchar *, color_float);
-void convertImageType(color_float *, color_float);
-void convertImageType(float2 *, color_float);
-void convertImageType(float3 *, color_float);
-
-// Conversion from float2
-void convertImageType(bool *, float2);
-void convertImageType(uchar *, float2);
-void convertImageType(char *, float2);
-void convertImageType(ushort *, float2);
-void convertImageType(short *, float2);
-void convertImageType(uint *, float2);
-void convertImageType(int *, float2);
-void convertImageType(float *, float2);
-void convertImageType(color_uchar *, float2);
-void convertImageType(color_float *, float2);
-void convertImageType(float2 *, float2);
-void convertImageType(float3 *, float2);
-
-// Conversion from float3
-void convertImageType(bool *, float3);
-void convertImageType(uchar *, float3);
-void convertImageType(char *, float3);
-void convertImageType(ushort *, float3);
-void convertImageType(short *, float3);
-void convertImageType(uint *, float3);
-void convertImageType(int *, float3);
-void convertImageType(float *, float3);
-void convertImageType(color_uchar *, float3);
-void convertImageType(color_float *, float3);
-void convertImageType(float2 *, float3);
-void convertImageType(float3 *, float3);
 
 /* --- Spesialized level/window --- */
 void toGuchar(uchar value, guchar * pixel, float level, float window) ;
@@ -746,18 +577,11 @@ Image<T>::Image(const char * filename) {
 
 template <class T> 
 template <class U>
-Image<T>::Image(Image<U> * otherImage) {
+Image<T>::Image(Image<U> * otherImage, IntensityTransformation it) {
     this->width = otherImage->getWidth();
     this->height = otherImage->getHeight();
     this->data = new T[this->height*this->width];
-
-    // Convert image with type U to this with type T
-    for(int i = 0; i < this->width*this->height; i++) {
-        T value;
-        convertImageType(&value, otherImage->get(i));
-        this->data[i] = value;
-    }
-
+    it.transform(otherImage->getData(), this->data, this->getTotalSize());
 }
 
 template <class T> 
@@ -766,12 +590,8 @@ Image<T>& Image<T>::operator=(const Image<U> &otherImage) {
     if(this->width != otherImage.getWidth() || this->height != otherImage.getHeight())
         throw ConversionException("image size mismatch in assignment", __LINE__, __FILE__);
     
-    // Convert image with type U to this with type T
-    for(int i = 0; i < this->width*this->height; i++) {
-        T value;
-        convertImageType(&value, otherImage.get(i));
-        this->data[i] = value;
-    }
+    IntensityTransformation it;
+    it.transform(otherImage->getData(), this->data, this->getTotalSize());
 
     return *this;
 }
@@ -779,24 +599,13 @@ Image<T>& Image<T>::operator=(const Image<U> &otherImage) {
 
 template <class T> 
 template <class U>
-void Volume<T>::convert(Volume<U> * otherImage) {
-    // Convert image with type U to this with type T
-    for(int i = 0; i < this->width*this->height*this->depth; i++) {
-        T value;
-        convertImageType(&value, otherImage->get(i));
-        this->data[i] = value;
-    }
-}
-
-template <class T> 
-template <class U>
-Volume<T>::Volume(Volume<U> * otherImage) {
+Volume<T>::Volume(Volume<U> * otherImage, IntensityTransformation it) {
     this->width = otherImage->getWidth();
     this->height = otherImage->getHeight();
     this->depth = otherImage->getDepth();
     this->spacing = otherImage->getSpacing();
     this->data = new T[this->height*this->width*this->depth];
-    this->convert(otherImage);
+    it.transform(otherImage->getData(), this->data, this->getTotalSize());
 }
 
 template <class T> 
@@ -807,7 +616,8 @@ Volume<T>& Volume<T>::operator=(const Volume<U> &otherImage) {
         this->depth != otherImage.getDepth())
         throw ConversionException("volume size mismatch in assignment", __LINE__, __FILE__);
     
-    this->convert(otherImage);
+    IntensityTransformation it;
+    it.transform(otherImage->getData(), this->data, this->getTotalSize());
 
     return *this;
 }

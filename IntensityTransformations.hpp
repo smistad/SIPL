@@ -7,14 +7,31 @@
 #include <iostream>
 namespace SIPL {
 
-enum TransformationType { NONE, HOUNSEFIELD, GRAYSCALE, NORMALIZED, CUSTOM };
+enum TransformationType { DEFAULT, HOUNSEFIELD, AVERAGE, NORMALIZED, CUSTOM };
+
+template <class T>
+inline float toSingleValue(T value) {
+    return (float)(value);
+};
+
+template <>
+inline float toSingleValue<color_uchar>(color_uchar value) {
+    return (float)(0.33f*(value.red+value.blue+value.green));
+};
+
+template <>
+inline float toSingleValue<float3>(float3 value) {
+    return (float)(0.33f*(value.x+value.y+value.z));
+};
+
+
 
 class IntensityTransformation {
 private:
 	TransformationType type;
 	void(*func)(void *, void *, unsigned int, unsigned int);
 public:
-	IntensityTransformation() { this->type = NONE; };
+	IntensityTransformation() { this->type = DEFAULT; };
 	IntensityTransformation(void(*func)(void *, void *, unsigned int, unsigned int)) {
 		this->func = func;
 		this->type = CUSTOM;
@@ -34,14 +51,21 @@ public:
 				this->copy(from, to, length, start);
 			} else if(typeid(S) == typeid(ushort)) {
 				for(int i = start; i < start+length; i++) {
-					to[i] = from[i] - 1024;
+					to[i] = toSingleValue(from[i]) - 1024;
 				}
 			} else {
 				throw SIPLException("Source has to be ushort or short");
 			}
 
 			break;
-		case GRAYSCALE:
+		case AVERAGE:
+			// Check that S is a vector type
+		    if(!isVectorType(from)) {
+		        throw SIPLException("Cannot convert scalar image using average intensity transformation");
+		    }
+
+            this->copy(from, to, length, start);
+
 			break;
 		case CUSTOM:
 			func(from,to,length,start);
@@ -53,21 +77,27 @@ public:
 
 			// find min and max
 
-			float min = from[start];
-			float max = from[start];
+			float min = toSingleValue(from[start]);
+			float max = toSingleValue(from[start]);
 			for(int i = start; i < start+length; i++) {
-				if(from[i] < min)
-					min = from[i];
-				if(from[i] > max)
-					max = from[i];
+				if(toSingleValue(from[i]) < min)
+					min = toSingleValue(from[i]);
+				if(toSingleValue(from[i]) > max)
+					max = toSingleValue(from[i]);
 			}
 			for(int i = start; i < start+length; i++) {
-				to[i] = ((float)from[i]-min)/(max+min);
+				to[i] = ((float)toSingleValue(from[i])-min)/(max+min);
 			}
 			}
 			break;
-		case NONE:
-			this->copy(from, to, length, start);
+		case DEFAULT:
+			if(isVectorType(from) && !isVectorType(to)) {
+				// Use AVERAGE instead
+				this->type = AVERAGE;
+				this->transform(from,to,length,start);
+			} else {
+				this->copy(from, to, length, start);
+			}
 			break;
 		default:
 			throw SIPLException("Invalid transformation type");
@@ -77,9 +107,18 @@ public:
 	template <class S, class T>
 	static void copy(S * from, T * to, unsigned int length, unsigned int start) {
 		for(int i = start; i < length+start; i++) {
-			to[i] = from[i];
+			to[i] = toSingleValue(from[i]);
 		}
 	}
+	template <class T>
+	static bool isVectorType(T * from) {
+		const std::type_info * i = &typeid(T);
+		return *i == typeid(float3) ||
+				*i == typeid(float2) ||
+				*i == typeid(color_uchar) ||
+				*i == typeid(color_float);
+	}
+
 };
 
 }
