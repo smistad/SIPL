@@ -8,6 +8,8 @@ Visualization::Visualization(BaseDataset * image) {
     if(images.size() == 3)
         throw SIPLException("A visualization can only contain a maximum of 3 images/volumes.");
     images.push_back(image);
+    setLevel(0.5);
+    setWindow(1.0);
     isVolumeVisualization = image->isVolume;
     if(isVolumeVisualization) {
         direction = Z;
@@ -29,6 +31,8 @@ Visualization::Visualization(BaseDataset * image, BaseDataset * image2) {
 
     images.push_back(image);
     images.push_back(image2);
+    setLevel(0.5);
+    setWindow(1.0);
     isVolumeVisualization = image->isVolume;
     if(isVolumeVisualization) {
         direction = Z;
@@ -51,11 +55,26 @@ Visualization::Visualization(BaseDataset * image, BaseDataset * image2, BaseData
     images.push_back(image);
     images.push_back(image2);
     images.push_back(image3);
+    setLevel(0.5);
+    setWindow(1.0);
     isVolumeVisualization = image->isVolume;
     if(isVolumeVisualization) {
         direction = Z;
         slice = image->getSize().z / 2;
     }
+}
+
+uchar levelWindow(float value, float level, float window) {
+    float result;
+    if(value < level-window*0.5f) {
+        result = 0.0f;
+    } else if(value > level+window*0.5f) {
+        result = 1.0f;
+    } else {
+        result = (float)(value-(level-window*0.5f)) / window;
+    }
+    result = SIPL::round(result*255);
+    return result;
 }
 
 void Visualization::renderSlice(int imageNr, GdkPixbuf * pixBuf) {
@@ -101,11 +120,11 @@ void Visualization::renderSlice(int imageNr, GdkPixbuf * pixBuf) {
         int i = x*n+y*rowstride;
         guchar * p = pixels + i;
         if(images.size() == 1) {
-            p[0] = intensity*255;
-            p[1] = intensity*255;
-            p[2] = intensity*255;
+            p[0] = levelWindow(intensity, level[images[imageNr]], window[images[imageNr]]);
+            p[1] = p[0];
+            p[2] = p[0];
         } else {
-            p[imageNr] = intensity*255;
+            p[imageNr] = levelWindow(intensity, level[images[imageNr]], window[images[imageNr]]);
         }
    }}
    delete[] floatData;
@@ -119,11 +138,11 @@ void Visualization::renderImage(int imageNr, GdkPixbuf * pixBuf) {
     for(int i = 0; i < images[imageNr]->getTotalSize(); i++) {
         guchar * p = pixels + i * n;
         if(images.size() == 1) {
-            p[0] = floatData[i]*255;
-            p[1] = floatData[i]*255;
-            p[2] = floatData[i]*255;
+            p[0] = levelWindow(floatData[i], level[images[imageNr]], window[images[imageNr]]);
+            p[1] = p[0];
+            p[2] = p[0];
         } else {
-            p[imageNr] = floatData[i]*255;
+            p[imageNr] = levelWindow(floatData[i], level[images[imageNr]], window[images[imageNr]]);
         }
     }
     delete[] floatData;
@@ -170,6 +189,25 @@ GdkPixbuf * Visualization::render() {
     return pixBuf;
 }
 
+void SIPL::Visualization::setLevel(float level) {
+    for(int i = 0; i < images.size(); i++) {
+        setLevel(images[i], level);
+    }
+}
+
+void SIPL::Visualization::setWindow(float window) {
+    for(int i = 0; i < images.size(); i++) {
+        setWindow(images[i], window);
+    }
+}
+
+void SIPL::Visualization::setLevel(BaseDataset* image, float level) {
+    this->level[image] = level;
+}
+
+void SIPL::Visualization::setWindow(BaseDataset* image, float window) {
+    this->window[image] = window;
+}
 
 void Visualization::display() {
     // For all images, get float data and then visualize it using window and level

@@ -11,6 +11,10 @@ class Visualization {
         Visualization(BaseDataset * image);
         Visualization(BaseDataset * image, BaseDataset * image2);
         Visualization(BaseDataset * image, BaseDataset * image2, BaseDataset * image3);
+        void setLevel(float level);
+        void setWindow(float window);
+        void setLevel(BaseDataset * image, float level);
+        void setWindow(BaseDataset * image, float window);
         void addImage();
         void addVolume();
         void display();
