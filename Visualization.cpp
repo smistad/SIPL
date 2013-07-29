@@ -8,6 +8,7 @@ Visualization::Visualization(BaseDataset * image) {
     if(images.size() == 3)
         throw SIPLException("A visualization can only contain a maximum of 3 images/volumes.");
     images.push_back(image);
+    size = image->getSize();
     setLevel(0.5);
     setWindow(1.0);
     scale = 1.0f;
@@ -32,6 +33,7 @@ Visualization::Visualization(BaseDataset * image, BaseDataset * image2) {
 
     images.push_back(image);
     images.push_back(image2);
+    size = image->getSize();
     setLevel(0.5);
     setWindow(1.0);
     scale = 1.0f;
@@ -57,6 +59,7 @@ Visualization::Visualization(BaseDataset * image, BaseDataset * image2, BaseData
     images.push_back(image);
     images.push_back(image2);
     images.push_back(image3);
+    size = image->getSize();
     setLevel(0.5);
     setWindow(1.0);
     scale = 1.0f;
@@ -280,6 +283,26 @@ void Visualization::display() {
 
 	gdk_threads_leave();
 }
+int validateSlice(int slice, slice_plane direction, int3 size) {
+    if(slice < 0)
+        return 0;
+
+    switch(direction) {
+        case X:
+            if(slice > size.x-1)
+                return size.x-1;
+            break;
+        case Y:
+            if(slice > size.y-1)
+                return size.y-1;
+            break;
+        case Z:
+            if(slice > size.z-1)
+                return size.z-1;
+            break;
+    }
+    return slice;
+}
 
 void Visualization::keyPressed(GtkWidget * widget, GdkEventKey * event, gpointer user_data) {
     Visualization * v = (Visualization *)user_data;
@@ -297,19 +320,38 @@ void Visualization::keyPressed(GtkWidget * widget, GdkEventKey * event, gpointer
 
     }
 
-    /*
     if(v->isVolumeVisualization) {
         switch(event->keyval) {
             case GDK_KEY_Up:
-                this->currentSlice = validateSlice(this->currentSlice+1,this->currentDirection,volume->getSize());
+                v->setSlice(validateSlice(v->getSlice()+1,v->getDirection(),v->getSize()));
                 break;
             case GDK_KEY_Down:
-                this->currentSlice = validateSlice(this->currentSlice-1,this->currentDirection,volume->getSize());
+                v->setSlice(validateSlice(v->getSlice()-1,v->getDirection(),v->getSize()));
                 break;
         }
 
+        v->update();
     }
-    */
+}
+
+slice_plane Visualization::getDirection() const {
+    return direction;
+}
+
+void Visualization::setDirection(slice_plane direction) {
+    this->direction = direction;
+}
+
+int Visualization::getSlice() const {
+    return slice;
+}
+
+void Visualization::setSlice(int slice) {
+    this->slice = slice;
+}
+
+int3 Visualization::getSize() {
+    return size;
 }
 
 void Visualization::draw() {

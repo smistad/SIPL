@@ -21,7 +21,14 @@ class Visualization {
         void addVolume();
         void display();
         void update();
+        void draw();
         static void keyPressed(GtkWidget * widget, GdkEventKey * event, gpointer user_data);
+        slice_plane getDirection() const;
+        void setDirection(slice_plane direction);
+        int getSlice() const;
+        void setSlice(int slice);
+        int3 getSize();
+
         static int windowCounter;
     private:
         bool isVolumeVisualization;
@@ -36,11 +43,11 @@ class Visualization {
         std::string title;
         float scale;
         int width, height;
+        int3 size;
         GtkWidget * gtkImage;
         GtkWidget * scaledImage;
         void zoomIn();
         void zoomOut();
-        void draw();
 };
 
 
