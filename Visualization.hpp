@@ -4,6 +4,7 @@
 #include "Core.hpp"
 #include <vector>
 #include <map>
+#include <string>
 
 namespace SIPL {
 class Visualization {
@@ -15,6 +16,7 @@ class Visualization {
         void setWindow(float window);
         void setLevel(BaseDataset * image, float level);
         void setWindow(BaseDataset * image, float window);
+        void setTitle(std::string);
         void addImage();
         void addVolume();
         void display();
@@ -30,6 +32,7 @@ class Visualization {
         GdkPixbuf * render();
         void renderSlice(int, GdkPixbuf *);
         void renderImage(int, GdkPixbuf *);
+        std::string title;
 };
 
 

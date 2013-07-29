@@ -209,6 +209,10 @@ void SIPL::Visualization::setWindow(BaseDataset* image, float window) {
     this->window[image] = window;
 }
 
+void SIPL::Visualization::setTitle(std::string title) {
+    this->title = title;
+}
+
 void Visualization::display() {
     // For all images, get float data and then visualize it using window and level
     // Create image widget and fill up the pixbuf
@@ -220,11 +224,39 @@ void Visualization::display() {
     // Create GUI
 	GtkWidget * window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	Visualization::windowCounter++;
-    char * title = new char[20];
-    sprintf(title, "Visualization #%d", Visualization::windowCounter);
-    gtk_window_set_title(GTK_WINDOW(window), title);
+	if(title == "") {
+        char * title = new char[20];
+        sprintf(title, "Visualization #%d", Visualization::windowCounter);
+        gtk_window_set_title(GTK_WINDOW(window), title);
+	} else {
+	    gtk_window_set_title(GTK_WINDOW(window), this->title.c_str());
+	}
 	GtkWidget * toolbar = gtk_toolbar_new();
 	gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar), GTK_ORIENTATION_HORIZONTAL);
+	gtk_toolbar_append_item (
+			 GTK_TOOLBAR (toolbar), /* our toolbar */
+             "Save",               /* button label */
+             "Save this image",     /* this button's tooltip */
+             NULL,             /* tooltip private info */
+             NULL,                 /* icon widget */
+             GTK_SIGNAL_FUNC(saveDialog), /* a signal */
+             gtk_image_new_from_pixbuf(pixBuf));
+	gtk_toolbar_append_item (
+			 GTK_TOOLBAR (toolbar), /* our toolbar */
+             "Close",               /* button label */
+             "Close this image",     /* this button's tooltip */
+             NULL,             /* tooltip private info */
+             NULL,                 /* icon widget */
+             GTK_SIGNAL_FUNC (signalDestroyWindow), /* a signal */
+             window);
+	gtk_toolbar_append_item (
+			 GTK_TOOLBAR (toolbar), /* our toolbar */
+             "Close program",               /* button label */
+             "Close this program",     /* this button's tooltip */
+             NULL,             /* tooltip private info */
+             NULL,                 /* icon widget */
+             GTK_SIGNAL_FUNC (quitProgram), /* a signal */
+             NULL);
 
 	gtk_window_set_default_size(
 			GTK_WINDOW(window),
