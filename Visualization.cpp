@@ -332,3 +332,9 @@ void Visualization::zoomOut() {
     scale = scale*0.5f;
     this->draw();
 }
+
+void Visualization::update() {
+    GdkPixbuf * pixBuf = render();
+    gtk_image_set_from_pixbuf(GTK_IMAGE(gtkImage), pixBuf);
+    draw();
+}
