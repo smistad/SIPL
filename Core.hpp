@@ -38,8 +38,18 @@ int getWindowCount() ;
 template <class T>
 class Window;
 
+class BaseDataset {
+    public:
+        virtual float * getFloatData() const = 0;
+        virtual float3 * getVectorFloatData() const = 0;
+        virtual int3 getSize() const = 0;
+        virtual int getTotalSize() const=0;
+        bool isVolume;
+        bool isVectorType;
+};
+
 template <class T>
-class Dataset {
+class Dataset : public BaseDataset {
     public:
         Dataset();
         ~Dataset();
@@ -48,7 +58,10 @@ class Dataset {
         T * getData();
         void setData(T * data);
         virtual int getTotalSize() const=0;
+        virtual int3 getSize() const = 0;
         void fill(T value);
+        float * getFloatData() const;
+        float3 * getVectorFloatData() const;
     protected:
         T * data;
         int width, height;
@@ -57,6 +70,8 @@ class Dataset {
 template <class T>
 class Image : public Dataset<T> {
     public:
+        float getFloatData();
+        float3 getVectorFloatData();
         Image(const char * filepath);
         Image(unsigned int width, unsigned int height);
         Image(int2 size);
@@ -69,7 +84,7 @@ class Image : public Dataset<T> {
         void set(int2, T value);
         void set(int i, T v);
         void set(Region region, T value);
-        int2 getSize() const;
+        int3 getSize() const;
         Window<T> * show();
         Window<T> * show(float level, float window);
         void save(const char * filepath, const char * imageType = "jpeg");
@@ -87,6 +102,8 @@ class Image : public Dataset<T> {
 template <class T>
 class Volume : public Dataset<T> {
     public:
+        float getFloatData();
+        float3 getVectorFloatData();
         Volume(std::string filename, IntensityTransformation IT = IntensityTransformation(DEFAULT)); // for reading mhd files
         Volume(const char * filename, int width, int height, int depth); // for reading raw files
         Volume(int width, int height, int depth);
@@ -554,6 +571,8 @@ void Volume<T>::MIPToPixbuf(GtkWidget * image, float angle, slice_plane directio
 /* --- Constructors & destructors --- */
 template <class T>
 Dataset<T>::Dataset() {
+    T * d;
+    this->isVectorType = IntensityTransformation::isVectorType(d);
     if(!isInit()) {
         Init();
     }
@@ -563,6 +582,7 @@ template <class T>
 Image<T>::Image(const char * filename) {
     // Check if file exists
     FILE * file = fopen(filename, "r");
+    this->isVolume = false;
     if(file == NULL) 
         throw FileNotFoundException(filename, __LINE__, __FILE__);
     fclose(file);
@@ -578,6 +598,7 @@ Image<T>::Image(const char * filename) {
 template <class T> 
 template <class U>
 Image<T>::Image(Image<U> * otherImage, IntensityTransformation it) {
+    this->isVolume = false;
     this->width = otherImage->getWidth();
     this->height = otherImage->getHeight();
     this->data = new T[this->height*this->width];
@@ -601,6 +622,7 @@ template <class T>
 template <class U>
 Volume<T>::Volume(Volume<U> * otherImage, IntensityTransformation it) {
     this->width = otherImage->getWidth();
+    this->isVolume = true;
     this->height = otherImage->getHeight();
     this->depth = otherImage->getDepth();
     this->spacing = otherImage->getSpacing();
@@ -635,6 +657,7 @@ Volume<T>::Volume(const char * filename, int width, int height, int depth) {
     this->width = width;
     this->height = height;
     this->depth = depth;
+    this->isVolume = true;
     this->spacing = float3(1.0f,1.0f,1.0f);
 }
 
@@ -725,6 +748,7 @@ Volume<T>::Volume(std::string filename, IntensityTransformation IT) {
         throw IOException("Error reading the mhd file", __LINE__, __FILE__);
 
     this->data = new T[this->width*this->height*this->depth];
+    this->isVolume = true;
     if(typeName == "MET_SHORT") {
         Volume<short> * volume = new Volume<short>(rawFilename.c_str(), this->width, this->height, this->depth);
         IT.transform(volume->getData(), this->data, volume->getTotalSize(), 0);
@@ -762,6 +786,7 @@ Volume<T>::Volume(int width, int height, int depth) {
     this->width = width;
     this->height = height;
     this->depth = depth;
+    this->isVolume = true;
     this->spacing = float3(1.0f,1.0f,1.0f);
 }
 
@@ -771,6 +796,7 @@ Volume<T>::Volume(int3 size) {
     this->width = size.x;
     this->height = size.y;
     this->depth = size.z;
+    this->isVolume = true;
     this->spacing = float3(1.0f,1.0f,1.0f);
 }
 
@@ -780,6 +806,7 @@ Image<T>::Image(unsigned int width, unsigned int height) {
     this->data = new T[width*height];
     this->width = width;
     this->height = height;
+    this->isVolume = false;
 }
 
 template <class T>
@@ -787,6 +814,7 @@ Image<T>::Image(int2 size) {
     this->data = new T[size.x*size.y];
     this->width = size.x;
     this->height = size.y;
+    this->isVolume = false;
 }
 
 
@@ -1407,10 +1435,11 @@ int Volume<T>::getDepth() const {
 }
 
 template <class T>
-int2 Image<T>::getSize() const {
-    int2 size;
+int3 Image<T>::getSize() const {
+    int3 size;
     size.x = this->width;
     size.y = this->height;
+    size.z = 0;
     return size;
 }
 template <class T>
@@ -1563,6 +1592,23 @@ template <class T>
 void Volume<T>::setSpacing(float3 spacing) {
 	this->spacing = spacing;
 }
+
+template <class T>
+float * Dataset<T>::getFloatData() const {
+    float * floatData = new float[this->getTotalSize()];
+    for(int i = 0; i < this->getTotalSize(); i++) {
+        floatData[i] = (float)toSingleValue(this->data[i]);
+    }
+    return floatData;
+}
+template <class T>
+float3 * Dataset<T>::getVectorFloatData() const {
+    float3 * floatData = new float3[this->getTotalSize()];
+    for(int i = 0; i < this->getTotalSize(); i++) {
+    }
+    return floatData;
+}
+
 
 }
 

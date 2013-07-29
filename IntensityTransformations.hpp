@@ -24,6 +24,11 @@ inline float toSingleValue<float3>(float3 value) {
     return (float)(0.33f*(value.x+value.y+value.z));
 };
 
+template <>
+inline float toSingleValue<float2>(float2 value) {
+    return (float)(0.33f*(value.x+value.y));
+};
+
 
 
 class IntensityTransformation {
