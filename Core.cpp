@@ -4,6 +4,7 @@
  * See LICENSE file for information on use 
  */
 #include "Core.hpp"
+#include "Visualization.hpp"
 
 namespace SIPL {
 bool init = false;
@@ -29,6 +30,13 @@ void Quit() {
 
 bool isInit() {
     return init;
+}
+
+void saveImage(BaseDataset * d, const char * filepath, const char * imageType) {
+    Visualization * v = new Visualization(d);
+    GdkPixbuf * pixBuf = v->render();
+    delete v;
+	gdk_pixbuf_save(pixBuf, filepath, imageType, NULL, NULL);
 }
 
 int validateSlice(int slice, slice_plane direction, int3 size) {

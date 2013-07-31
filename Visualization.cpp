@@ -2,8 +2,6 @@
 #include <iostream>
 using namespace SIPL;
 
-int Visualization::windowCounter = 0;
-
 Visualization::Visualization(BaseDataset * image) {
     if(images.size() == 3)
         throw SIPLException("A visualization can only contain a maximum of 3 images/volumes.");
@@ -408,10 +406,10 @@ void Visualization::display() {
 
     // Create GUI
 	GtkWidget * window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	Visualization::windowCounter++;
+	int windowCounter = increaseWindowCount();
 	if(title == "") {
         char * title = new char[20];
-        sprintf(title, "Visualization #%d", Visualization::windowCounter);
+        sprintf(title, "Visualization #%d", windowCounter);
         gtk_window_set_title(GTK_WINDOW(window), title);
 	} else {
 	    gtk_window_set_title(GTK_WINDOW(window), this->title.c_str());

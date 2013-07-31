@@ -5,12 +5,17 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <gtk/gtk.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
+#include <gdk/gdkkeysyms.h>
 
 namespace SIPL {
 
 enum visualizationType {
     SLICE, MIP
 };
+
+class BaseDataset;
 
 class Visualization {
     public:
@@ -36,8 +41,7 @@ class Visualization {
         int3 getSize();
         float getAngle() const;
         void setAngle(float angle);
-
-        static int windowCounter;
+        GdkPixbuf * render();
     private:
         bool isVolumeVisualization;
         std::vector<BaseDataset *> images;
@@ -45,7 +49,6 @@ class Visualization {
         std::map<BaseDataset *, float> window;
         slice_plane direction;
         int slice;
-        GdkPixbuf * render();
         void renderSlice(int, GdkPixbuf *);
         void renderImage(int, GdkPixbuf *);
         void renderMIP(int, GdkPixbuf *);
