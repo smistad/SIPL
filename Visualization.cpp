@@ -12,7 +12,9 @@ Visualization::Visualization(BaseDataset * image) {
     setLevel(0.5);
     setWindow(1.0);
     scale = 1.0f;
+    angle = 0.5f*M_PI;
     isVolumeVisualization = image->isVolume;
+    type = SLICE;
     if(isVolumeVisualization) {
         direction = Z;
         slice = image->getSize().z / 2;
@@ -37,7 +39,9 @@ Visualization::Visualization(BaseDataset * image, BaseDataset * image2) {
     setLevel(0.5);
     setWindow(1.0);
     scale = 1.0f;
+    angle = 0.5f*M_PI;
     isVolumeVisualization = image->isVolume;
+    type = SLICE;
     if(isVolumeVisualization) {
         direction = Z;
         slice = image->getSize().z / 2;
@@ -63,7 +67,9 @@ Visualization::Visualization(BaseDataset * image, BaseDataset * image2, BaseData
     setLevel(0.5);
     setWindow(1.0);
     scale = 1.0f;
+    angle = 0.5f*M_PI;
     isVolumeVisualization = image->isVolume;
+    type = SLICE;
     if(isVolumeVisualization) {
         direction = Z;
         slice = image->getSize().z / 2;
@@ -81,6 +87,89 @@ uchar levelWindow(float value, float level, float window) {
     }
     result = SIPL::round(result*255);
     return result;
+}
+
+void Visualization::renderMIP(int imageNr, GdkPixbuf * pixBuf) {
+    int xSize;
+    int ySize;
+    int zSize;
+    switch(direction) {
+        case X:
+            // x direction
+            xSize = this->size.y;
+            ySize = this->size.z;
+            zSize = this->size.x;
+            break;
+        case Y:
+            // y direction
+            xSize = this->size.x;
+            ySize = this->size.z;
+            zSize = this->size.y;
+            break;
+        case Z:
+            // z direction
+            xSize = this->size.x;
+            ySize = this->size.y;
+            zSize = this->size.z;
+            break;
+    }
+
+    guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
+    float cangle = cos(angle);
+    float sangle = sin(angle);
+    int xMultiple, yMultiple, zMultiple;
+    switch(direction) {
+        case X:
+            xMultiple = this->size.x;
+            yMultiple = this->size.x*this->size.y;
+            zMultiple = 1;
+            break;
+        case Y:
+            xMultiple = 1;
+            yMultiple = this->size.x*this->size.y;
+            zMultiple = this->size.x;
+            break;
+        case Z:
+            xMultiple = 1;
+            yMultiple = this->size.x;
+            zMultiple = this->size.x*this->size.y;
+            break;
+    }
+    float * mip = new float[xSize*ySize]();
+    float * floatData = images[imageNr]->getFloatData();
+    int n = gdk_pixbuf_get_n_channels(pixBuf);
+    int rowstride = gdk_pixbuf_get_rowstride(pixBuf);
+    // Initialize image to black
+    for(int i = 0; i < n*xSize*ySize; i++)
+        pixels[i] = 0;
+
+    #pragma omp parallel for
+    for(int x = 0; x < xSize; x++) {
+        int nu = (x-(float)xSize/2.0f)*sangle + (float)xSize/2.0f;
+    for(int y = 0; y < ySize; y++) {
+        int v = y;
+    for(int z = 0; z < zSize; z++) {
+        int u = round((z-(float)zSize/2.0f)*cangle + nu);
+
+        if(u >= 0 && u < xSize) {
+            bool change;
+            float newValue = maximum<float>(mip[u+v*xSize], floatData[x*xMultiple+y*yMultiple+z*zMultiple], &change);
+            if(change) {
+                // New maximum
+                mip[u+v*xSize] = newValue;
+                guchar * p = pixels + (u*n+(ySize-1-v)*rowstride);
+                if(images.size() == 1) {
+                    p[0] = levelWindow(newValue, level[images[0]], window[images[0]]);
+                    p[1] = p[0];
+                    p[2] = p[0];
+                } else {
+                    p[imageNr] = levelWindow(newValue, level[images[imageNr]], window[images[imageNr]]);
+                }
+            }
+        }
+    }}}
+
+
 }
 
 void Visualization::renderSlice(int imageNr, GdkPixbuf * pixBuf) {
@@ -140,6 +229,8 @@ void Visualization::renderImage(int imageNr, GdkPixbuf * pixBuf) {
 }
 
 GdkPixbuf * Visualization::render() {
+    GdkPixbuf * pixBuf;
+    if(this->type == SLICE) {
     int3 size = images[0]->getSize();
     int xSize = 0;
     int ySize = 0;
@@ -171,12 +262,46 @@ GdkPixbuf * Visualization::render() {
     gtkImage = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, xSize,ySize));
 
-    GdkPixbuf * pixBuf = gtk_image_get_pixbuf((GtkImage *) gtkImage);
+    pixBuf = gtk_image_get_pixbuf((GtkImage *) gtkImage);
     for(int i = 0; i < images.size(); i++) {
         if(isVolumeVisualization) {
             renderSlice(i, pixBuf);
         } else {
             renderImage(i, pixBuf);
+        }
+    }
+    } else if(this->type == MIP) {
+        int xSize;
+        int ySize;
+        int zSize;
+        switch(direction) {
+            case X:
+                // x direction
+                xSize = this->size.y;
+                ySize = this->size.z;
+                zSize = this->size.x;
+                break;
+            case Y:
+                // y direction
+                xSize = this->size.x;
+                ySize = this->size.z;
+                zSize = this->size.y;
+                break;
+            case Z:
+                // z direction
+                xSize = this->size.x;
+                ySize = this->size.y;
+                zSize = this->size.z;
+                break;
+        }
+        this->width = xSize;
+        this->height = ySize;
+
+        gtkImage = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
+                8, xSize,ySize));
+        pixBuf = gtk_image_get_pixbuf((GtkImage *) gtkImage);
+        for(int i = 0; i < images.size(); i++) {
+            renderMIP(i, pixBuf);
         }
     }
     return pixBuf;
@@ -339,6 +464,12 @@ void Visualization::keyPressed(GtkWidget * widget, GdkEventKey * event, gpointer
             case GDK_KEY_z:
                 v->setDirection(Z);
                 break;
+            case GDK_KEY_Left:
+                v->setAngle(v->getAngle()-0.1f);
+                break;
+            case GDK_KEY_Right:
+                v->setAngle(v->getAngle()+0.1f);
+                break;
         }
 
         v->update();
@@ -365,6 +496,10 @@ int3 Visualization::getSize() {
     return size;
 }
 
+void Visualization::setType(visualizationType type) {
+    this->type = type;
+}
+
 void Visualization::draw() {
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf(GTK_IMAGE(gtkImage));
     GdkPixbuf * newPixBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
@@ -378,6 +513,14 @@ void Visualization::zoomIn() {
     // TODO: check if image is actually displayed
     scale = scale*2;
     this->draw();
+}
+
+float Visualization::getAngle() const {
+    return angle;
+}
+
+void Visualization::setAngle(float angle) {
+    this->angle = angle;
 }
 
 void Visualization::zoomOut() {

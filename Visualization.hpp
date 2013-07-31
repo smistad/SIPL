@@ -7,6 +7,11 @@
 #include <string>
 
 namespace SIPL {
+
+enum visualizationType {
+    SLICE, MIP
+};
+
 class Visualization {
     public:
         Visualization(BaseDataset * image);
@@ -17,6 +22,7 @@ class Visualization {
         void setLevel(BaseDataset * image, float level);
         void setWindow(BaseDataset * image, float window);
         void setTitle(std::string);
+        void setType(visualizationType);
         void addImage();
         void addVolume();
         void display();
@@ -28,6 +34,8 @@ class Visualization {
         int getSlice() const;
         void setSlice(int slice);
         int3 getSize();
+        float getAngle() const;
+        void setAngle(float angle);
 
         static int windowCounter;
     private:
@@ -40,14 +48,17 @@ class Visualization {
         GdkPixbuf * render();
         void renderSlice(int, GdkPixbuf *);
         void renderImage(int, GdkPixbuf *);
+        void renderMIP(int, GdkPixbuf *);
         std::string title;
         float scale;
+        float angle;
         int width, height;
         int3 size;
         GtkWidget * gtkImage;
         GtkWidget * scaledImage;
         void zoomIn();
         void zoomOut();
+        visualizationType type;
 };
 
 
