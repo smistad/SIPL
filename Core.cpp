@@ -355,5 +355,9 @@ void Dataset<color_uchar>::setDefaultLevelWindow() {
     this->defaultLevel = 255*0.5;
     this->defaultWindow = 255;
 }
-
+template <>
+void Dataset<uchar>::setDefaultLevelWindow() {
+    this->defaultLevel = 255*0.5;
+    this->defaultWindow = 255;
+}
 } // End namespace
