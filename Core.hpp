@@ -65,6 +65,8 @@ class Dataset : public BaseDataset {
         float * getFloatData() const;
         float3 * getVectorFloatData() const;
         void setDefaultLevelWindow();
+        Visualization * display();
+        Visualization * display(float level, float window);
     protected:
         T * data;
         int width, height;
@@ -127,6 +129,10 @@ class Volume : public Dataset<T> {
         int getTotalSize() const;
 		float3 getSpacing() const;
 		void setSpacing(float3 spacing);
+		Visualization * display();
+		Visualization * display(float level, float window);
+		Visualization * display(int slice, slice_plane direction);
+		Visualization * display(int slice, slice_plane direction, float level, float window);
     private:
         int depth;
         float3 spacing;
@@ -557,6 +563,35 @@ void Volume<T>::save(const char * filepath) {
     fclose(file);
 }
 
+Visualization * displayVisualization(BaseDataset * d, float level, float window);
+template <class T>
+Visualization * Dataset<T>::display() {
+    return displayVisualization(this, defaultLevel, defaultWindow);
+}
+
+template <class T>
+Visualization * Dataset<T>::display(float level, float window) {
+    return displayVisualization(this, level, window);
+}
+
+template <class T>
+Visualization * Volume<T>::display() {
+    return displayVisualization(this, this->defaultLevel, this->defaultWindow);
+}
+template <class T>
+Visualization * Volume<T>::display(float level, float window) {
+    return displayVisualization(this, level, window);
+}
+Visualization * displayVolumeVisualization(BaseDataset * d, int slice, slice_plane direction, float level, float window);
+template <class T>
+Visualization * Volume<T>::display(int slice, slice_plane direction) {
+    return displayVolumeVisualization(this, slice, direction, this->defaultLevel, this->defaultWindow);
+}
+
+template <class T>
+Visualization * Volume<T>::display(int slice, slice_plane direction, float level, float window) {
+    return displayVolumeVisualization(this, slice, direction, level, window);
+}
 
 struct _saveData {
 	GtkWidget * fs;

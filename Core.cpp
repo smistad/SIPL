@@ -39,6 +39,24 @@ void saveImage(BaseDataset * d, const char * filepath, const char * imageType) {
 	gdk_pixbuf_save(pixBuf, filepath, imageType, NULL, NULL);
 }
 
+Visualization * displayVisualization(BaseDataset * d, float level, float window) {
+    Visualization * v = new Visualization(d);
+    v->setLevel(level);
+    v->setWindow(window);
+    v->display();
+    return v;
+}
+
+Visualization * displayVolumeVisualization(BaseDataset * d, int slice, slice_plane direction, float level, float window) {
+    Visualization * v = new Visualization(d);
+    v->setLevel(level);
+    v->setWindow(window);
+    v->setSlice(slice);
+    v->setDirection(direction);
+    v->display();
+    return v;
+}
+
 int validateSlice(int slice, slice_plane direction, int3 size) {
     if(slice < 0)
         return 0;
