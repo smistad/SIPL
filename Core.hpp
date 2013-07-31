@@ -142,33 +142,6 @@ class Volume : public Dataset<T> {
         float3 spacing;
 };
 
-/* --- Spesialized conversion functions --- */
-void toGuchar(bool value, guchar * pixel) ;
-void toGuchar(uchar value, guchar * pixel) ;
-void toGuchar(char value, guchar * pixel) ;
-void toGuchar(ushort value, guchar * pixel) ;
-void toGuchar(short value, guchar * pixel) ;
-void toGuchar(uint value, guchar * pixel) ;
-void toGuchar(int value, guchar * pixel) ;
-void toGuchar(float value, guchar * pixel) ;
-void toGuchar(color_uchar value, guchar * pixel) ;
-void toGuchar(color_float value, guchar * pixel) ;
-void toGuchar(float2 value, guchar * pixel) ;
-void toGuchar(float3 value, guchar * pixel) ;
-
-
-/* --- Spesialized level/window --- */
-void toGuchar(uchar value, guchar * pixel, float level, float window) ;
-void toGuchar(char value, guchar * pixel, float level, float window) ;
-void toGuchar(ushort value, guchar * pixel, float level, float window) ;
-void toGuchar(short value, guchar * pixel, float level, float window) ;
-void toGuchar(uint value, guchar * pixel, float level, float window) ;
-void toGuchar(int value, guchar * pixel, float level, float window) ;
-void toGuchar(float value, guchar * pixel, float level, float window) ;
-void toGuchar(color_float value, guchar * pixel, float level, float window) ;
-void toGuchar(color_uchar value, guchar * pixel, float level, float window) ;
-void toGuchar(float2 value, guchar * pixel, float level, float window) ;
-void toGuchar(float3 value, guchar * pixel, float level, float window) ;
 inline double round( double d ) {
     return floor( d + 0.5 );
 }
