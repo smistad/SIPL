@@ -57,6 +57,17 @@ Visualization * displayVolumeVisualization(BaseDataset * d, int slice, slice_pla
     return v;
 }
 
+Visualization * displayMIPVisualization(BaseDataset * d, slice_plane direction, float level, float window) {
+    Visualization * v = new Visualization(d);
+    v->setType(MIP);
+    v->setLevel(level);
+    v->setWindow(window);
+    v->setDirection(direction);
+    v->display();
+    return v;
+}
+
+
 int validateSlice(int slice, slice_plane direction, int3 size) {
     if(slice < 0)
         return 0;

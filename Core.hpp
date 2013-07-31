@@ -133,6 +133,10 @@ class Volume : public Dataset<T> {
 		Visualization * display(float level, float window);
 		Visualization * display(int slice, slice_plane direction);
 		Visualization * display(int slice, slice_plane direction, float level, float window);
+		Visualization * displayMIP();
+		Visualization * displayMIP(float level, float window);
+		Visualization * displayMIP(slice_plane direction);
+		Visualization * displayMIP(slice_plane direction, float level, float window);
     private:
         int depth;
         float3 spacing;
@@ -591,6 +595,23 @@ Visualization * Volume<T>::display(int slice, slice_plane direction) {
 template <class T>
 Visualization * Volume<T>::display(int slice, slice_plane direction, float level, float window) {
     return displayVolumeVisualization(this, slice, direction, level, window);
+}
+Visualization * displayMIPVisualization(BaseDataset * d, slice_plane direction, float level, float window);
+template <class T>
+Visualization * Volume<T>::displayMIP() {
+    return displayMIPVisualization(this, X, this->defaultLevel, this->defaultWindow);
+}
+template <class T>
+Visualization * Volume<T>::displayMIP(float level, float window) {
+    return displayMIPVisualization(this, X, level, window);
+}
+template <class T>
+Visualization * Volume<T>::displayMIP(slice_plane direction, float level, float window) {
+    return displayMIPVisualization(this, direction, level, window);
+}
+template <class T>
+Visualization * Volume<T>::displayMIP(slice_plane direction) {
+    return displayMIPVisualization(this, direction, this->defaultLevel, this->defaultWindow);
 }
 
 struct _saveData {
