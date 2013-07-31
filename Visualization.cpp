@@ -92,6 +92,7 @@ void Visualization::renderSlice(int imageNr, GdkPixbuf * pixBuf) {
     int n =  gdk_pixbuf_get_n_channels(pixBuf);
     int rowstride = gdk_pixbuf_get_rowstride(pixBuf);
     float * floatData = images[imageNr]->getFloatData();
+#pragma omp parallel for
     for(int y = 0; y < ySize; y++) {
     for(int x = 0; x < xSize; x++) {
         float intensity;
@@ -124,6 +125,7 @@ void Visualization::renderImage(int imageNr, GdkPixbuf * pixBuf) {
     int n =  gdk_pixbuf_get_n_channels(pixBuf);
 
     float * floatData = images[imageNr]->getFloatData();
+#pragma omp parallel for
     for(int i = 0; i < images[imageNr]->getTotalSize(); i++) {
         guchar * p = pixels + i * n;
         if(images.size() == 1) {
@@ -327,6 +329,15 @@ void Visualization::keyPressed(GtkWidget * widget, GdkEventKey * event, gpointer
                 break;
             case GDK_KEY_Down:
                 v->setSlice(validateSlice(v->getSlice()-1,v->getDirection(),v->getSize()));
+                break;
+            case GDK_KEY_x:
+                v->setDirection(X);
+                break;
+            case GDK_KEY_y:
+                v->setDirection(Y);
+                break;
+            case GDK_KEY_z:
+                v->setDirection(Z);
                 break;
         }
 

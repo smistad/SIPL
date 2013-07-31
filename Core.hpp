@@ -1596,6 +1596,7 @@ void Volume<T>::setSpacing(float3 spacing) {
 template <class T>
 float * Dataset<T>::getFloatData() const {
     float * floatData = new float[this->getTotalSize()];
+#pragma omp parallel for
     for(int i = 0; i < this->getTotalSize(); i++) {
         floatData[i] = (float)toSingleValue(this->data[i]);
     }
