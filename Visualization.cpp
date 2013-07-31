@@ -135,41 +135,69 @@ void Visualization::renderMIP(int imageNr, GdkPixbuf * pixBuf) {
             zMultiple = this->size.x*this->size.y;
             break;
     }
-    float * mip = new float[xSize*ySize]();
-    float * floatData = images[imageNr]->getFloatData();
     int n = gdk_pixbuf_get_n_channels(pixBuf);
     int rowstride = gdk_pixbuf_get_rowstride(pixBuf);
     // Initialize image to black
     for(int i = 0; i < n*xSize*ySize; i++)
         pixels[i] = 0;
 
-    #pragma omp parallel for
-    for(int x = 0; x < xSize; x++) {
-        int nu = (x-(float)xSize/2.0f)*sangle + (float)xSize/2.0f;
-    for(int y = 0; y < ySize; y++) {
-        int v = y;
-    for(int z = 0; z < zSize; z++) {
-        int u = round((z-(float)zSize/2.0f)*cangle + nu);
+    if(images[0]->isVectorType) {
+        float3 * mip = new float3[xSize*ySize]();
+        float3 * floatData = images[imageNr]->getVectorFloatData();
+#pragma omp parallel for
+        for(int x = 0; x < xSize; x++) {
+            int nu = (x-(float)xSize/2.0f)*sangle + (float)xSize/2.0f;
+        for(int y = 0; y < ySize; y++) {
+            int v = y;
+        for(int z = 0; z < zSize; z++) {
+            int u = round((z-(float)zSize/2.0f)*cangle + nu);
 
-        if(u >= 0 && u < xSize) {
-            bool change;
-            float newValue = maximum<float>(mip[u+v*xSize], floatData[x*xMultiple+y*yMultiple+z*zMultiple], &change);
-            if(change) {
-                // New maximum
-                mip[u+v*xSize] = newValue;
-                guchar * p = pixels + (u*n+(ySize-1-v)*rowstride);
-                if(images.size() == 1) {
-                    p[0] = levelWindow(newValue, level[images[0]], window[images[0]]);
-                    p[1] = p[0];
-                    p[2] = p[0];
-                } else {
-                    p[imageNr] = levelWindow(newValue, level[images[imageNr]], window[images[imageNr]]);
+            if(u >= 0 && u < xSize) {
+                bool change;
+                float3 newValue = maximum<float3>(mip[u+v*xSize], floatData[x*xMultiple+y*yMultiple+z*zMultiple], &change);
+                if(change) {
+                    // New maximum
+                    mip[u+v*xSize] = newValue;
+                    guchar * p = pixels + (u*n+(ySize-1-v)*rowstride);
+                    p[0] = levelWindow(newValue.x,level[images[0]],window[images[0]]);
+                    p[1] = levelWindow(newValue.y,level[images[0]],window[images[0]]);
+                    p[2] = levelWindow(newValue.z,level[images[0]],window[images[0]]);
                 }
             }
-        }
-    }}}
+        }}}
+        delete[] floatData;
+        delete[] mip;
+    } else {
+        float * mip = new float[xSize*ySize]();
+        float * floatData = images[imageNr]->getFloatData();
+        #pragma omp parallel for
+        for(int x = 0; x < xSize; x++) {
+            int nu = (x-(float)xSize/2.0f)*sangle + (float)xSize/2.0f;
+        for(int y = 0; y < ySize; y++) {
+            int v = y;
+        for(int z = 0; z < zSize; z++) {
+            int u = round((z-(float)zSize/2.0f)*cangle + nu);
 
-
+            if(u >= 0 && u < xSize) {
+                bool change;
+                float newValue = maximum<float>(mip[u+v*xSize], floatData[x*xMultiple+y*yMultiple+z*zMultiple], &change);
+                if(change) {
+                    // New maximum
+                    mip[u+v*xSize] = newValue;
+                    guchar * p = pixels + (u*n+(ySize-1-v)*rowstride);
+                    if(images.size() == 1) {
+                        p[0] = levelWindow(newValue, level[images[0]], window[images[0]]);
+                        p[1] = p[0];
+                        p[2] = p[0];
+                    } else {
+                        p[imageNr] = levelWindow(newValue, level[images[imageNr]], window[images[imageNr]]);
+                    }
+                }
+            }
+        }}}
+        delete[] floatData;
+        delete[] mip;
+    }
 }
 
 void Visualization::renderSlice(int imageNr, GdkPixbuf * pixBuf) {
@@ -180,52 +208,91 @@ void Visualization::renderSlice(int imageNr, GdkPixbuf * pixBuf) {
     guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
     int n =  gdk_pixbuf_get_n_channels(pixBuf);
     int rowstride = gdk_pixbuf_get_rowstride(pixBuf);
-    float * floatData = images[imageNr]->getFloatData();
+    if(images[0]->isVectorType) {
+        float3 * floatData = images[0]->getVectorFloatData();
 #pragma omp parallel for
-    for(int y = 0; y < ySize; y++) {
-    for(int x = 0; x < xSize; x++) {
-        float intensity;
-        switch(direction) {
-            case X:
-                intensity = floatData[slice + x*size.x + (ySize-1-y)*size.x*size.y];
-                break;
-            case Y:
-                intensity = floatData[x + slice*size.x + (ySize-1-y)*size.x*size.y];
-                break;
-            case Z:
-                intensity = floatData[x + y*size.x + slice*size.x*size.y];
-                break;
-        }
-        int i = x*n+y*rowstride;
-        guchar * p = pixels + i;
-        if(images.size() == 1) {
-            p[0] = levelWindow(intensity, level[images[imageNr]], window[images[imageNr]]);
-            p[1] = p[0];
-            p[2] = p[0];
-        } else {
-            p[imageNr] = levelWindow(intensity, level[images[imageNr]], window[images[imageNr]]);
-        }
-   }}
-   delete[] floatData;
+        for(int y = 0; y < ySize; y++) {
+        for(int x = 0; x < xSize; x++) {
+            float3 intensity;
+            switch(direction) {
+                case X:
+                    intensity = floatData[slice + x*size.x + (ySize-1-y)*size.x*size.y];
+                    break;
+                case Y:
+                    intensity = floatData[x + slice*size.x + (ySize-1-y)*size.x*size.y];
+                    break;
+                case Z:
+                    intensity = floatData[x + y*size.x + slice*size.x*size.y];
+                    break;
+            }
+            int i = x*n+y*rowstride;
+            guchar * p = pixels + i;
+            p[0] = levelWindow(intensity.x,level[images[0]],window[images[0]]);
+            p[1] = levelWindow(intensity.y,level[images[0]],window[images[0]]);
+            p[2] = levelWindow(intensity.z,level[images[0]],window[images[0]]);
+       }}
+       delete[] floatData;
+
+    } else {
+        float * floatData = images[imageNr]->getFloatData();
+#pragma omp parallel for
+        for(int y = 0; y < ySize; y++) {
+        for(int x = 0; x < xSize; x++) {
+            float intensity;
+            switch(direction) {
+                case X:
+                    intensity = floatData[slice + x*size.x + (ySize-1-y)*size.x*size.y];
+                    break;
+                case Y:
+                    intensity = floatData[x + slice*size.x + (ySize-1-y)*size.x*size.y];
+                    break;
+                case Z:
+                    intensity = floatData[x + y*size.x + slice*size.x*size.y];
+                    break;
+            }
+            int i = x*n+y*rowstride;
+            guchar * p = pixels + i;
+            if(images.size() == 1) {
+                p[0] = levelWindow(intensity, level[images[imageNr]], window[images[imageNr]]);
+                p[1] = p[0];
+                p[2] = p[0];
+            } else {
+                p[imageNr] = levelWindow(intensity, level[images[imageNr]], window[images[imageNr]]);
+            }
+       }}
+       delete[] floatData;
+    }
 }
 
 void Visualization::renderImage(int imageNr, GdkPixbuf * pixBuf) {
     guchar * pixels = gdk_pixbuf_get_pixels(pixBuf);
     int n =  gdk_pixbuf_get_n_channels(pixBuf);
 
-    float * floatData = images[imageNr]->getFloatData();
+    if(images[0]->isVectorType) {
+        float3 * floatData = images[0]->getVectorFloatData();
 #pragma omp parallel for
-    for(int i = 0; i < images[imageNr]->getTotalSize(); i++) {
-        guchar * p = pixels + i * n;
-        if(images.size() == 1) {
-            p[0] = levelWindow(floatData[i], level[images[imageNr]], window[images[imageNr]]);
-            p[1] = p[0];
-            p[2] = p[0];
-        } else {
-            p[imageNr] = levelWindow(floatData[i], level[images[imageNr]], window[images[imageNr]]);
+        for(int i = 0; i < images[0]->getTotalSize(); i++) {
+            guchar * p = pixels + i * n;
+            p[0] = levelWindow(floatData[i].x,level[images[0]],window[images[0]]);
+            p[1] = levelWindow(floatData[i].y,level[images[0]],window[images[0]]);
+            p[2] = levelWindow(floatData[i].z,level[images[0]],window[images[0]]);
         }
+        delete[] floatData;
+    } else {
+        float * floatData = images[imageNr]->getFloatData();
+#pragma omp parallel for
+        for(int i = 0; i < images[imageNr]->getTotalSize(); i++) {
+            guchar * p = pixels + i * n;
+            if(images.size() == 1) {
+                p[0] = levelWindow(floatData[i], level[images[imageNr]], window[images[imageNr]]);
+                p[1] = p[0];
+                p[2] = p[0];
+            } else {
+                p[imageNr] = levelWindow(floatData[i], level[images[imageNr]], window[images[imageNr]]);
+            }
+        }
+        delete[] floatData;
     }
-    delete[] floatData;
 }
 
 GdkPixbuf * Visualization::render() {

@@ -29,7 +29,26 @@ inline float toSingleValue<float2>(float2 value) {
     return (float)(0.33f*(value.x+value.y));
 };
 
+template <class T>
+inline float3 toVectorData(T value) {
+    float3 v(value,value,value);
+    return v;
+}
 
+template <>
+inline float3 toVectorData(float3 value) {
+    return value;
+}
+
+template <>
+inline float3 toVectorData(float2 value) {
+    return float3(value.x,value.y,0);
+}
+
+template <>
+inline float3 toVectorData(color_uchar value) {
+    return float3(value.red,value.green,value.blue);
+}
 
 class IntensityTransformation {
 private:

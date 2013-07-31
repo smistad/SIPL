@@ -1605,7 +1605,9 @@ float * Dataset<T>::getFloatData() const {
 template <class T>
 float3 * Dataset<T>::getVectorFloatData() const {
     float3 * floatData = new float3[this->getTotalSize()];
+#pragma omp parallel for
     for(int i = 0; i < this->getTotalSize(); i++) {
+        floatData[i] = toVectorData(this->data[i]);
     }
     return floatData;
 }
