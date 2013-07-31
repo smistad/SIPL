@@ -7,8 +7,8 @@ Visualization::Visualization(BaseDataset * image) {
         throw SIPLException("A visualization can only contain a maximum of 3 images/volumes.");
     images.push_back(image);
     size = image->getSize();
-    setLevel(0.5);
-    setWindow(1.0);
+    setLevel(image, image->defaultLevel);
+    setWindow(image, image->defaultWindow);
     scale = 1.0f;
     angle = 0.5f*M_PI;
     isVolumeVisualization = image->isVolume;
@@ -34,8 +34,10 @@ Visualization::Visualization(BaseDataset * image, BaseDataset * image2) {
     images.push_back(image);
     images.push_back(image2);
     size = image->getSize();
-    setLevel(0.5);
-    setWindow(1.0);
+    setLevel(image, image->defaultLevel);
+    setWindow(image, image->defaultWindow);
+    setLevel(image2, image2->defaultLevel);
+    setWindow(image2, image2->defaultWindow);
     scale = 1.0f;
     angle = 0.5f*M_PI;
     isVolumeVisualization = image->isVolume;
@@ -62,8 +64,12 @@ Visualization::Visualization(BaseDataset * image, BaseDataset * image2, BaseData
     images.push_back(image2);
     images.push_back(image3);
     size = image->getSize();
-    setLevel(0.5);
-    setWindow(1.0);
+    setLevel(image, image->defaultLevel);
+    setWindow(image, image->defaultWindow);
+    setLevel(image2, image2->defaultLevel);
+    setWindow(image2, image2->defaultWindow);
+    setLevel(image3, image3->defaultLevel);
+    setWindow(image3, image3->defaultWindow);
     scale = 1.0f;
     angle = 0.5f*M_PI;
     isVolumeVisualization = image->isVolume;

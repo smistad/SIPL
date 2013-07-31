@@ -321,5 +321,10 @@ void toT(float3 * c, uchar * p) {
     c->y = (float)p[1]/255.0f;
     c->z = (float)p[2]/255.0f;
 }
+template <>
+void Dataset<color_uchar>::setDefaultLevelWindow() {
+    this->defaultLevel = 255*0.5;
+    this->defaultWindow = 255;
+}
 
 } // End namespace

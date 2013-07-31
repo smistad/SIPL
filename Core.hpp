@@ -23,6 +23,8 @@
 
 namespace SIPL {
 
+class Visualization;
+
 void Init();
 bool isInit();
 void Quit();
@@ -43,6 +45,9 @@ class BaseDataset {
         virtual int getTotalSize() const=0;
         bool isVolume;
         bool isVectorType;
+        float defaultLevel;
+        float defaultWindow;
+        friend class Visualization;
 };
 
 template <class T>
@@ -59,6 +64,7 @@ class Dataset : public BaseDataset {
         void fill(T value);
         float * getFloatData() const;
         float3 * getVectorFloatData() const;
+        void setDefaultLevelWindow();
     protected:
         T * data;
         int width, height;
@@ -67,8 +73,6 @@ class Dataset : public BaseDataset {
 template <class T>
 class Image : public Dataset<T> {
     public:
-        float getFloatData();
-        float3 getVectorFloatData();
         Image(const char * filepath);
         Image(unsigned int width, unsigned int height);
         Image(int2 size);
@@ -95,8 +99,6 @@ class Image : public Dataset<T> {
 template <class T>
 class Volume : public Dataset<T> {
     public:
-        float getFloatData();
-        float3 getVectorFloatData();
         Volume(std::string filename, IntensityTransformation IT = IntensityTransformation(DEFAULT)); // for reading mhd files
         Volume(const char * filename, int width, int height, int depth); // for reading raw files
         Volume(int width, int height, int depth);
@@ -160,6 +162,14 @@ void toGuchar(float3 value, guchar * pixel, float level, float window) ;
 inline double round( double d ) {
     return floor( d + 0.5 );
 }
+
+template <class T>
+void Dataset<T>::setDefaultLevelWindow() {
+    this->defaultLevel = 0.5;
+    this->defaultWindow = 1.0;
+}
+
+
 template <class T>
 uchar levelWindow(T value, float level, float window) {
     float result;
@@ -242,6 +252,7 @@ template <class T>
 Dataset<T>::Dataset() {
     T * d;
     this->isVectorType = IntensityTransformation::isVectorType(d);
+    this->setDefaultLevelWindow();
     if(!isInit()) {
         Init();
     }
