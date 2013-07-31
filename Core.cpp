@@ -360,4 +360,9 @@ void Dataset<uchar>::setDefaultLevelWindow() {
     this->defaultLevel = 255*0.5;
     this->defaultWindow = 255;
 }
+template <>
+void Dataset<char>::setDefaultLevelWindow() {
+    this->defaultLevel = 0;
+    this->defaultWindow = 255;
+}
 } // End namespace
