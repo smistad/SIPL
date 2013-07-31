@@ -119,8 +119,7 @@ void quit(void) {
 void Init() {
     windowCount = 0;
 	if (!init) {
-		g_thread_init(NULL);
-		gtkThread = g_thread_create(initGTK, NULL, true, NULL);
+		gtkThread = g_thread_new("main", initGTK, NULL);
 	}
 	while(!init); // wait for the thread to be created
     atexit(quit);
