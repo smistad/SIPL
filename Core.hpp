@@ -15,7 +15,6 @@
 #include "IntensityTransformations.hpp"
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
-#include <gdk/gdkkeysyms.h>
 #include <fstream>
 #include <typeinfo>
 #include <string>
@@ -41,6 +40,8 @@ class BaseDataset {
     public:
         virtual float * getFloatData() const = 0;
         virtual float3 * getVectorFloatData() const = 0;
+        virtual float getFloatData(int3 pos) const=0;
+        virtual float3 getVectorFloatData(int3 pos) const=0;
         virtual int3 getSize() const = 0;
         virtual int getTotalSize() const=0;
         bool isVolume;
@@ -63,7 +64,9 @@ class Dataset : public BaseDataset {
         virtual int3 getSize() const = 0;
         void fill(T value);
         float * getFloatData() const;
+        float getFloatData(int3 pos) const;
         float3 * getVectorFloatData() const;
+        float3 getVectorFloatData(int3 pos) const;
         void setDefaultLevelWindow();
         Visualization * display();
         Visualization * display(float level, float window);
@@ -775,6 +778,18 @@ float * Dataset<T>::getFloatData() const {
     }
     return floatData;
 }
+
+template <class T>
+float Dataset<T>::getFloatData(int3 pos) const {
+    return toSingleValue(this->data[pos.x+pos.y*this->width+pos.z*this->width*this->height]);
+}
+
+template <class T>
+float3 Dataset<T>::getVectorFloatData(int3 pos) const {
+    return toVectorData(this->data[pos.x+pos.y*this->width+pos.z*this->width*this->height]);
+}
+
+
 template <class T>
 float3 * Dataset<T>::getVectorFloatData() const {
     float3 * floatData = new float3[this->getTotalSize()];

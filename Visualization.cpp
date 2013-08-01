@@ -619,15 +619,46 @@ void Visualization::update() {
     draw();
 }
 
+float3 Visualization::getValue(int2 position) {
+    float3 res;
+    int nofImages = images.size();
+    bool isVector = images[0]->isVectorType;
+    // TODO get value
+    if(isVolumeVisualization) {
+
+    } else {
+        int3 position3D(position.x,position.y,0);
+        if(isVector) {
+            res = images[0]->getVectorFloatData(position3D);
+        } else {
+            res.x = images[0]->getFloatData(position3D);
+            if(nofImages > 2)
+                res.y = images[1]->getFloatData(position3D);
+            if(nofImages > 3)
+                res.z = images[2]->getFloatData(position3D);
+        }
+    }
+
+    return res;
+}
+
 bool Visualization::buttonPressed(GtkWidget * widget, GdkEventButton * event, gpointer user_data) {
     Visualization * v = (Visualization *)user_data;
     gtk_statusbar_pop(GTK_STATUSBAR(v->statusBar), 0); // remove old message
     if(event->button == 1) {
-        if(event->x < v->width && event->y < v->height) {
+        // Get real position
+        int2 position(round(event->x/v->scale), round(event->y/v->scale));
+        if(position.x < v->width && position.y < v->height) {
             char * str = new char[255];
-            float value;
-            // TODO get value
-            sprintf(str, "Position: %d %d   Value: ", (int)event->x, (int)event->y);
+            float3 value = v->getValue(position);
+
+            if(v->images.size() == 1 && !v->images[0]->isVectorType) {
+                sprintf(str, "Position: %d %d   Value: %f", (int)position.x, (int)position.y, value.x);
+            } else if(v->images.size() == 2) {
+                sprintf(str, "Position: %d %d   Value: %f %f", (int)position.x, (int)position.y, value.x, value.y);
+            } else {
+                sprintf(str, "Position: %d %d   Value: %f %f %f ", (int)position.x, (int)position.y, value.x, value.y, value.z);
+            }
             gtk_statusbar_push(GTK_STATUSBAR(v->statusBar), 0, (const gchar *)str);
         }
     }
