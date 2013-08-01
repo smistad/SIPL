@@ -156,6 +156,11 @@ void saveFileSignal(GtkWidget * widget, gpointer data) {
 	gtk_widget_destroy(GTK_WIDGET(((_saveData *)data)->fs));
 }
 
+void refresh(GtkWidget * widget, gpointer data) {
+    Visualization * v = (Visualization *)data;
+    v->update();
+}
+
 void saveDialog(GtkWidget * widget, gpointer image) {
 	GtkWidget * fileSelection = gtk_file_selection_new("Save an image");
 

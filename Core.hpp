@@ -33,6 +33,7 @@ void quitProgram(GtkWidget * widget, gpointer window) ;
 void signalDestroyWindow(GtkWidget * widget, gpointer window) ;
 void saveFileSignal(GtkWidget * widget, gpointer data) ;
 void saveDialog(GtkWidget * widget, gpointer image) ;
+void refresh(GtkWidget * widget, gpointer data) ;
 int increaseWindowCount() ;
 int getWindowCount() ;
 

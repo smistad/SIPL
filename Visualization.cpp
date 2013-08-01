@@ -432,6 +432,14 @@ void Visualization::display() {
              gtk_image_new_from_pixbuf(pixBuf));
 	gtk_toolbar_append_item (
 			 GTK_TOOLBAR (toolbar), /* our toolbar */
+             "Refresh",               /* button label */
+             "Refresh this image",     /* this button's tooltip */
+             NULL,             /* tooltip private info */
+             NULL,                 /* icon widget */
+             GTK_SIGNAL_FUNC(refresh), /* a signal */
+             this);
+	gtk_toolbar_append_item (
+			 GTK_TOOLBAR (toolbar), /* our toolbar */
              "Close",               /* button label */
              "Close this image",     /* this button's tooltip */
              NULL,             /* tooltip private info */
