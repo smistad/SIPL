@@ -34,6 +34,7 @@ class Visualization {
         void update();
         void draw();
         static void keyPressed(GtkWidget * widget, GdkEventKey * event, gpointer user_data);
+        static bool buttonPressed(GtkWidget * widget, GdkEventButton * event, gpointer user_data);
         slice_plane getDirection() const;
         void setDirection(slice_plane direction);
         int getSlice() const;
@@ -59,6 +60,7 @@ class Visualization {
         int3 size;
         GtkWidget * gtkImage;
         GtkWidget * scaledImage;
+        GtkWidget * statusBar;
         void zoomIn();
         void zoomOut();
         visualizationType type;

@@ -449,8 +449,8 @@ void Visualization::display() {
 
 	gtk_window_set_default_size(
 			GTK_WINDOW(window),
-			size.x,
-			size.y + 35
+			size.x + 3,
+			size.y + 58
 	);
 	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
 	g_signal_connect_swapped(
@@ -466,17 +466,30 @@ void Visualization::display() {
             this
     );
 
-    GtkWidget * vbox = gtk_vbox_new(FALSE, 1);
 
+    GtkWidget * vbox = gtk_vbox_new(FALSE, 1);
 	gtk_container_add (GTK_CONTAINER (window), vbox);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar,FALSE,FALSE,0);
     scaledImage = gtk_image_new_from_pixbuf(pixBuf);
-    GtkWidget *  scrolledWindow = gtk_scrolled_window_new(NULL, NULL);
+    gtk_widget_set_events(scaledImage, GDK_BUTTON_PRESS_MASK);
+    GtkWidget *eventBox = gtk_event_box_new();
+    GtkWidget * align = gtk_alignment_new(0,0,0,0);
+    gtk_container_add(GTK_CONTAINER(align), eventBox);
+    gtk_container_add (GTK_CONTAINER (eventBox), scaledImage);
+    GtkWidget * scrolledWindow = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledWindow),
                                     GTK_POLICY_AUTOMATIC,
                                     GTK_POLICY_AUTOMATIC);
-    gtk_scrolled_window_add_with_viewport((GtkScrolledWindow *)scrolledWindow, scaledImage);
+    gtk_scrolled_window_add_with_viewport((GtkScrolledWindow *)scrolledWindow, align);
+    gtk_signal_connect(
+            GTK_OBJECT (eventBox),
+            "button_press_event",
+            G_CALLBACK(Visualization::buttonPressed),
+            this
+    );
     gtk_box_pack_start(GTK_BOX(vbox), scrolledWindow,TRUE,TRUE,0);
+    statusBar = gtk_statusbar_new();
+    gtk_box_pack_start(GTK_BOX(vbox), statusBar, FALSE, FALSE, 0);
 	gtk_widget_show_all(window);
 
 	gdk_threads_leave();
@@ -604,4 +617,20 @@ void Visualization::update() {
     GdkPixbuf * pixBuf = render();
     gtk_image_set_from_pixbuf(GTK_IMAGE(gtkImage), pixBuf);
     draw();
+}
+
+bool Visualization::buttonPressed(GtkWidget * widget, GdkEventButton * event, gpointer user_data) {
+    Visualization * v = (Visualization *)user_data;
+    gtk_statusbar_pop(GTK_STATUSBAR(v->statusBar), 0); // remove old message
+    if(event->button == 1) {
+        if(event->x < v->width && event->y < v->height) {
+            char * str = new char[255];
+            float value;
+            // TODO get value
+            sprintf(str, "Position: %d %d   Value: ", (int)event->x, (int)event->y);
+            gtk_statusbar_push(GTK_STATUSBAR(v->statusBar), 0, (const gchar *)str);
+        }
+    }
+
+    return true;
 }
