@@ -65,6 +65,7 @@ class Visualization {
         void zoomOut();
         visualizationType type;
         float3 getValue(int2 position);
+        int3 getTrue3DPosition(int2 pos);
 };
 
 

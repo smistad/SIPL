@@ -632,22 +632,51 @@ float3 Visualization::getValue(int2 position) {
     int nofImages = images.size();
     bool isVector = images[0]->isVectorType;
     // TODO get value
+    int3 position3D;
     if(isVolumeVisualization) {
-
-    } else {
-        int3 position3D(position.x,position.y,0);
-        if(isVector) {
-            res = images[0]->getVectorFloatData(position3D);
+        if(type == MIP) {
+            // currently not supported
         } else {
-            res.x = images[0]->getFloatData(position3D);
-            if(nofImages > 2)
-                res.y = images[1]->getFloatData(position3D);
-            if(nofImages > 3)
-                res.z = images[2]->getFloatData(position3D);
+            // Find true 3D position
+            position3D = getTrue3DPosition(position);
         }
+    } else {
+        position3D = int3(position.x,position.y,0);
+    }
+
+    if(isVector) {
+        res = images[0]->getVectorFloatData(position3D);
+    } else {
+        res.x = images[0]->getFloatData(position3D);
+        if(nofImages > 2)
+            res.y = images[1]->getFloatData(position3D);
+        if(nofImages > 3)
+            res.z = images[2]->getFloatData(position3D);
     }
 
     return res;
+}
+
+int3 Visualization::getTrue3DPosition(int2 pos) {
+    int3 realPos;
+    switch(direction) {
+       case X:
+           realPos.x = slice;
+           realPos.y = pos.x;
+           realPos.z = pos.y;
+           break;
+       case Y:
+           realPos.x = pos.x;
+           realPos.y = slice;
+           realPos.z = pos.y;
+           break;
+       case Z:
+           realPos.x = pos.x;
+           realPos.y = pos.y;
+           realPos.z = slice;
+           break;
+    }
+    return realPos;
 }
 
 bool Visualization::buttonPressed(GtkWidget * widget, GdkEventButton * event, gpointer user_data) {
@@ -660,12 +689,28 @@ bool Visualization::buttonPressed(GtkWidget * widget, GdkEventButton * event, gp
             char * str = new char[255];
             float3 value = v->getValue(position);
 
-            if(v->images.size() == 1 && !v->images[0]->isVectorType) {
-                sprintf(str, "Position: %d %d   Value: %f", (int)position.x, (int)position.y, value.x);
-            } else if(v->images.size() == 2) {
-                sprintf(str, "Position: %d %d   Value: %f %f", (int)position.x, (int)position.y, value.x, value.y);
+            if(v->isVolumeVisualization) {
+                if(v->type == MIP) {
+                    // not implemented yet
+                    sprintf(str, "");
+                } else {
+                    int3 pos3D = v->getTrue3DPosition(position);
+                    if(v->images.size() == 1 && !v->images[0]->isVectorType) {
+                        sprintf(str, "Position: %d %d %d   Value: %f", pos3D.x, pos3D.y, pos3D.z, value.x);
+                    } else if(v->images.size() == 2) {
+                        sprintf(str, "Position: %d %d %d  Value: %f %f", pos3D.x, pos3D.y, pos3D.z, value.x, value.y);
+                    } else {
+                        sprintf(str, "Position: %d %d %d  Value: %f %f %f ", pos3D.x, pos3D.y, pos3D.z, value.x, value.y, value.z);
+                    }
+                }
             } else {
-                sprintf(str, "Position: %d %d   Value: %f %f %f ", (int)position.x, (int)position.y, value.x, value.y, value.z);
+                if(v->images.size() == 1 && !v->images[0]->isVectorType) {
+                    sprintf(str, "Position: %d %d   Value: %f", (int)position.x, (int)position.y, value.x);
+                } else if(v->images.size() == 2) {
+                    sprintf(str, "Position: %d %d   Value: %f %f", (int)position.x, (int)position.y, value.x, value.y);
+                } else {
+                    sprintf(str, "Position: %d %d   Value: %f %f %f ", (int)position.x, (int)position.y, value.x, value.y, value.z);
+                }
             }
             gtk_statusbar_push(GTK_STATUSBAR(v->statusBar), 0, (const gchar *)str);
         }
