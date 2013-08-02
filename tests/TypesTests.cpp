@@ -85,3 +85,46 @@ TEST(TypesTests, VectorDistance) {
     EXPECT_FLOAT_EQ(0.5,f3_1.distance(i3_1));
     EXPECT_FLOAT_EQ(0.5,i3_1.distance(f3_1));
 }
+
+TEST(TypesTests, VectorNormalize) {
+   float2 f2(-2.0, 1.0);
+   float2 f2_n = f2.normalize();
+   EXPECT_FLOAT_EQ(1.0, f2_n.length());
+   EXPECT_FLOAT_EQ(-0.894427191, f2_n.x);
+   EXPECT_FLOAT_EQ(0.4472135955, f2_n.y);
+   // f2 is unchanged?
+   EXPECT_FLOAT_EQ(-2.0, f2.x);
+   EXPECT_FLOAT_EQ(1.0, f2.y);
+
+   float3 f3(-2.0, 1.0, 2.4);
+   float3 f3_n = f3.normalize();
+   EXPECT_FLOAT_EQ(1.0, f3_n.length());
+   EXPECT_FLOAT_EQ(-0.6097107608, f3_n.x);
+   EXPECT_FLOAT_EQ(0.3048553804, f3_n.y);
+   EXPECT_FLOAT_EQ(0.731652913, f3_n.z);
+   // f3 is unchanged?
+   EXPECT_FLOAT_EQ(-2.0, f3.x);
+   EXPECT_FLOAT_EQ(1.0, f3.y);
+   EXPECT_FLOAT_EQ(2.4, f3.z);
+
+   int2 i2(-2,1);
+   float2 i2_n = i2.normalize();
+   EXPECT_FLOAT_EQ(1.0, i2_n.length());
+   EXPECT_FLOAT_EQ(-0.894427191, i2_n.x);
+   EXPECT_FLOAT_EQ(0.4472135955, i2_n.y);
+   // f2 is unchanged?
+   EXPECT_EQ(-2, i2.x);
+   EXPECT_EQ(1, i2.y);
+
+   int3 i3(-2, 1, 2);
+   float3 i3_n = i3.normalize();
+   EXPECT_FLOAT_EQ(1.0, i3_n.length());
+   EXPECT_FLOAT_EQ(-0.6666666667, i3_n.x);
+   EXPECT_FLOAT_EQ(0.3333333333, i3_n.y);
+   EXPECT_FLOAT_EQ(0.6666666667, i3_n.z);
+   // f3 is unchanged?
+   EXPECT_EQ(-2, i3.x);
+   EXPECT_EQ(1, i3.y);
+   EXPECT_EQ(2, i3.z);
+
+}
