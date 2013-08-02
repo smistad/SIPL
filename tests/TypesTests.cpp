@@ -1,7 +1,6 @@
 #include "Tests.hpp"
 
-TEST(TypesTests, DefaultConstructors) {
-
+TEST(TypesTests, DefaultVectorConstructors) {
     float2 v;
     EXPECT_EQ(0.0f, v.x);
     EXPECT_EQ(0.0f, v.y);
@@ -21,7 +20,7 @@ TEST(TypesTests, DefaultConstructors) {
     EXPECT_EQ(0, v4.z);
 }
 
-TEST(TypesTests, ValuedConstructors) {
+TEST(TypesTests, ValuedVectorConstructors) {
     float2 f2(1.1f, -2.0f);
     EXPECT_EQ(1.1f, f2.x);
     EXPECT_EQ(-2.0f, f2.y);
@@ -39,4 +38,50 @@ TEST(TypesTests, ValuedConstructors) {
     EXPECT_EQ(-2, i3.x);
     EXPECT_EQ(2000, i3.y);
     EXPECT_EQ(0, i3.z);
+}
+
+TEST(TypesTests, VectorLength) {
+    float2 f2(-1.0f, 1.0f);
+    EXPECT_FLOAT_EQ(1.414213562f, f2.length());
+
+    float3 f3(2.0, 0.5, -1.0f);
+    EXPECT_FLOAT_EQ(2.291287847, f3.length());
+
+    int2 i2(4, 2);
+    EXPECT_FLOAT_EQ(4.472135955, i2.length());
+
+    int3 i3(-2, 0, 3);
+    EXPECT_FLOAT_EQ(3.605551275, i3.length());
+}
+
+TEST(TypesTests, VectorDistance) {
+    float2 f2_1(1.0f, -2.0f);
+    float2 f2_2(4.0f, 1.0f);
+    EXPECT_FLOAT_EQ(0.0, f2_1.distance(f2_1));
+    EXPECT_FLOAT_EQ(4.242640687, f2_1.distance(f2_2));
+    EXPECT_FLOAT_EQ(4.242640687, f2_2.distance(f2_1));
+
+    float3 f3_1(1.0f, 0.5f, -1.0f);
+    float3 f3_2(2.0f, 1.0f, -1.0f);
+    EXPECT_FLOAT_EQ(0.0, f3_1.distance(f3_1));
+    EXPECT_FLOAT_EQ(1.118033989,f3_1.distance(f3_2));
+    EXPECT_FLOAT_EQ(1.118033989,f3_2.distance(f3_1));
+
+    int2 i2_1(1,-2);
+    int2 i2_2(4,1);
+    EXPECT_FLOAT_EQ(0.0, i2_1.distance(i2_1));
+    EXPECT_FLOAT_EQ(4.242640687, i2_1.distance(i2_2));
+    EXPECT_FLOAT_EQ(4.242640687, i2_2.distance(i2_1));
+
+    int3 i3_1(1,0,-1);
+    int3 i3_2(2,1,1);
+    EXPECT_FLOAT_EQ(0.0f, i3_1.distance(i3_1));
+    EXPECT_FLOAT_EQ(2.449489743, i3_1.distance(i3_2));
+    EXPECT_FLOAT_EQ(2.449489743, i3_2.distance(i3_1));
+
+    EXPECT_FLOAT_EQ(0.0,f2_1.distance(i2_1));
+    EXPECT_FLOAT_EQ(0.0,i2_1.distance(f2_1));
+
+    EXPECT_FLOAT_EQ(0.5,f3_1.distance(i3_1));
+    EXPECT_FLOAT_EQ(0.5,i3_1.distance(f3_1));
 }
