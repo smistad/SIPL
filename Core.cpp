@@ -281,11 +281,11 @@ void adjustLevelAndWindow(GtkWidget * widget, gpointer data) {
         gtk_entry_set_text(GTK_ENTRY(windowEntry), floatToChar(currentWindow));
         g_signal_connect(
                 windowScale, "value-changed",
-                G_CALLBACK(scaleChangeLevel),
+                G_CALLBACK(scaleChangeWindow),
                 new LevelWindowChange(v,images[i],windowEntry));
         g_signal_connect(
                 windowEntry, "activate",
-                G_CALLBACK(entryChangeLevel),
+                G_CALLBACK(entryChangeWindow),
                 new LevelWindowChange(v, images[i], windowScale));
         gtk_container_add(GTK_CONTAINER(vbox), windowEntry);
 	}
