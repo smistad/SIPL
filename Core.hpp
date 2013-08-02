@@ -46,6 +46,7 @@ class BaseDataset {
         virtual float3 getVectorFloatData(int3 pos) const=0;
         virtual int3 getSize() const = 0;
         virtual int getTotalSize() const=0;
+        virtual float3 getSpacing() const=0;
         bool isVolume;
         bool isVectorType;
         float defaultLevel;
@@ -64,6 +65,8 @@ class Dataset : public BaseDataset {
         void setData(T * data);
         virtual int getTotalSize() const=0;
         virtual int3 getSize() const = 0;
+		float3 getSpacing() const;
+		void setSpacing(float3 spacing);
         void fill(T value);
         float * getFloatData() const;
         float getFloatData(int3 pos) const;
@@ -75,6 +78,7 @@ class Dataset : public BaseDataset {
     protected:
         T * data;
         int width, height;
+        float3 spacing;
 };
 
 template <class T>
@@ -132,8 +136,6 @@ class Volume : public Dataset<T> {
         bool inBounds(int3 pos) const;
         bool inBounds(int i) const;
         int getTotalSize() const;
-		float3 getSpacing() const;
-		void setSpacing(float3 spacing);
 		Visualization * display();
 		Visualization * display(float level, float window);
 		Visualization * display(int slice, slice_plane direction);
@@ -144,7 +146,6 @@ class Volume : public Dataset<T> {
 		Visualization * displayMIP(slice_plane direction, float level, float window);
     private:
         int depth;
-        float3 spacing;
 };
 
 inline double round( double d ) {
@@ -261,6 +262,7 @@ Image<T>::Image(const char * filename) {
 	this->width = gdk_pixbuf_get_width(gtk_image_get_pixbuf((GtkImage *) image));
     this->data = new T[this->height*this->width];
     this->pixbufToData((GtkImage *)image);
+    this->spacing = float3(1.0f,1.0f,1.0f);
 }
 
 template <class T> 
@@ -270,6 +272,7 @@ Image<T>::Image(Image<U> * otherImage, IntensityTransformation it) {
     this->width = otherImage->getWidth();
     this->height = otherImage->getHeight();
     this->data = new T[this->height*this->width];
+    this->spacing = otherImage->getSpacing();
     it.transform(otherImage->getData(), this->data, this->getTotalSize());
 }
 
@@ -403,9 +406,9 @@ Volume<T>::Volume(std::string filename, IntensityTransformation IT) {
             sizeString = sizeString.substr(sizeString.find(" ")+1);
             std::string sizeZ = sizeString.substr(0,sizeString.find(" "));
 
-            spacing.x = atof(sizeX.c_str());
-            spacing.y = atof(sizeY.c_str());
-            spacing.z = atof(sizeZ.c_str());
+            this->spacing.x = atof(sizeX.c_str());
+            this->spacing.y = atof(sizeY.c_str());
+            this->spacing.z = atof(sizeZ.c_str());
         }
 
     } while(!mhdFile.eof());
@@ -475,6 +478,7 @@ Image<T>::Image(unsigned int width, unsigned int height) {
     this->width = width;
     this->height = height;
     this->isVolume = false;
+    this->spacing = float3(1.0f,1.0f,1.0f);
 }
 
 template <class T>
@@ -483,6 +487,7 @@ Image<T>::Image(int2 size) {
     this->width = size.x;
     this->height = size.y;
     this->isVolume = false;
+    this->spacing = float3(1.0f,1.0f,1.0f);
 }
 
 
@@ -762,12 +767,12 @@ void Dataset<T>::fill(T value) {
 }
 
 template <class T>
-float3 Volume<T>::getSpacing() const {
+float3 Dataset<T>::getSpacing() const {
 	return spacing;
 }
 
 template <class T>
-void Volume<T>::setSpacing(float3 spacing) {
+void Dataset<T>::setSpacing(float3 spacing) {
 	this->spacing = spacing;
 }
 

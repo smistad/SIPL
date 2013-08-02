@@ -69,6 +69,8 @@ class Visualization {
         visualizationType type;
         float3 getValue(int2 position);
         int3 getTrue3DPosition(int2 pos);
+        float spacingX;
+        float spacingY;
 };
 
 

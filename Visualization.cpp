@@ -13,6 +13,9 @@ Visualization::Visualization(BaseDataset * image) {
     angle = 0.5f*M_PI;
     isVolumeVisualization = image->isVolume;
     type = SLICE;
+    float3 spacing = image->getSpacing();
+    spacingX = spacing.x;
+    spacingY = spacing.y;
     if(isVolumeVisualization) {
         direction = Z;
         slice = image->getSize().z / 2;
@@ -42,6 +45,9 @@ Visualization::Visualization(BaseDataset * image, BaseDataset * image2) {
     angle = 0.5f*M_PI;
     isVolumeVisualization = image->isVolume;
     type = SLICE;
+    float3 spacing = image->getSpacing();
+    spacingX = spacing.x;
+    spacingY = spacing.y;
     if(isVolumeVisualization) {
         direction = Z;
         slice = image->getSize().z / 2;
@@ -74,6 +80,9 @@ Visualization::Visualization(BaseDataset * image, BaseDataset * image2, BaseData
     angle = 0.5f*M_PI;
     isVolumeVisualization = image->isVolume;
     type = SLICE;
+    float3 spacing = image->getSpacing();
+    spacingX = spacing.x;
+    spacingY = spacing.y;
     if(isVolumeVisualization) {
         direction = Z;
         slice = image->getSize().z / 2;
@@ -306,21 +315,28 @@ GdkPixbuf * Visualization::render() {
     int xSize = 0;
     int ySize = 0;
     if(isVolumeVisualization) {
+        float3 spacing = images[0]->getSpacing();
         switch(direction) {
             case X:
                 // x direction
                 xSize = size.y;
                 ySize = size.z;
+                spacingX = spacing.y;
+                spacingY = spacing.z;
                 break;
             case Y:
                 // y direction
                 xSize = size.x;
                 ySize = size.z;
+                spacingX = spacing.x;
+                spacingY = spacing.z;
                 break;
             case Z:
                 // z direction
                 xSize = size.x;
                 ySize = size.y;
+                spacingX = spacing.x;
+                spacingY = spacing.y;
                 break;
         }
     } else {
@@ -345,24 +361,31 @@ GdkPixbuf * Visualization::render() {
         int xSize;
         int ySize;
         int zSize;
+        float3 spacing = images[0]->getSpacing();
         switch(direction) {
             case X:
                 // x direction
                 xSize = this->size.y;
                 ySize = this->size.z;
                 zSize = this->size.x;
+                spacingX = spacing.y;
+                spacingY = spacing.z;
                 break;
             case Y:
                 // y direction
                 xSize = this->size.x;
                 ySize = this->size.z;
                 zSize = this->size.y;
+                spacingX = spacing.x;
+                spacingY = spacing.z;
                 break;
             case Z:
                 // z direction
                 xSize = this->size.x;
                 ySize = this->size.y;
                 zSize = this->size.z;
+                spacingX = spacing.x;
+                spacingY = spacing.y;
                 break;
         }
         this->width = xSize;
@@ -486,7 +509,11 @@ void Visualization::display() {
     GtkWidget * vbox = gtk_vbox_new(FALSE, 1);
 	gtk_container_add (GTK_CONTAINER (window), vbox);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar,FALSE,FALSE,0);
-    scaledImage = gtk_image_new_from_pixbuf(pixBuf);
+
+    GdkPixbuf * newPixBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
+			8, spacingX*scale*width, spacingY*scale*height);
+    gdk_pixbuf_scale(pixBuf, newPixBuf, 0, 0, spacingX*scale*width, spacingY*scale*height, 0, 0, scale*spacingX, scale*spacingY, GDK_INTERP_BILINEAR);
+    scaledImage = gtk_image_new_from_pixbuf(newPixBuf);
     gtk_widget_set_events(scaledImage, GDK_BUTTON_PRESS_MASK);
     GtkWidget *eventBox = gtk_event_box_new();
     GtkWidget * align = gtk_alignment_new(0,0,0,0);
@@ -603,8 +630,8 @@ void Visualization::setType(visualizationType type) {
 void Visualization::draw() {
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf(GTK_IMAGE(gtkImage));
     GdkPixbuf * newPixBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
-			8, scale*width, scale*height);
-    gdk_pixbuf_scale(pixBuf, newPixBuf, 0, 0, scale*width, scale*height, 0, 0, scale, scale, GDK_INTERP_BILINEAR);
+			8, spacingX*scale*width, spacingY*scale*height);
+    gdk_pixbuf_scale(pixBuf, newPixBuf, 0, 0, spacingX*scale*width, spacingY*scale*height, 0, 0, scale*spacingX, scale*spacingY, GDK_INTERP_BILINEAR);
     gtk_image_set_from_pixbuf(GTK_IMAGE(scaledImage), newPixBuf);
     gtk_widget_queue_draw(scaledImage);
 }
@@ -692,7 +719,7 @@ bool Visualization::buttonPressed(GtkWidget * widget, GdkEventButton * event, gp
     gtk_statusbar_pop(GTK_STATUSBAR(v->statusBar), 0); // remove old message
     if(event->button == 1) {
         // Get real position
-        int2 position(round(event->x/v->scale), round(event->y/v->scale));
+        int2 position(round(event->x/(v->scale*v->spacingX)), round(event->y/(v->scale*v->spacingY)));
         if(position.x < v->width && position.y < v->height) {
             char * str = new char[255];
             float3 value = v->getValue(position);
