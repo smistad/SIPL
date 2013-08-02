@@ -126,5 +126,32 @@ TEST(TypesTests, VectorNormalize) {
    EXPECT_EQ(-2, i3.x);
    EXPECT_EQ(1, i3.y);
    EXPECT_EQ(2, i3.z);
+}
 
+TEST(TypesTests, Equal) {
+    float2 f2_1(1.0f, -2.0f);
+    float2 f2_2(4.0f, 1.0f);
+    EXPECT_TRUE(f2_1 == f2_1);
+    EXPECT_FALSE(f2_1 == f2_2);
+
+    float3 f3_1(1.0f, 0.5f, -1.0f);
+    float3 f3_2(2.0f, 1.0f, -1.0f);
+    EXPECT_TRUE(f3_1 == f3_1);
+    EXPECT_FALSE(f3_1 == f3_2);
+
+    int2 i2_1(1,-2);
+    int2 i2_2(4,1);
+    EXPECT_TRUE(i2_1 == i2_1);
+    EXPECT_FALSE(i2_1 == i2_2);
+
+    int3 i3_1(1,0,-1);
+    int3 i3_2(2,1,-1);
+    EXPECT_TRUE(i3_1 == i3_1);
+    EXPECT_FALSE(i3_1 == i3_2);
+
+    EXPECT_TRUE(f2_1 == i2_1);
+    EXPECT_FALSE(f2_1 == i2_2);
+
+    EXPECT_TRUE(f3_2 == i3_2);
+    EXPECT_FALSE(f3_1 == i3_1);
 }
