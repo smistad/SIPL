@@ -440,6 +440,14 @@ void Visualization::display() {
              this);
 	gtk_toolbar_append_item (
 			 GTK_TOOLBAR (toolbar), /* our toolbar */
+             "Level & Window",               /* button label */
+             "Adjust level and window",     /* this button's tooltip */
+             NULL,             /* tooltip private info */
+             NULL,                 /* icon widget */
+             GTK_SIGNAL_FUNC(adjustLevelAndWindow), /* a signal */
+             this);
+	gtk_toolbar_append_item (
+			 GTK_TOOLBAR (toolbar), /* our toolbar */
              "Close",               /* button label */
              "Close this image",     /* this button's tooltip */
              NULL,             /* tooltip private info */
@@ -717,4 +725,16 @@ bool Visualization::buttonPressed(GtkWidget * widget, GdkEventButton * event, gp
     }
 
     return true;
+}
+
+float Visualization::getLevel(BaseDataset * image) {
+    return level[image];
+}
+
+float Visualization::getWindow(BaseDataset * image) {
+    return window[image];
+}
+
+std::vector<BaseDataset *> Visualization::getImages() {
+    return images;
 }

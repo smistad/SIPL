@@ -23,9 +23,11 @@ class Visualization {
         Visualization(BaseDataset * image, BaseDataset * image2);
         Visualization(BaseDataset * image, BaseDataset * image2, BaseDataset * image3);
         void setLevel(float level);
+        float getLevel(BaseDataset * image);
         void setWindow(float window);
         void setLevel(BaseDataset * image, float level);
         void setWindow(BaseDataset * image, float window);
+        float getWindow(BaseDataset * image);
         void setTitle(std::string);
         void setType(visualizationType);
         void addImage();
@@ -43,6 +45,7 @@ class Visualization {
         float getAngle() const;
         void setAngle(float angle);
         GdkPixbuf * render();
+        std::vector<BaseDataset *> getImages();
     private:
         bool isVolumeVisualization;
         std::vector<BaseDataset *> images;

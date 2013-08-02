@@ -5,6 +5,7 @@
  */
 #include "Core.hpp"
 #include "Visualization.hpp"
+#include <limits>
 
 namespace SIPL {
 bool init = false;
@@ -159,6 +160,128 @@ void saveFileSignal(GtkWidget * widget, gpointer data) {
 void refresh(GtkWidget * widget, gpointer data) {
     Visualization * v = (Visualization *)data;
     v->update();
+}
+
+char * floatToChar(float v) {
+	char * str = new char[10];
+	sprintf(str, "%f", v);
+	return str;
+}
+
+void getMinAndMax(BaseDataset * image, float * min, float * max) {
+    *min = std::numeric_limits<float>::max();
+    *max = std::numeric_limits<float>::min();
+    if(image->isVectorType) {
+        float3 * floatData = image->getVectorFloatData();
+        for(int i = 0; i < image->getTotalSize(); i++) {
+            *min = std::min(*min, std::min(floatData[i].x, std::min(floatData[i].y, floatData[i].z)));
+            *max = std::max(*max, std::max(floatData[i].x, std::max(floatData[i].y, floatData[i].z)));
+        }
+
+        delete[] floatData;
+    } else {
+        float * floatData = image->getFloatData();
+        for(int i = 0; i < image->getTotalSize(); i++) {
+            if(floatData[i] < *min)
+                *min = floatData[i];
+            if(floatData[i] > *max)
+                *max = floatData[i];
+        }
+        delete[] floatData;
+    }
+}
+
+struct levelWindowChange {
+        Visualization * viz;
+        BaseDataset * image;
+        GtkWidget * otherWidget;
+};
+
+void entryChangeLevel(GtkWidget * widget, gpointer data) {
+    Visualization * v = (Visualization *)data;
+    const gchar * value = gtk_entry_get_text(GTK_ENTRY(widget));
+    v->setLevel(atof((char*)value));
+    v->update();
+}
+
+void scaleChangeLevel(GtkWidget * widget, gpointer data) {
+    Visualization * v = (Visualization *)data;
+    gdouble value = gtk_range_get_value(GTK_RANGE(widget));
+    v->setLevel((float)value);
+    v->update();
+}
+
+void entryChangeWindow(GtkWidget * widget, gpointer data) {
+    Visualization * v = (Visualization *)data;
+    const gchar * value = gtk_entry_get_text(GTK_ENTRY(widget));
+    v->setWindow(atof((char*)value));
+    v->update();
+}
+
+void scaleChangeWindow(GtkWidget * widget, gpointer data) {
+    Visualization * v = (Visualization *)data;
+    gdouble value = gtk_range_get_value(GTK_RANGE(widget));
+    v->setWindow((float)value);
+    v->update();
+}
+
+void adjustLevelAndWindow(GtkWidget * widget, gpointer data) {
+    Visualization * v = (Visualization *)data;
+    // Create window and add sliders and text boxes to it, one for each image
+    GtkWidget * window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(window), "Adjust Level & Window");
+	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
+
+    GtkWidget * vbox = gtk_vbox_new(FALSE, 1);
+	gtk_container_add (GTK_CONTAINER (window), vbox);
+
+	// TODO: retrieve min and max of image and the current level
+	std::vector<BaseDataset *> images = v->getImages();
+
+	for(int i = 0; i < images.size(); i++) {
+        float currentLevel = v->getLevel(images[i]);
+        float min,max;
+        getMinAndMax(images[i], &min, &max);
+
+        GtkWidget * levelLabel = gtk_label_new("Level: ");
+        gtk_container_add(GTK_CONTAINER(vbox), levelLabel);
+        GtkWidget * levelScale = gtk_hscale_new_with_range(min, max, (max-min)/255.0f);
+        gtk_range_set_value(GTK_RANGE(levelScale), currentLevel);
+        g_signal_connect(
+                levelScale, "value-changed",
+                G_CALLBACK(scaleChangeLevel),
+                v);
+        gtk_container_add(GTK_CONTAINER(vbox), levelScale);
+        GtkWidget * levelEntry = gtk_entry_new();
+        gtk_entry_set_text(GTK_ENTRY(levelEntry), floatToChar(currentLevel));
+        g_signal_connect(
+                levelEntry, "activate",
+                G_CALLBACK(entryChangeLevel),
+                v);
+        gtk_container_add(GTK_CONTAINER(vbox), levelEntry);
+
+        float currentWindow = v->getWindow(images[i]);
+
+        GtkWidget * windowLabel = gtk_label_new("Window: ");
+        gtk_container_add(GTK_CONTAINER(vbox), windowLabel);
+        GtkWidget * windowScale = gtk_hscale_new_with_range(0, max, (max)/255.0f);
+        gtk_range_set_value(GTK_RANGE(windowScale), currentWindow);
+        g_signal_connect(
+                windowScale, "value-changed",
+                G_CALLBACK(scaleChangeWindow),
+                v);
+        gtk_container_add(GTK_CONTAINER(vbox), windowScale);
+        GtkWidget * windowEntry = gtk_entry_new();
+        gtk_entry_set_text(GTK_ENTRY(windowEntry), floatToChar(currentWindow));
+        g_signal_connect(
+                windowEntry, "activate",
+                G_CALLBACK(entryChangeWindow),
+                v);
+        gtk_container_add(GTK_CONTAINER(vbox), windowEntry);
+	}
+
+
+    gtk_widget_show_all(window);
 }
 
 void saveDialog(GtkWidget * widget, gpointer image) {
