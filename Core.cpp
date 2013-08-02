@@ -191,38 +191,48 @@ void getMinAndMax(BaseDataset * image, float * min, float * max) {
     }
 }
 
-struct levelWindowChange {
+class LevelWindowChange {
+    public:
+        LevelWindowChange(Visualization * v, BaseDataset * i, GtkWidget * w) {
+            viz = v;
+            image = i;
+            otherWidget = w;
+        };
         Visualization * viz;
         BaseDataset * image;
         GtkWidget * otherWidget;
 };
 
 void entryChangeLevel(GtkWidget * widget, gpointer data) {
-    Visualization * v = (Visualization *)data;
+    LevelWindowChange * c = (LevelWindowChange *)data;
     const gchar * value = gtk_entry_get_text(GTK_ENTRY(widget));
-    v->setLevel(atof((char*)value));
-    v->update();
+    gtk_range_set_value(GTK_RANGE(c->otherWidget), atof((char*)value));
+    c->viz->setLevel(c->image,atof((char*)value));
+    c->viz->update();
 }
 
 void scaleChangeLevel(GtkWidget * widget, gpointer data) {
-    Visualization * v = (Visualization *)data;
+    LevelWindowChange * c = (LevelWindowChange *)data;
     gdouble value = gtk_range_get_value(GTK_RANGE(widget));
-    v->setLevel((float)value);
-    v->update();
+    gtk_entry_set_text(GTK_ENTRY(c->otherWidget), floatToChar((float)value));
+    c->viz->setLevel(c->image, (float)value);
+    c->viz->update();
 }
 
 void entryChangeWindow(GtkWidget * widget, gpointer data) {
-    Visualization * v = (Visualization *)data;
+    LevelWindowChange * c = (LevelWindowChange *)data;
     const gchar * value = gtk_entry_get_text(GTK_ENTRY(widget));
-    v->setWindow(atof((char*)value));
-    v->update();
+    gtk_range_set_value(GTK_RANGE(c->otherWidget), atof((char*)value));
+    c->viz->setWindow(c->image,atof((char*)value));
+    c->viz->update();
 }
 
 void scaleChangeWindow(GtkWidget * widget, gpointer data) {
-    Visualization * v = (Visualization *)data;
+    LevelWindowChange * c = (LevelWindowChange *)data;
     gdouble value = gtk_range_get_value(GTK_RANGE(widget));
-    v->setWindow((float)value);
-    v->update();
+    gtk_entry_set_text(GTK_ENTRY(c->otherWidget), floatToChar((float)value));
+    c->viz->setWindow(c->image, (float)value);
+    c->viz->update();
 }
 
 void adjustLevelAndWindow(GtkWidget * widget, gpointer data) {
@@ -247,17 +257,17 @@ void adjustLevelAndWindow(GtkWidget * widget, gpointer data) {
         gtk_container_add(GTK_CONTAINER(vbox), levelLabel);
         GtkWidget * levelScale = gtk_hscale_new_with_range(min, max, (max-min)/255.0f);
         gtk_range_set_value(GTK_RANGE(levelScale), currentLevel);
-        g_signal_connect(
-                levelScale, "value-changed",
-                G_CALLBACK(scaleChangeLevel),
-                v);
         gtk_container_add(GTK_CONTAINER(vbox), levelScale);
         GtkWidget * levelEntry = gtk_entry_new();
         gtk_entry_set_text(GTK_ENTRY(levelEntry), floatToChar(currentLevel));
         g_signal_connect(
+                levelScale, "value-changed",
+                G_CALLBACK(scaleChangeLevel),
+                new LevelWindowChange(v,images[i],levelEntry));
+        g_signal_connect(
                 levelEntry, "activate",
                 G_CALLBACK(entryChangeLevel),
-                v);
+                new LevelWindowChange(v, images[i], levelScale));
         gtk_container_add(GTK_CONTAINER(vbox), levelEntry);
 
         float currentWindow = v->getWindow(images[i]);
@@ -266,17 +276,17 @@ void adjustLevelAndWindow(GtkWidget * widget, gpointer data) {
         gtk_container_add(GTK_CONTAINER(vbox), windowLabel);
         GtkWidget * windowScale = gtk_hscale_new_with_range(0, max, (max)/255.0f);
         gtk_range_set_value(GTK_RANGE(windowScale), currentWindow);
-        g_signal_connect(
-                windowScale, "value-changed",
-                G_CALLBACK(scaleChangeWindow),
-                v);
         gtk_container_add(GTK_CONTAINER(vbox), windowScale);
         GtkWidget * windowEntry = gtk_entry_new();
         gtk_entry_set_text(GTK_ENTRY(windowEntry), floatToChar(currentWindow));
         g_signal_connect(
+                windowScale, "value-changed",
+                G_CALLBACK(scaleChangeLevel),
+                new LevelWindowChange(v,images[i],windowEntry));
+        g_signal_connect(
                 windowEntry, "activate",
-                G_CALLBACK(entryChangeWindow),
-                v);
+                G_CALLBACK(entryChangeLevel),
+                new LevelWindowChange(v, images[i], windowScale));
         gtk_container_add(GTK_CONTAINER(vbox), windowEntry);
 	}
 
