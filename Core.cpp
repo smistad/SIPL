@@ -251,7 +251,7 @@ void adjustLevelAndWindow(GtkWidget * widget, gpointer data) {
         float min,max;
         getMinAndMax(images[i], &min, &max);
         char * str = new char[10];
-        sprintf(str, "Image #%d", i);
+        sprintf(str, "Image #%d", i+1);
         GtkWidget * imageLabel = gtk_label_new(str);
         gtk_table_attach_defaults(GTK_TABLE(table), imageLabel, 0, 3, i*3, i*3+1);
 
@@ -259,6 +259,7 @@ void adjustLevelAndWindow(GtkWidget * widget, gpointer data) {
         gtk_table_attach_defaults(GTK_TABLE(table), levelLabel, 0, 1, i*3+1, i*3+2);
         GtkWidget * levelScale = gtk_hscale_new_with_range(min, max, (max-min)/255.0f);
         gtk_range_set_value(GTK_RANGE(levelScale), currentLevel);
+        gtk_widget_set_size_request(levelScale, 200, 40);
         gtk_table_attach_defaults(GTK_TABLE(table), levelScale, 1, 2, i*3+1, i*3+2);
         GtkWidget * levelEntry = gtk_entry_new();
         gtk_entry_set_text(GTK_ENTRY(levelEntry), floatToChar(currentLevel));
