@@ -12,9 +12,20 @@ if(OPENMP_FOUND)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}" PARENT_SCOPE)
 endif()
 
+
 include_directories (${GTK2_INCLUDE_DIRS})
 set(SIPL_INCLUDE_DIRS ${GTK2_INCLUDE_DIRS} PARENT_SCOPE)
 link_directories (${GTK2_LIBRARY_DIRS})
 add_library (SIPL Core.cpp Types.cpp Visualization.cpp)
 add_definitions (${GTK2_CFLAGS_OTHER})
 target_link_libraries (SIPL ${GTK2_LIBRARIES})
+
+
+option(compile_tests "Compile tests for SIPL" OFF) # cmake option to turn on compilation of tests
+find_package(GTest)
+if(GTEST_FOUND)
+if(compile_tests)
+	message("Google test framework found. Compiling tests ...")
+	add_subdirectory(tests)
+endif()
+endif()
