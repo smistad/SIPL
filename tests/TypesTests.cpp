@@ -40,6 +40,43 @@ TEST(TypesTests, ValuedVectorConstructors) {
     EXPECT_EQ(0, i3.z);
 }
 
+TEST(TypesTests, RegionConstructors) {
+    // 2D
+    Region r(10,10);
+    EXPECT_EQ(0, r.offset.x);
+    EXPECT_EQ(0, r.offset.y);
+    EXPECT_EQ(0, r.offset.z);
+    EXPECT_EQ(10, r.size.x);
+    EXPECT_EQ(10, r.size.y);
+    EXPECT_EQ(0, r.size.z);
+
+    Region r2(1,1, 10,10);
+    EXPECT_EQ(1, r2.offset.x);
+    EXPECT_EQ(1, r2.offset.y);
+    EXPECT_EQ(0, r2.offset.z);
+    EXPECT_EQ(10, r2.size.x);
+    EXPECT_EQ(10, r2.size.y);
+    EXPECT_EQ(0, r2.size.z);
+
+    // 3D
+    Region r3(10,10,10);
+    EXPECT_EQ(0, r3.offset.x);
+    EXPECT_EQ(0, r3.offset.y);
+    EXPECT_EQ(0, r3.offset.z);
+    EXPECT_EQ(10, r3.size.x);
+    EXPECT_EQ(10, r3.size.y);
+    EXPECT_EQ(10, r3.size.z);
+
+    Region r4(1,1,1, 10,10,10);
+    EXPECT_EQ(1, r4.offset.x);
+    EXPECT_EQ(1, r4.offset.y);
+    EXPECT_EQ(1, r4.offset.z);
+    EXPECT_EQ(10, r4.size.x);
+    EXPECT_EQ(10, r4.size.y);
+    EXPECT_EQ(10, r4.size.z);
+
+}
+
 TEST(TypesTests, VectorLength) {
     float2 f2(-1.0f, 1.0f);
     EXPECT_FLOAT_EQ(1.414213562f, f2.length());
