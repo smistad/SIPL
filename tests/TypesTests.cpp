@@ -156,6 +156,112 @@ TEST(TypesTests, DotProduct) {
     EXPECT_FLOAT_EQ(3.5f,i3_2.dot(f3_1));
 }
 
+TEST(TypesTests, VectorScalarArithmetic) {
+    float2 f2(1.0f, -2.0f);
+    float2 f2_a;
+    f2_a = f2+2.2f;
+    EXPECT_FLOAT_EQ(3.2f, f2_a.x);
+    EXPECT_FLOAT_EQ(0.2f, f2_a.y);
+    f2_a = 2.2f+f2;
+    EXPECT_FLOAT_EQ(3.2f, f2_a.x);
+    EXPECT_FLOAT_EQ(0.2f, f2_a.y);
+
+    f2_a = f2-0.2f;
+    EXPECT_FLOAT_EQ(0.8f, f2_a.x);
+    EXPECT_FLOAT_EQ(-2.2f, f2_a.y);
+    f2_a = 0.2f-f2;
+    EXPECT_FLOAT_EQ(-0.8f, f2_a.x);
+    EXPECT_FLOAT_EQ(2.2f, f2_a.y);
+
+    f2_a = f2*2;
+    EXPECT_FLOAT_EQ(2.0f, f2_a.x);
+    EXPECT_FLOAT_EQ(-4.0f, f2_a.y);
+    f2_a = 2*f2;
+    EXPECT_FLOAT_EQ(2.0f, f2_a.x);
+    EXPECT_FLOAT_EQ(-4.0f, f2_a.y);
+
+    float3 f3(1.0f, 0.5f, -1.0f);
+    float3 f3_a;
+    f3_a = f3+2.2f;
+    EXPECT_FLOAT_EQ(3.2f, f3_a.x);
+    EXPECT_FLOAT_EQ(2.7f, f3_a.y);
+    EXPECT_FLOAT_EQ(1.2f, f3_a.z);
+    f3_a = 2.2f+f3;
+    EXPECT_FLOAT_EQ(3.2f, f3_a.x);
+    EXPECT_FLOAT_EQ(2.7f, f3_a.y);
+    EXPECT_FLOAT_EQ(1.2f, f3_a.z);
+
+    f3_a = f3-0.2f;
+    EXPECT_FLOAT_EQ(0.8f, f3_a.x);
+    EXPECT_FLOAT_EQ(0.3f, f3_a.y);
+    EXPECT_FLOAT_EQ(-1.2f, f3_a.z);
+    f3_a = 0.2f-f3;
+    EXPECT_FLOAT_EQ(-0.8f, f3_a.x);
+    EXPECT_FLOAT_EQ(-0.3f, f3_a.y);
+    EXPECT_FLOAT_EQ(1.2f, f3_a.z);
+
+    f3_a = f3*2;
+    EXPECT_FLOAT_EQ(2.0f, f3_a.x);
+    EXPECT_FLOAT_EQ(1.0f, f3_a.y);
+    EXPECT_FLOAT_EQ(-2.0f, f3_a.z);
+    f3_a = 2*f3;
+    EXPECT_FLOAT_EQ(2.0f, f3_a.x);
+    EXPECT_FLOAT_EQ(1.0f, f3_a.y);
+    EXPECT_FLOAT_EQ(-2.0f, f3_a.z);
+
+    int2 i2(4,-1);
+    int2 i2_a;
+    i2_a = i2+2.1f;
+    EXPECT_EQ(6, i2_a.x);
+    EXPECT_EQ(1, i2_a.y);
+    i2_a = 2.1f+i2;
+    EXPECT_EQ(6, i2_a.x);
+    EXPECT_EQ(1, i2_a.y);
+
+    i2_a = i2-2.1f;
+    EXPECT_EQ(1, i2_a.x);
+    EXPECT_EQ(-3, i2_a.y);
+    i2_a = 2-i2;
+    EXPECT_EQ(-2, i2_a.x);
+    EXPECT_EQ(3, i2_a.y);
+
+    i2_a = i2*2;
+    EXPECT_EQ(8, i2_a.x);
+    EXPECT_EQ(-2, i2_a.y);
+    i2_a = 2*i2;
+    EXPECT_EQ(8, i2_a.x);
+    EXPECT_EQ(-2, i2_a.y);
+
+    int3 i3(2,1,-1);
+    int3 i3_a;
+    i3_a = i3+2.1f;
+    EXPECT_EQ(4, i3_a.x);
+    EXPECT_EQ(3, i3_a.y);
+    EXPECT_EQ(1, i3_a.z);
+    i3_a = 2.1f+i3;
+    EXPECT_EQ(4, i3_a.x);
+    EXPECT_EQ(3, i3_a.y);
+    EXPECT_EQ(1, i3_a.z);
+
+    i3_a = i3-2.1f;
+    EXPECT_EQ(0, i3_a.x);
+    EXPECT_EQ(-1, i3_a.y);
+    EXPECT_EQ(-3, i3_a.z);
+    i3_a = 2-i3;
+    EXPECT_EQ(0, i3_a.x);
+    EXPECT_EQ(1, i3_a.y);
+    EXPECT_EQ(3, i3_a.z);
+
+    i3_a = i3*2;
+    EXPECT_EQ(4, i3_a.x);
+    EXPECT_EQ(2, i3_a.y);
+    EXPECT_EQ(-2, i3_a.z);
+    i3_a = 2*i3;
+    EXPECT_EQ(4, i3_a.x);
+    EXPECT_EQ(2, i3_a.y);
+    EXPECT_EQ(-2, i3_a.z);
+}
+
 TEST(TypesTests, Equal) {
     float2 f2_1(1.0f, -2.0f);
     float2 f2_2(4.0f, 1.0f);
