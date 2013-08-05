@@ -247,56 +247,56 @@ TEST(TypesTests, VectorScalarArithmetic) {
     EXPECT_FLOAT_EQ(-2.0f, f3_a.z);
 
     int2 i2(4,-1);
-    int2 i2_a;
+    float2 i2_a;
     i2_a = i2+2.1f;
-    EXPECT_EQ(6, i2_a.x);
-    EXPECT_EQ(1, i2_a.y);
+    EXPECT_FLOAT_EQ(6.1f, i2_a.x);
+    EXPECT_FLOAT_EQ(1.1f, i2_a.y);
     i2_a = 2.1f+i2;
-    EXPECT_EQ(6, i2_a.x);
-    EXPECT_EQ(1, i2_a.y);
+    EXPECT_FLOAT_EQ(6.1f, i2_a.x);
+    EXPECT_FLOAT_EQ(1.1f, i2_a.y);
 
     i2_a = i2-2.1f;
-    EXPECT_EQ(1, i2_a.x);
-    EXPECT_EQ(-3, i2_a.y);
-    i2_a = 2-i2;
-    EXPECT_EQ(-2, i2_a.x);
-    EXPECT_EQ(3, i2_a.y);
+    EXPECT_FLOAT_EQ(1.9f, i2_a.x);
+    EXPECT_FLOAT_EQ(-3.1f, i2_a.y);
+    i2_a = 2.1f-i2;
+    EXPECT_FLOAT_EQ(-1.9f, i2_a.x);
+    EXPECT_FLOAT_EQ(3.1f, i2_a.y);
 
     i2_a = i2*2;
-    EXPECT_EQ(8, i2_a.x);
-    EXPECT_EQ(-2, i2_a.y);
+    EXPECT_FLOAT_EQ(8, i2_a.x);
+    EXPECT_FLOAT_EQ(-2, i2_a.y);
     i2_a = 2*i2;
-    EXPECT_EQ(8, i2_a.x);
-    EXPECT_EQ(-2, i2_a.y);
+    EXPECT_FLOAT_EQ(8, i2_a.x);
+    EXPECT_FLOAT_EQ(-2, i2_a.y);
 
     int3 i3(2,1,-1);
-    int3 i3_a;
+    float3 i3_a;
     i3_a = i3+2.1f;
-    EXPECT_EQ(4, i3_a.x);
-    EXPECT_EQ(3, i3_a.y);
-    EXPECT_EQ(1, i3_a.z);
+    EXPECT_FLOAT_EQ(4.1f, i3_a.x);
+    EXPECT_FLOAT_EQ(3.1f, i3_a.y);
+    EXPECT_FLOAT_EQ(1.1f, i3_a.z);
     i3_a = 2.1f+i3;
-    EXPECT_EQ(4, i3_a.x);
-    EXPECT_EQ(3, i3_a.y);
-    EXPECT_EQ(1, i3_a.z);
+    EXPECT_FLOAT_EQ(4.1f, i3_a.x);
+    EXPECT_FLOAT_EQ(3.1f, i3_a.y);
+    EXPECT_FLOAT_EQ(1.1f, i3_a.z);
 
-    i3_a = i3-2.1f;
-    EXPECT_EQ(0, i3_a.x);
-    EXPECT_EQ(-1, i3_a.y);
-    EXPECT_EQ(-3, i3_a.z);
-    i3_a = 2-i3;
-    EXPECT_EQ(0, i3_a.x);
-    EXPECT_EQ(1, i3_a.y);
-    EXPECT_EQ(3, i3_a.z);
+    i3_a = i3-2.2f;
+    EXPECT_FLOAT_EQ(-0.2f, i3_a.x);
+    EXPECT_FLOAT_EQ(-1.2f, i3_a.y);
+    EXPECT_FLOAT_EQ(-3.2f, i3_a.z);
+    i3_a = 2.2f-i3;
+    EXPECT_FLOAT_EQ(0.2f, i3_a.x);
+    EXPECT_FLOAT_EQ(1.2f, i3_a.y);
+    EXPECT_FLOAT_EQ(3.2f, i3_a.z);
 
     i3_a = i3*2;
-    EXPECT_EQ(4, i3_a.x);
-    EXPECT_EQ(2, i3_a.y);
-    EXPECT_EQ(-2, i3_a.z);
+    EXPECT_FLOAT_EQ(4, i3_a.x);
+    EXPECT_FLOAT_EQ(2, i3_a.y);
+    EXPECT_FLOAT_EQ(-2, i3_a.z);
     i3_a = 2*i3;
-    EXPECT_EQ(4, i3_a.x);
-    EXPECT_EQ(2, i3_a.y);
-    EXPECT_EQ(-2, i3_a.z);
+    EXPECT_FLOAT_EQ(4, i3_a.x);
+    EXPECT_FLOAT_EQ(2, i3_a.y);
+    EXPECT_FLOAT_EQ(-2, i3_a.z);
 }
 
 TEST(TypesTests, VectorVectorArithmetic) {
@@ -354,6 +354,8 @@ TEST(TypesTests, VectorVectorArithmetic) {
     EXPECT_FLOAT_EQ(2.0f, f3_3.x);
     EXPECT_FLOAT_EQ(-0.5f, f3_3.y);
     EXPECT_FLOAT_EQ(1.0f, f3_3.z);
+
+    // TODO add int2 and int3 tests as well
 }
 
 TEST(TypesTests, Equal) {
