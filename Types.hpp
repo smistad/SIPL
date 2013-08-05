@@ -161,33 +161,17 @@ class int2 {
         float dot(int2 other) const ;
         bool operator==(int2 other) const;
         bool operator==(float2 other) const;
-        template <class T>
-        int2 operator+(T v) const {
-            int2 n;
-            n.x = this->x + v;
-            n.y = this->y + v;
-            return n;
-        };
-        template <class T>
-        int2 operator-(T v) const {
-            int2 n;
-            n.x = this->x - v;
-            n.y = this->y - v;
-            return n;
-        };
-        template <class T>
-        int2 operator*(T v) const {
-            int2 n;
-            n.x = this->x * v;
-            n.y = this->y * v;
-            return n;
-        };
-        template <class T>
-        int2 operator/(T v) const {
-            int2 n;
-            n.x = this->x / v;
-            n.y = this->y / v;
-            return n;
+        float2 operator+(float v) const;
+        float2 operator+(float2 v) const;
+        int2 operator+(int2 v) const;
+        float2 operator-(float v) const;
+        float2 operator-(float2 v) const;
+        int2 operator-(int2 v) const;
+        float2 operator*(float v) const;
+        float2 operator*(float2 v) const;
+        int2 operator*(int2 v) const;
+        float2 toFloat() const {
+            return float2(x,y);
         };
 };
 
@@ -217,37 +201,17 @@ class int3 {
         float dot(int3 other) const ;
         bool operator==(int3 other) const;
         bool operator==(float3 other) const;
-        template <class T>
-        int3 operator+(T v) const {
-            int3 n;
-            n.x = this->x + v;
-            n.y = this->y + v;
-            n.z = this->z + v;
-            return n;
-        };
-        template <class T>
-        int3 operator-(T v) const {
-            int3 n;
-            n.x = this->x - v;
-            n.y = this->y - v;
-            n.z = this->z - v;
-            return n;
-        };
-        template <class T>
-        int3 operator*(T v) const {
-            int3 n;
-            n.x = this->x * v;
-            n.y = this->y * v;
-            n.z = this->z * v;
-            return n;
-        };
-        template <class T>
-        int3 operator/(T v) const {
-            int3 n;
-            n.x = this->x / v;
-            n.y = this->y / v;
-            n.z = this->z / v;
-            return n;
+        float3 operator+(float v) const;
+        float3 operator+(float3 v) const;
+        int3 operator+(int3 v) const;
+        float3 operator-(float v) const;
+        float3 operator-(float3 v) const;
+        int3 operator-(int3 v) const;
+        float3 operator*(float v) const;
+        float3 operator*(float3 v) const;
+        int3 operator*(int3 v) const;
+        float3 toFloat() const {
+            return float3(x,y,z);
         };
 };
 
@@ -403,43 +367,65 @@ float3 operator*(float scalar, float3 other) {
 }
 
 // int2
-template <> inline
-int2 int2::operator+(float2 other) const {
-    int2 v;
+inline
+float2 int2::operator+(float other) const {
+    float2 v;
+    v.x = this->x + other;
+    v.y = this->y + other;
+    return v;
+}
+
+inline
+float2 int2::operator+(float2 other) const {
+    float2 v;
     v.x = this->x + other.x;
     v.y = this->y + other.y;
     return v;
 }
-template <> inline
+
+inline
 int2 int2::operator+(int2 other) const {
     int2 v;
     v.x = this->x + other.x;
     v.y = this->y + other.y;
     return v;
 }
-template <> inline
-int2 int2::operator-(float2 other) const {
-    int2 v;
+inline
+float2 int2::operator-(float other) const {
+    float2 v;
+    v.x = this->x - other;
+    v.y = this->y - other;
+    return v;
+}
+inline
+float2 int2::operator-(float2 other) const {
+    float2 v;
     v.x = this->x - other.x;
     v.y = this->y - other.y;
     return v;
 }
-template <> inline
+inline
 int2 int2::operator-(int2 other) const {
     int2 v;
     v.x = this->x - other.x;
     v.y = this->y - other.y;
     return v;
 }
-
-template <> inline
-int2 int2::operator*(float2 other) const {
-    int2 v;
+inline
+float2 int2::operator*(float other) const {
+    float2 v;
+    v.x = this->x*other;
+    v.y = this->y*other;
+    return v;
+}
+inline
+float2 int2::operator*(float2 other) const {
+    float2 v;
     v.x = this->x * other.x;
     v.y = this->y * other.y;
     return v;
 }
-template <> inline
+inline
 int2 int2::operator*(int2 other) const {
     int2 v;
     v.x = this->x * other.x;
@@ -447,33 +433,42 @@ int2 int2::operator*(int2 other) const {
     return v;
 }
 
-template <class T>
-int2 operator+(T scalar, int2 other) {
+inline
+float2 operator+(float scalar, int2 other) {
     return other.operator+(scalar);
 }
-template <class T>
-int2 operator-(T scalar, int2 other) {
-    int2 v;
+inline
+float2 operator-(float scalar, int2 other) {
+    float2 v;
     v.x = scalar - other.x;
     v.y = scalar - other.y;
     return v;
 }
-template <class T>
-int2 operator*(T scalar, int2 other) {
+inline
+float2 operator*(float scalar, int2 other) {
     return other.operator*(scalar);
 }
 
 
 // float3
-template <> inline
-int3 int3::operator+(float3 other) const {
-    int3 v;
+inline
+float3 int3::operator+(float other) const {
+    float3 v;
+    v.x = this->x + other;
+    v.y = this->y + other;
+    v.z = this->z + other;
+    return v;
+}
+
+inline
+float3 int3::operator+(float3 other) const {
+    float3 v;
     v.x = this->x + other.x;
     v.y = this->y + other.y;
     v.z = this->z + other.z;
     return v;
 }
-template <> inline
+inline
 int3 int3::operator+(int3 other) const {
     int3 v;
     v.x = this->x + other.x;
@@ -481,15 +476,24 @@ int3 int3::operator+(int3 other) const {
     v.z = this->z + other.z;
     return v;
 }
-template <> inline
-int3 int3::operator-(float3 other) const {
-    int3 v;
+inline
+float3 int3::operator-(float other) const {
+    float3 v;
+    v.x = this->x - other;
+    v.y = this->y - other;
+    v.z = this->z - other;
+    return v;
+}
+
+inline
+float3 int3::operator-(float3 other) const {
+    float3 v;
     v.x = this->x - other.x;
     v.y = this->y - other.y;
     v.z = this->z - other.z;
     return v;
 }
-template <> inline
+inline
 int3 int3::operator-(int3 other) const {
     int3 v;
     v.x = this->x - other.x;
@@ -497,15 +501,24 @@ int3 int3::operator-(int3 other) const {
     v.z = this->z - other.z;
     return v;
 }
-template <> inline
-int3 int3::operator*(float3 other) const {
-    int3 v;
+inline
+float3 int3::operator*(float other) const {
+    float3 v;
+    v.x = this->x * other;
+    v.y = this->y * other;
+    v.z = this->z * other;
+    return v;
+}
+
+inline
+float3 int3::operator*(float3 other) const {
+    float3 v;
     v.x = this->x * other.x;
     v.y = this->y * other.y;
     v.z = this->z * other.z;
     return v;
 }
-template <> inline
+inline
 int3 int3::operator*(int3 other) const {
     int3 v;
     v.x = this->x * other.x;
@@ -514,20 +527,20 @@ int3 int3::operator*(int3 other) const {
     return v;
 }
 
-template <class T>
-int3 operator+(T scalar, int3 other) {
+inline
+float3 operator+(float scalar, int3 other) {
     return other.operator+(scalar);
 }
-template <class T>
-int3 operator-(T scalar, int3 other) {
-    int3 v;
+inline
+float3 operator-(float scalar, int3 other) {
+    float3 v;
     v.x = scalar - other.x;
     v.y = scalar - other.y;
     v.z = scalar - other.z;
     return v;
 }
-template <class T>
-int3 operator*(T scalar, int3 other) {
+inline
+float3 operator*(float scalar, int3 other) {
     return other.operator*(scalar);
 }
 
