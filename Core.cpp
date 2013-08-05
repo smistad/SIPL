@@ -148,8 +148,17 @@ void signalDestroyWindow(GtkWidget * widget, gpointer window) {
 void saveFileSignal(GtkWidget * widget, gpointer data) {
 	// Get extension to determine image type
     std::string filepath(gtk_file_selection_get_filename (GTK_FILE_SELECTION (((_saveData *)data)->fs)));
-	gdk_pixbuf_save(gtk_image_get_pixbuf(
-			GTK_IMAGE(((_saveData *)data)->viz->getGtkImage())),
+    Visualization * v = ((_saveData *)data)->viz;
+    GdkPixbuf * pixBuf = gtk_image_get_pixbuf(GTK_IMAGE(v->getGtkImage()));
+    float width = v->getWidth();
+    float height = v->getHeight();
+    float spacingX = v->getSpacingX();
+    float spacingY = v->getSpacingY();
+    GdkPixbuf * newPixBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, false, 8, spacingX*width, spacingY*height);
+    gdk_pixbuf_scale(pixBuf, newPixBuf, 0, 0, spacingX*width, spacingY*height, 0, 0, spacingX, spacingY, GDK_INTERP_BILINEAR);
+
+	gdk_pixbuf_save(
+	        newPixBuf,
 			filepath.c_str(),
 			filepath.substr(filepath.rfind('.')+1).c_str(),
 			NULL, "quality", "100", NULL);

@@ -47,6 +47,10 @@ class Visualization {
         GdkPixbuf * render();
         std::vector<BaseDataset *> getImages();
         GtkWidget * getGtkImage();
+        int getWidth();
+        int getHeight();
+        float getSpacingX();
+        float getSpacingY();
     private:
         bool isVolumeVisualization;
         std::vector<BaseDataset *> images;

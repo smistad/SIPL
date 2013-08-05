@@ -769,3 +769,19 @@ std::vector<BaseDataset *> Visualization::getImages() {
 GtkWidget * Visualization::getGtkImage() {
     return gtkImage;
 }
+
+int Visualization::getWidth() {
+    return width;
+}
+
+int Visualization::getHeight() {
+    return height;
+}
+
+float Visualization::getSpacingX() {
+    return spacingX;
+}
+
+float Visualization::getSpacingY() {
+    return spacingY;
+}
