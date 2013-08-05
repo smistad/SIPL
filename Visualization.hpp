@@ -46,6 +46,7 @@ class Visualization {
         void setAngle(float angle);
         GdkPixbuf * render();
         std::vector<BaseDataset *> getImages();
+        GtkWidget * getGtkImage();
     private:
         bool isVolumeVisualization;
         std::vector<BaseDataset *> images;

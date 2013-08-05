@@ -599,7 +599,7 @@ Visualization * Volume<T>::displayMIP(slice_plane direction) {
 
 struct _saveData {
 	GtkWidget * fs;
-	GtkImage * image;
+	Visualization * viz;
 };
 
 template <class T>

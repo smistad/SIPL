@@ -149,7 +149,7 @@ void saveFileSignal(GtkWidget * widget, gpointer data) {
 	// Get extension to determine image type
     std::string filepath(gtk_file_selection_get_filename (GTK_FILE_SELECTION (((_saveData *)data)->fs)));
 	gdk_pixbuf_save(gtk_image_get_pixbuf(
-			((_saveData *)data)->image),
+			GTK_IMAGE(((_saveData *)data)->viz->getGtkImage())),
 			filepath.c_str(),
 			filepath.substr(filepath.rfind('.')+1).c_str(),
 			NULL, "quality", "100", NULL);
@@ -297,12 +297,12 @@ void adjustLevelAndWindow(GtkWidget * widget, gpointer data) {
     gtk_widget_show_all(window);
 }
 
-void saveDialog(GtkWidget * widget, gpointer image) {
+void saveDialog(GtkWidget * widget, gpointer viz) {
 	GtkWidget * fileSelection = gtk_file_selection_new("Save an image");
 
 	_saveData * data = (_saveData *)malloc(sizeof(_saveData));
 	data->fs = fileSelection;
-	data->image = (GtkImage *)image;
+	data->viz = (Visualization *)viz;
 
 	/* Connect the ok_button to file_ok_sel function */
 	g_signal_connect (G_OBJECT (GTK_FILE_SELECTION (fileSelection)->ok_button),

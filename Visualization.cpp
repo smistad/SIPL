@@ -452,7 +452,7 @@ void Visualization::display() {
              NULL,             /* tooltip private info */
              NULL,                 /* icon widget */
              GTK_SIGNAL_FUNC(saveDialog), /* a signal */
-             gtk_image_new_from_pixbuf(pixBuf));
+             this);
 	gtk_toolbar_append_item (
 			 GTK_TOOLBAR (toolbar), /* our toolbar */
              "Refresh",               /* button label */
@@ -764,4 +764,8 @@ float Visualization::getWindow(BaseDataset * image) {
 
 std::vector<BaseDataset *> Visualization::getImages() {
     return images;
+}
+
+GtkWidget * Visualization::getGtkImage() {
+    return gtkImage;
 }
