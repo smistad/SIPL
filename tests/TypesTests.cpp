@@ -262,6 +262,63 @@ TEST(TypesTests, VectorScalarArithmetic) {
     EXPECT_EQ(-2, i3_a.z);
 }
 
+TEST(TypesTests, VectorVectorArithmetic) {
+    float2 f2_1(1.1f, -2.0f);
+    float2 f2_2(4.0f, 1.0f);
+    float2 f2_3;
+    f2_3 = f2_1+f2_2;
+    EXPECT_FLOAT_EQ(5.1f, f2_3.x);
+    EXPECT_FLOAT_EQ(-1.0f, f2_3.y);
+    f2_3 = f2_2+f2_1;
+    EXPECT_FLOAT_EQ(5.1f, f2_3.x);
+    EXPECT_FLOAT_EQ(-1.0f, f2_3.y);
+
+    f2_3 = f2_1-f2_2;
+    EXPECT_FLOAT_EQ(-2.9f, f2_3.x);
+    EXPECT_FLOAT_EQ(-3.0f, f2_3.y);
+    f2_3 = f2_2-f2_1;
+    EXPECT_FLOAT_EQ(2.9f, f2_3.x);
+    EXPECT_FLOAT_EQ(3.0f, f2_3.y);
+
+    f2_3 = f2_1*f2_2;
+    EXPECT_FLOAT_EQ(4.4f, f2_3.x);
+    EXPECT_FLOAT_EQ(-2.0f, f2_3.y);
+    f2_3 = f2_2*f2_1;
+    EXPECT_FLOAT_EQ(4.4f, f2_3.x);
+    EXPECT_FLOAT_EQ(-2.0f, f2_3.y);
+
+
+    float3 f3_1(1.0f, -0.5f, -1.0f);
+    float3 f3_2(2.0f, 1.0f, -1.0f);
+    float3 f3_3;
+    f3_3 = f3_1+f3_2;
+    EXPECT_FLOAT_EQ(3.0f, f3_3.x);
+    EXPECT_FLOAT_EQ(0.5f, f3_3.y);
+    EXPECT_FLOAT_EQ(-2.0f, f3_3.z);
+    f3_3 = f3_2+f3_1;
+    EXPECT_FLOAT_EQ(3.0f, f3_3.x);
+    EXPECT_FLOAT_EQ(0.5f, f3_3.y);
+    EXPECT_FLOAT_EQ(-2.0f, f3_3.z);
+
+    f3_3 = f3_1-f3_2;
+    EXPECT_FLOAT_EQ(-1.0f, f3_3.x);
+    EXPECT_FLOAT_EQ(-1.5f, f3_3.y);
+    EXPECT_FLOAT_EQ(0.0f, f3_3.z);
+    f3_3 = f3_2-f3_1;
+    EXPECT_FLOAT_EQ(1.0f, f3_3.x);
+    EXPECT_FLOAT_EQ(1.5f, f3_3.y);
+    EXPECT_FLOAT_EQ(0.0f, f3_3.z);
+
+    f3_3 = f3_1*f3_2;
+    EXPECT_FLOAT_EQ(2.0f, f3_3.x);
+    EXPECT_FLOAT_EQ(-0.5f, f3_3.y);
+    EXPECT_FLOAT_EQ(1.0f, f3_3.z);
+    f3_3 = f3_2*f3_1;
+    EXPECT_FLOAT_EQ(2.0f, f3_3.x);
+    EXPECT_FLOAT_EQ(-0.5f, f3_3.y);
+    EXPECT_FLOAT_EQ(1.0f, f3_3.z);
+}
+
 TEST(TypesTests, Equal) {
     float2 f2_1(1.0f, -2.0f);
     float2 f2_2(4.0f, 1.0f);
