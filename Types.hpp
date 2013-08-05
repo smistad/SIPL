@@ -255,10 +255,19 @@ class Region {
     public:
         int3 offset;
         int3 size;
-        Region(int x_size, int y_size);
-        Region(int x_offset, int y_offset, int x_size, int y_size);
-        Region(int x_size, int y_size, int z_size);
-        Region(int x_offset, int y_offset, int z_offset, int x_size, int y_size, int z_size);
+        Region() { offset = int3(0,0,0); size = int3(0,0,0); };
+        Region(int x_size, int y_size) {size = int3(x_size, y_size,0);};
+        Region(int x_offset, int y_offset, int x_size, int y_size) {
+            offset = int3(x_offset, y_offset,0);
+            size = int3(x_size, y_size, 0);
+        };
+        Region(int x_size, int y_size, int z_size) {
+            size = int3(x_size, y_size, z_size);
+        };
+        Region(int x_offset, int y_offset, int z_offset, int x_size, int y_size, int z_size) {
+            offset = int3(x_offset, y_offset, z_offset);
+            size = int3(x_size, y_size, z_size);
+        };
 };
 
 // float2
@@ -419,6 +428,7 @@ int2 int2::operator-(int2 other) const {
     v.y = this->y - other.y;
     return v;
 }
+
 template <> inline
 int2 int2::operator*(float2 other) const {
     int2 v;
