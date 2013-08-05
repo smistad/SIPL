@@ -21,10 +21,10 @@ add_definitions (${GTK2_CFLAGS_OTHER})
 target_link_libraries (SIPL ${GTK2_LIBRARIES})
 
 
-option(compile_tests "Compile tests for SIPL" OFF) # cmake option to turn on compilation of tests
+option(compile_sipl_tests "Compile tests for SIPL" OFF) # cmake option to turn on compilation of tests
 find_package(GTest)
 if(GTEST_FOUND)
-if(compile_tests)
+if(compile_sipl_tests)
 	message("Google test framework found. Compiling tests ...")
 	add_subdirectory(tests)
 endif()
