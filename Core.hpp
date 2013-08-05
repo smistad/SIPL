@@ -61,7 +61,7 @@ class Dataset : public BaseDataset {
         ~Dataset();
         int getWidth() const;
         int getHeight() const;
-        T * getData();
+        const T * getData();
         void setData(T * data);
         virtual int getTotalSize() const=0;
         virtual int3 getSize() const = 0;
@@ -644,7 +644,7 @@ void Dataset<T>::setData(T * data) {
 }
 
 template <class T>
-T * Dataset<T>::getData() {
+const T * Dataset<T>::getData() {
     return this->data;
 }
 

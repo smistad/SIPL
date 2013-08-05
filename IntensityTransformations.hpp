@@ -53,17 +53,17 @@ inline float3 toVectorData(color_uchar value) {
 class IntensityTransformation {
 private:
 	TransformationType type;
-	void(*func)(void *, void *, unsigned int, unsigned int);
+	void(*func)(const void *, void *, unsigned int, unsigned int);
 public:
 	IntensityTransformation() { this->type = DEFAULT; };
-	IntensityTransformation(void(*func)(void *, void *, unsigned int, unsigned int)) {
+	IntensityTransformation(void(*func)(const void *, void *, unsigned int, unsigned int)) {
 		this->func = func;
 		this->type = CUSTOM;
 	};
 
 	IntensityTransformation(TransformationType type) { this->type = type; };
 	template <class S, class T>
-	void transform(S * from, T * to, unsigned int length, unsigned int start = 0) {
+	void transform(const S * from, T * to, unsigned int length, unsigned int start = 0) {
 		switch(type) {
 		case HOUNSEFIELD:
 			// Target must be short
@@ -129,7 +129,7 @@ public:
 		}
 	}
 	template <class S, class T>
-	static void copy(S * from, T * to, unsigned int length, unsigned int start) {
+	static void copy(const S * from, T * to, unsigned int length, unsigned int start) {
 		for(int i = start; i < length+start; i++) {
 			to[i] = toSingleValue(from[i]);
 		}
