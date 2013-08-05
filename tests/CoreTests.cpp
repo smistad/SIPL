@@ -1,5 +1,52 @@
 #include "Tests.hpp"
 
+TEST(CoreTests, ImageSizeConstructor) {
+    Image<char> * image1 = new Image<char>(4, 10);
+    EXPECT_EQ(4, image1->getWidth());
+    EXPECT_EQ(10, image1->getHeight());
+    float3 spacing = image1->getSpacing();
+    EXPECT_FLOAT_EQ(1.0f, spacing.x);
+    EXPECT_FLOAT_EQ(1.0f, spacing.y);
+    EXPECT_FLOAT_EQ(1.0f, spacing.z);
+    EXPECT_FALSE(image1->isVolume);
+    EXPECT_FALSE(image1->isVectorType);
+    delete image1;
+    image1 = new Image<char>(int2(4,10));
+    EXPECT_EQ(4, image1->getWidth());
+    EXPECT_EQ(10, image1->getHeight());
+    spacing = image1->getSpacing();
+    EXPECT_FLOAT_EQ(1.0f, spacing.x);
+    EXPECT_FLOAT_EQ(1.0f, spacing.y);
+    EXPECT_FLOAT_EQ(1.0f, spacing.z);
+    EXPECT_FALSE(image1->isVolume);
+    EXPECT_FALSE(image1->isVectorType);
+}
+
+TEST(CoreTests, VolumeSizeConstructor) {
+    Volume<char> * image1 = new Volume<char>(4, 10, 1);
+    EXPECT_EQ(4, image1->getWidth());
+    EXPECT_EQ(10, image1->getHeight());
+    EXPECT_EQ(1, image1->getDepth());
+    float3 spacing = image1->getSpacing();
+    EXPECT_FLOAT_EQ(1.0f, spacing.x);
+    EXPECT_FLOAT_EQ(1.0f, spacing.y);
+    EXPECT_FLOAT_EQ(1.0f, spacing.z);
+    EXPECT_TRUE(image1->isVolume);
+    EXPECT_FALSE(image1->isVectorType);
+    delete image1;
+    image1 = new Volume<char>(int3(4,10,1));
+    EXPECT_EQ(4, image1->getWidth());
+    EXPECT_EQ(10, image1->getHeight());
+    EXPECT_EQ(1, image1->getDepth());
+    spacing = image1->getSpacing();
+    EXPECT_FLOAT_EQ(1.0f, spacing.x);
+    EXPECT_FLOAT_EQ(1.0f, spacing.y);
+    EXPECT_FLOAT_EQ(1.0f, spacing.z);
+    EXPECT_TRUE(image1->isVolume);
+    EXPECT_FALSE(image1->isVectorType);
+}
+
+
 TEST(CoreTests, ImageFill) {
     Image<float> * image = new Image<float>(3, 3);
     image->fill(-1.0f);
