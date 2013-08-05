@@ -69,3 +69,21 @@ TEST(CoreTests, VolumeOutOfBounds) {
     EXPECT_THROW(image->set(Region(11, 11, 1),1), OutOfBoundsException);
 }
 
+TEST(CoreTests, ImageSpacingSetAndGet) {
+    Image<char> * image = new Image<char>(1,1);
+    image->setSpacing(float3(0.5, 0.1, 0.2));
+    float3 spacing = image->getSpacing();
+    EXPECT_FLOAT_EQ(0.5, spacing.x);
+    EXPECT_FLOAT_EQ(0.1, spacing.y);
+    EXPECT_FLOAT_EQ(0.2, spacing.z);
+}
+
+TEST(CoreTests, VolumeSpacingSetAndGet) {
+    Volume<char> * image = new Volume<char>(1,1,1);
+    image->setSpacing(float3(0.5, 0.1, 0.2));
+    float3 spacing = image->getSpacing();
+    EXPECT_FLOAT_EQ(0.5, spacing.x);
+    EXPECT_FLOAT_EQ(0.1, spacing.y);
+    EXPECT_FLOAT_EQ(0.2, spacing.z);
+
+}
