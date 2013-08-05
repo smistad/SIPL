@@ -92,6 +92,7 @@ class Image : public Dataset<T> {
         T get(int i) const;
         T get(int x, int y) const;
         T get(int2 pos) const;
+        T * get(Region r) const;
         void set(int x, int y, T value);
         void set(int2, T value);
         void set(int i, T v);
@@ -105,6 +106,7 @@ class Image : public Dataset<T> {
         bool inBounds(int x, int y) const;
         bool inBounds(int i) const;
         int getTotalSize() const;
+        Image<T> crop(Region r) const;
 };
 
 template <class T>
@@ -119,6 +121,7 @@ class Volume : public Dataset<T> {
         T get(int x, int y, int z) const;
         T get(int3 pos) const;
         T get(int i) const;
+        T * get(Region r) const;
         void set(int x, int y, int z, T value);
         void set(int3 pos, T v);
         void set(int i, T v);
@@ -144,6 +147,7 @@ class Volume : public Dataset<T> {
 		Visualization * displayMIP(float level, float window);
 		Visualization * displayMIP(slice_plane direction);
 		Visualization * displayMIP(slice_plane direction, float level, float window);
+		Volume<T> crop(Region r) const;
     private:
         int depth;
 };
@@ -730,6 +734,30 @@ T Image<T>::get(int i) const {
 }
 
 template <class T>
+T * Image<T>::get(Region r) const {
+    T * res = new T[r.size.x*r.size.y];
+    int counter = 0;
+    for(int y = r.offset.y; y < r.size.y; y++) {
+    for(int x = r.offset.x; x < r.size.x; x++) {
+        res[counter] = this->get(x,y);
+    }}
+}
+
+template <class T>
+void Image<T>::set(Region r, T value) {
+    for(int y = r.offset.y; y < r.size.y; y++) {
+    for(int x = r.offset.x; x < r.size.x; x++) {
+        this->set(x,y,value);
+    }}
+}
+
+template <class T>
+Image<T> Image<T>::crop(Region r) const {
+    Image<T> * res = new Image<T>(r.size);
+    res->setData(this->get(r));
+}
+
+template <class T>
 T Volume<T>::get(int i) const {
     if(!this->inBounds(i))
         throw OutOfBoundsException(i, this->width*this->height*this->depth, __LINE__, __FILE__);
@@ -758,6 +786,32 @@ T Volume<T>::get(int x, int y, int z) const {
 template <class T>
 T Volume<T>::get(int3 pos) const {
     return this->get(pos.x, pos.y, pos.z);
+}
+
+template <class T>
+T * Volume<T>::get(Region r) const {
+    T * res = new T[r.size.x*r.size.y*r.size.z];
+    int counter = 0;
+    for(int z = r.offset.z; z < r.size.z; z++) {
+    for(int y = r.offset.y; y < r.size.y; y++) {
+    for(int x = r.offset.x; x < r.size.x; x++) {
+        res[counter] = this->get(x,y,z);
+    }}}
+}
+
+template <class T>
+void Volume<T>::set(Region r, T value) {
+    for(int z = r.offset.z; z < r.size.z; z++) {
+    for(int y = r.offset.y; y < r.size.y; y++) {
+    for(int x = r.offset.x; x < r.size.x; x++) {
+        this->set(x,y,z,value);
+    }}}
+}
+
+template <class T>
+Volume<T> Volume<T>::crop(Region r) const {
+    Volume<T> * res = new Volume<T>(r.size);
+    res->setData(this->get(r));
 }
 
 template <class T>
