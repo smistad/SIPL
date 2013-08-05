@@ -100,7 +100,6 @@ class Image : public Dataset<T> {
         int3 getSize() const;
         void save(const char * filepath, const char * imageType = "jpeg");
         void pixbufToData(GtkImage * image);
-		static gboolean setupGUI(gpointer data);
         template <class U>
         Image<T> & operator=(const Image<U> &otherImage);
         bool inBounds(int x, int y) const;
@@ -132,7 +131,6 @@ class Volume : public Dataset<T> {
         void saveSlice(int slice, slice_plane direction, const char * filepath, const char * imageType);
         void dataToPixbuf(GtkWidget * image, int slice, slice_plane direction);
         void dataToPixbuf(GtkWidget * image, int slice, slice_plane direction, float level, float window);
-		static gboolean setupGUI(gpointer data);
         template <class U>
         Volume<T> & operator=(const Volume<U> &otherVolume);
         bool inBounds(int x, int y, int z) const;
