@@ -128,6 +128,34 @@ TEST(TypesTests, VectorNormalize) {
    EXPECT_EQ(2, i3.z);
 }
 
+TEST(TypesTests, DotProduct) {
+    float2 f2_1(1.0f, -2.0f);
+    float2 f2_2(4.0f, 1.0f);
+    EXPECT_FLOAT_EQ(2.0f,f2_1.dot(f2_2));
+    EXPECT_FLOAT_EQ(2.0f,f2_2.dot(f2_1));
+
+    float3 f3_1(1.0f, 0.5f, -1.0f);
+    float3 f3_2(2.0f, 1.0f, -1.0f);
+    EXPECT_FLOAT_EQ(3.5f, f3_1.dot(f3_2));
+    EXPECT_FLOAT_EQ(3.5f, f3_2.dot(f3_1));
+
+    int2 i2_1(1,-2);
+    int2 i2_2(4,1);
+    EXPECT_FLOAT_EQ(2.0f, i2_1.dot(i2_2));
+    EXPECT_FLOAT_EQ(2.0f, i2_2.dot(i2_1));
+
+    int3 i3_1(1,0,-1);
+    int3 i3_2(2,1,-1);
+    EXPECT_FLOAT_EQ(3.0f, i3_1.dot(i3_2));
+    EXPECT_FLOAT_EQ(3.0f, i3_2.dot(i3_1));
+
+    EXPECT_FLOAT_EQ(2.0f,f2_1.dot(i2_2));
+    EXPECT_FLOAT_EQ(2.0f,i2_2.dot(f2_1));
+
+    EXPECT_FLOAT_EQ(3.5f,f3_1.dot(i3_2));
+    EXPECT_FLOAT_EQ(3.5f,i3_2.dot(f3_1));
+}
+
 TEST(TypesTests, Equal) {
     float2 f2_1(1.0f, -2.0f);
     float2 f2_2(4.0f, 1.0f);
