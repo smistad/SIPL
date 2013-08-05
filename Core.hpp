@@ -129,8 +129,6 @@ class Volume : public Dataset<T> {
         int3 getSize() const;
         void save(const char * filepath);
         void saveSlice(int slice, slice_plane direction, const char * filepath, const char * imageType);
-        void dataToPixbuf(GtkWidget * image, int slice, slice_plane direction);
-        void dataToPixbuf(GtkWidget * image, int slice, slice_plane direction, float level, float window);
         template <class U>
         Volume<T> & operator=(const Volume<U> &otherVolume);
         bool inBounds(int x, int y, int z) const;
