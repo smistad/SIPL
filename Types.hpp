@@ -255,13 +255,16 @@ class Region {
     public:
         int3 offset;
         int3 size;
-        Region() { offset = int3(0,0,0); size = int3(0,0,0); };
-        Region(int x_size, int y_size) {size = int3(x_size, y_size,0);};
+        Region(int x_size, int y_size) {
+            offset = int3(0,0,0);
+            size = int3(x_size, y_size,0);
+        };
         Region(int x_offset, int y_offset, int x_size, int y_size) {
             offset = int3(x_offset, y_offset,0);
             size = int3(x_size, y_size, 0);
         };
         Region(int x_size, int y_size, int z_size) {
+            offset = int3(0,0,0);
             size = int3(x_size, y_size, z_size);
         };
         Region(int x_offset, int y_offset, int z_offset, int x_size, int y_size, int z_size) {
