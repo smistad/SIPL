@@ -311,7 +311,10 @@ float2 operator+(T scalar, float2 other) {
 }
 template <class T>
 float2 operator-(T scalar, float2 other) {
-    return other.operator-(scalar);
+    float2 v;
+    v.x = scalar - other.x;
+    v.y = scalar - other.y;
+    return v;
 }
 template <class T>
 float2 operator*(T scalar, float2 other) {
@@ -375,7 +378,11 @@ float3 operator+(T scalar, float3 other) {
 }
 template <class T>
 float3 operator-(T scalar, float3 other) {
-    return other.operator-(scalar);
+    float3 v;
+    v.x = scalar - other.x;
+    v.y = scalar - other.y;
+    v.z = scalar - other.z;
+    return v;
 }
 template <class T>
 float3 operator*(T scalar, float3 other) {
@@ -432,7 +439,10 @@ int2 operator+(T scalar, int2 other) {
 }
 template <class T>
 int2 operator-(T scalar, int2 other) {
-    return other.operator-(scalar);
+    int2 v;
+    v.x = scalar - other.x;
+    v.y = scalar - other.y;
+    return v;
 }
 template <class T>
 int2 operator*(T scalar, int2 other) {
@@ -496,7 +506,11 @@ int3 operator+(T scalar, int3 other) {
 }
 template <class T>
 int3 operator-(T scalar, int3 other) {
-    return other.operator-(scalar);
+    int3 v;
+    v.x = scalar - other.x;
+    v.y = scalar - other.y;
+    v.z = scalar - other.z;
+    return v;
 }
 template <class T>
 int3 operator*(T scalar, int3 other) {
