@@ -305,19 +305,20 @@ float2 float2::operator*(int2 other) const {
     return v;
 }
 
-template <class T>
-float2 operator+(T scalar, float2 other) {
+inline
+float2 operator+(float scalar, float2 other) {
     return other.operator+(scalar);
 }
-template <class T>
-float2 operator-(T scalar, float2 other) {
+inline
+float2 operator-(float scalar, float2 other) {
     float2 v;
     v.x = scalar - other.x;
     v.y = scalar - other.y;
     return v;
 }
-template <class T>
-float2 operator*(T scalar, float2 other) {
+
+inline
+float2 operator*(float scalar, float2 other) {
     return other.operator*(scalar);
 }
 
@@ -372,20 +373,20 @@ float3 float3::operator*(int3 other) const {
     return v;
 }
 
-template <class T>
-float3 operator+(T scalar, float3 other) {
+inline
+float3 operator+(float scalar, float3 other) {
     return other.operator+(scalar);
 }
-template <class T>
-float3 operator-(T scalar, float3 other) {
+inline
+float3 operator-(float scalar, float3 other) {
     float3 v;
     v.x = scalar - other.x;
     v.y = scalar - other.y;
     v.z = scalar - other.z;
     return v;
 }
-template <class T>
-float3 operator*(T scalar, float3 other) {
+inline
+float3 operator*(float scalar, float3 other) {
     return other.operator*(scalar);
 }
 
