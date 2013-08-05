@@ -1,6 +1,6 @@
 #include "Tests.hpp"
 
-TEST(CoreTests, Fill) {
+TEST(CoreTests, ImageFill) {
     Image<float> * image = new Image<float>(3, 3);
     image->fill(-1.0f);
 
@@ -8,13 +8,15 @@ TEST(CoreTests, Fill) {
     for(int i = 0; i < 9; i++) {
         ASSERT_EQ(-1.0f, data[i]);
     }
+}
 
+TEST(CoreTests, VolumeFill) {
     Volume<int> * volume = new Volume<int>(3,3,3);
     volume->fill(10);
 
-    const int * data2 = volume->getData();
+    const int * data = volume->getData();
     for(int i = 0; i < 27; i++) {
-        ASSERT_EQ(10, data2[i]);
+        ASSERT_EQ(10, data[i]);
     }
 }
 
@@ -85,5 +87,4 @@ TEST(CoreTests, VolumeSpacingSetAndGet) {
     EXPECT_FLOAT_EQ(0.5, spacing.x);
     EXPECT_FLOAT_EQ(0.1, spacing.y);
     EXPECT_FLOAT_EQ(0.2, spacing.z);
-
 }
