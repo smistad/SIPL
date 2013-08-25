@@ -74,7 +74,7 @@ public:
 				// Do a simple copy
 				this->copy(from, to, length, start);
 			} else if(typeid(S) == typeid(ushort)) {
-				for(int i = start; i < start+length; i++) {
+				for(unsigned int i = start; i < start+length; i++) {
 					to[i] = toSingleValue(from[i]) - 1024;
 				}
 			} else {
@@ -103,13 +103,13 @@ public:
 
 			float min = toSingleValue(from[start]);
 			float max = toSingleValue(from[start]);
-			for(int i = start; i < start+length; i++) {
+			for(unsigned int i = start; i < start+length; i++) {
 				if(toSingleValue(from[i]) < min)
 					min = toSingleValue(from[i]);
 				if(toSingleValue(from[i]) > max)
 					max = toSingleValue(from[i]);
 			}
-			for(int i = start; i < start+length; i++) {
+			for(unsigned int i = start; i < start+length; i++) {
 				to[i] = ((float)toSingleValue(from[i])-min)/(max+min);
 			}
 			}
@@ -130,7 +130,7 @@ public:
 	}
 	template <class S, class T>
 	static void copy(const S * from, T * to, unsigned int length, unsigned int start) {
-		for(int i = start; i < length+start; i++) {
+		for(unsigned int i = start; i < length+start; i++) {
 			to[i] = toSingleValue(from[i]);
 		}
 	}

@@ -265,7 +265,7 @@ void adjustLevelAndWindow(GtkWidget * widget, gpointer data) {
 	GtkWidget * table = gtk_table_new(3*images.size(),3,false);
 	gtk_container_add(GTK_CONTAINER(window), table);
 
-	for(int i = 0; i < images.size(); i++) {
+	for(unsigned int i = 0; i < images.size(); i++) {
         float currentLevel = v->getLevel(images[i]);
         float min,max;
         getMinAndMax(images[i], &min, &max);

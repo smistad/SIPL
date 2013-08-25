@@ -238,7 +238,7 @@ inline color_uchar maximum<color_uchar>(color_uchar a, color_uchar b, bool * cha
 /* --- Constructors & destructors --- */
 template <class T>
 Dataset<T>::Dataset() {
-    T * d;
+    T * d = NULL;
     this->isVectorType = IntensityTransformation::isVectorType(d);
     this->setDefaultLevelWindow();
     Init();
@@ -320,7 +320,9 @@ Volume<T>::Volume(const char * filename, int width, int height, int depth) {
     FILE * file = fopen(filename, "rb");
     if(file == NULL)
         throw FileNotFoundException(filename, __LINE__, __FILE__);
-    fread(this->data, sizeof(T), width*height*depth, file);
+    int elementsRead = fread(this->data, sizeof(T), width*height*depth, file);
+    if(elementsRead != width*height*depth) 
+        throw IOException(filename, __LINE__, __FILE__);
     fclose(file);
     this->width = width;
     this->height = height;
@@ -734,6 +736,7 @@ T * Image<T>::get(Region r) const {
     for(int x = r.offset.x; x < r.size.x; x++) {
         res[counter] = this->get(x,y);
     }}
+    return res;
 }
 
 template <class T>
@@ -790,6 +793,7 @@ T * Volume<T>::get(Region r) const {
     for(int x = r.offset.x; x < r.size.x; x++) {
         res[counter] = this->get(x,y,z);
     }}}
+    return res;
 }
 
 template <class T>

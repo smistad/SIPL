@@ -350,7 +350,7 @@ GdkPixbuf * Visualization::render() {
 			8, xSize,ySize));
 
     pixBuf = gtk_image_get_pixbuf((GtkImage *) gtkImage);
-    for(int i = 0; i < images.size(); i++) {
+    for(unsigned int i = 0; i < images.size(); i++) {
         if(isVolumeVisualization) {
             renderSlice(i, pixBuf);
         } else {
@@ -360,14 +360,12 @@ GdkPixbuf * Visualization::render() {
     } else if(this->type == MIP) {
         int xSize;
         int ySize;
-        int zSize;
         float3 spacing = images[0]->getSpacing();
         switch(direction) {
             case X:
                 // x direction
                 xSize = this->size.y;
                 ySize = this->size.z;
-                zSize = this->size.x;
                 spacingX = spacing.y;
                 spacingY = spacing.z;
                 break;
@@ -375,7 +373,6 @@ GdkPixbuf * Visualization::render() {
                 // y direction
                 xSize = this->size.x;
                 ySize = this->size.z;
-                zSize = this->size.y;
                 spacingX = spacing.x;
                 spacingY = spacing.z;
                 break;
@@ -383,7 +380,6 @@ GdkPixbuf * Visualization::render() {
                 // z direction
                 xSize = this->size.x;
                 ySize = this->size.y;
-                zSize = this->size.z;
                 spacingX = spacing.x;
                 spacingY = spacing.y;
                 break;
@@ -394,7 +390,7 @@ GdkPixbuf * Visualization::render() {
         gtkImage = gtk_image_new_from_pixbuf(gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
                 8, xSize,ySize));
         pixBuf = gtk_image_get_pixbuf((GtkImage *) gtkImage);
-        for(int i = 0; i < images.size(); i++) {
+        for(unsigned int i = 0; i < images.size(); i++) {
             renderMIP(i, pixBuf);
         }
     }
@@ -402,13 +398,13 @@ GdkPixbuf * Visualization::render() {
 }
 
 void SIPL::Visualization::setLevel(float level) {
-    for(int i = 0; i < images.size(); i++) {
+    for(unsigned int i = 0; i < images.size(); i++) {
         setLevel(images[i], level);
     }
 }
 
 void SIPL::Visualization::setWindow(float window) {
-    for(int i = 0; i < images.size(); i++) {
+    for(unsigned int i = 0; i < images.size(); i++) {
         setWindow(images[i], window);
     }
 }
@@ -727,7 +723,7 @@ bool Visualization::buttonPressed(GtkWidget * widget, GdkEventButton * event, gp
             if(v->isVolumeVisualization) {
                 if(v->type == MIP) {
                     // not implemented yet
-                    sprintf(str, "");
+                    sprintf(str, " ");
                 } else {
                     int3 pos3D = v->getTrue3DPosition(position);
                     if(v->images.size() == 1 && !v->images[0]->isVectorType) {
