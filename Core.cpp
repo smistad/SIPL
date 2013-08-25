@@ -12,11 +12,13 @@ bool init = false;
 GThread * gtkThread;
 int windowCount;
 GMutex * windowCountMutex;
+GMutex * initMutex;
+GCond * initCondition;
 void * initGTK(void * t) {
-	gdk_threads_init ();	
-	gtk_init(0, (char ***) "");
+    g_mutex_lock(initMutex);
 	init = true;
-    windowCountMutex = g_mutex_new();
+    g_cond_signal(initCondition);
+    g_mutex_unlock(initMutex);
 	gdk_threads_enter ();
 	gtk_main();
     gdk_threads_leave();
@@ -118,12 +120,20 @@ void quit(void) {
 }
 
 void Init() {
-    windowCount = 0;
-	if (!init) {
+	if(!init) {
+        gdk_threads_init ();	
+        gtk_init(0, (char ***) "");
+        windowCountMutex = g_mutex_new();
+        initMutex = g_mutex_new();
+        initCondition = g_cond_new();
+        windowCount = 0;
 		gtkThread = g_thread_new("main", initGTK, NULL);
-	}
-	while(!init); // wait for the thread to be created
-    atexit(quit);
+
+        while(!init) // wait for the thread to be created
+            g_cond_wait(initCondition, initMutex);
+        g_mutex_unlock(initMutex);
+        atexit(quit);
+    }
 }
 
 void destroyWindow(GtkWidget * widget, gpointer window) {

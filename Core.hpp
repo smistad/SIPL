@@ -25,7 +25,6 @@ namespace SIPL {
 class Visualization;
 
 void Init();
-bool isInit();
 void Quit();
 
 void destroyWindow(GtkWidget * widget, gpointer window) ;
@@ -242,9 +241,7 @@ Dataset<T>::Dataset() {
     T * d;
     this->isVectorType = IntensityTransformation::isVectorType(d);
     this->setDefaultLevelWindow();
-    if(!isInit()) {
-        Init();
-    }
+    Init();
 }
 
 template <class T>
