@@ -350,6 +350,10 @@ GdkPixbuf * Visualization::render() {
 			8, xSize,ySize));
 
     pixBuf = gtk_image_get_pixbuf((GtkImage *) gtkImage);
+    if(images.size() == 2) { 
+        // have to initialize pixbuf if the last component won't be set
+        gdk_pixbuf_fill(pixBuf, 0);
+    }
     for(unsigned int i = 0; i < images.size(); i++) {
         if(isVolumeVisualization) {
             renderSlice(i, pixBuf);
