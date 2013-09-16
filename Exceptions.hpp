@@ -153,8 +153,6 @@ class OutOfBoundsException : public SIPLException {
             char * message = new char[255];
             sprintf(message, "Out of bounds exception. Requested position %d, %d, %d in volume of size %d, %d, %d", x, y, z, sizeX, sizeY, sizeZ);
             this->setMessage(message);
-            this->setLine(line);
-            this->setFile(file);
        };
     private:
         int x, y, z; // position requested
@@ -168,7 +166,8 @@ class SIPLCompiledWithoutGTKException : public SIPLException {
         }
         SIPLCompiledWithoutGTKException(int line, const char * file) {
             this->setMessage("SIPL was compiled without GTK and cannot complete");
-            SIPLException(line, file);
+            this->setLine(line);
+            this->setFile(file);
         }
 };
 
