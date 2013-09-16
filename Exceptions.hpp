@@ -161,6 +161,10 @@ class OutOfBoundsException : public SIPLException {
         int sizeX, sizeY, sizeZ;
 };
 
+class SIPLCompiledWithoutGTKException : public SIPLException {
+
+};
+
 class ConversionException : public SIPLException {
 };
 

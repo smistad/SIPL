@@ -9,6 +9,7 @@
 
 namespace SIPL {
 bool init = false;
+#ifdef USE_GTK
 GThread * gtkThread;
 int windowCount;
 GMutex * windowCountMutex;
@@ -41,6 +42,7 @@ void saveImage(BaseDataset * d, const char * filepath, const char * imageType) {
     delete v;
 	gdk_pixbuf_save(pixBuf, filepath, imageType, NULL, NULL);
 }
+#endif
 
 Visualization * displayVisualization(BaseDataset * d, float level, float window) {
     Visualization * v = new Visualization(d);
@@ -91,6 +93,7 @@ int validateSlice(int slice, slice_plane direction, int3 size) {
     }
     return slice;
 }
+#ifdef USE_GTK
 int getWindowCount() {
     g_mutex_lock(windowCountMutex);
     int wc = windowCount;
@@ -180,6 +183,7 @@ void refresh(GtkWidget * widget, gpointer data) {
     Visualization * v = (Visualization *)data;
     v->update();
 }
+#endif
 
 char * floatToChar(float v) {
 	char * str = new char[10];
@@ -210,6 +214,7 @@ void getMinAndMax(BaseDataset * image, float * min, float * max) {
     }
 }
 
+#ifdef USE_GTK
 class LevelWindowChange {
     public:
         LevelWindowChange(Visualization * v, BaseDataset * i, GtkWidget * w) {
@@ -335,6 +340,7 @@ void saveDialog(GtkWidget * widget, gpointer viz) {
 
 	gtk_widget_show(fileSelection);
 }
+#endif
 
 uchar color2gray(uchar * p) {
    return 0.33*(p[0]+p[1]+p[2]); 

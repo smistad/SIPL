@@ -5,9 +5,11 @@
 #include <vector>
 #include <map>
 #include <string>
+#ifdef USE_GTK
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gdk/gdkkeysyms.h>
+#endif
 
 namespace SIPL {
 
@@ -35,8 +37,10 @@ class Visualization {
         void display();
         void update();
         void draw();
+#ifdef USE_GTK
         static void keyPressed(GtkWidget * widget, GdkEventKey * event, gpointer user_data);
         static bool buttonPressed(GtkWidget * widget, GdkEventButton * event, gpointer user_data);
+#endif
         slice_plane getDirection() const;
         void setDirection(slice_plane direction);
         int getSlice() const;
@@ -44,9 +48,13 @@ class Visualization {
         int3 getSize();
         float getAngle() const;
         void setAngle(float angle);
+#ifdef USE_GTK
         GdkPixbuf * render();
+#endif
         std::vector<BaseDataset *> getImages();
+#ifdef USE_GTK
         GtkWidget * getGtkImage();
+#endif
         int getWidth();
         int getHeight();
         float getSpacingX();
@@ -58,17 +66,21 @@ class Visualization {
         std::map<BaseDataset *, float> window;
         slice_plane direction;
         int slice;
+#ifdef USE_GTK
         void renderSlice(int, GdkPixbuf *);
         void renderImage(int, GdkPixbuf *);
         void renderMIP(int, GdkPixbuf *);
+#endif
         std::string title;
         float scale;
         float angle;
         int width, height;
         int3 size;
+#ifdef USE_GTK
         GtkWidget * gtkImage;
         GtkWidget * scaledImage;
         GtkWidget * statusBar;
+#endif
         void zoomIn();
         void zoomOut();
         visualizationType type;

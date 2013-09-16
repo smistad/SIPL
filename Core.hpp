@@ -13,8 +13,10 @@
 #include "Exceptions.hpp"
 #include "Types.hpp"
 #include "IntensityTransformations.hpp"
+#ifdef USE_GTK
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#endif
 #include <fstream>
 #include <typeinfo>
 #include <string>
@@ -24,6 +26,7 @@ namespace SIPL {
 
 class Visualization;
 
+#ifdef USE_GTK
 void Init();
 void Quit();
 
@@ -36,6 +39,7 @@ void refresh(GtkWidget * widget, gpointer data) ;
 void adjustLevelAndWindow(GtkWidget * widget, gpointer data) ;
 int increaseWindowCount() ;
 int getWindowCount() ;
+#endif
 
 class BaseDataset {
     public:
@@ -98,7 +102,9 @@ class Image : public Dataset<T> {
         void set(Region region, T value);
         int3 getSize() const;
         void save(const char * filepath, const char * imageType = "jpeg");
+#ifdef USE_GTK
         void pixbufToData(GtkImage * image);
+#endif
         template <class U>
         Image<T> & operator=(const Image<U> &otherImage);
         bool inBounds(int x, int y) const;
@@ -187,6 +193,7 @@ void toT(color_float * r, uchar * p) ;
 void toT(float2 * r, uchar * p) ;
 void toT(float3 * r, uchar * p) ;
 
+#ifdef USE_GTK
 template <class T>
 void Image<T>::pixbufToData(GtkImage * image) {
 	gdk_threads_enter ();
@@ -198,6 +205,7 @@ void Image<T>::pixbufToData(GtkImage * image) {
     }
     gdk_threads_leave();
 }
+#endif
 int validateSlice(int slice, slice_plane direction, int3 size);
 
 template <class T>
@@ -241,11 +249,14 @@ Dataset<T>::Dataset() {
     T * d = NULL;
     this->isVectorType = IntensityTransformation::isVectorType(d);
     this->setDefaultLevelWindow();
+#ifdef USE_GTK
     Init();
+#endif
 }
 
 template <class T>
 Image<T>::Image(const char * filename) {
+#ifdef USE_GTK
     // Check if file exists
     FILE * file = fopen(filename, "r");
     this->isVolume = false;
@@ -260,6 +271,9 @@ Image<T>::Image(const char * filename) {
     this->data = new T[this->height*this->width];
     this->pixbufToData((GtkImage *)image);
     this->spacing = float3(1.0f,1.0f,1.0f);
+#else
+    throw SIPLCompiledWithoutGTKException(__LINE__, __FILE__);
+#endif
 }
 
 template <class T> 
@@ -596,10 +610,12 @@ Visualization * Volume<T>::displayMIP(slice_plane direction) {
     return displayMIPVisualization(this, direction, this->defaultLevel, this->defaultWindow);
 }
 
+#ifdef USE_GTK
 struct _saveData {
 	GtkWidget * fs;
 	Visualization * viz;
 };
+#endif
 
 template <class T>
 int Dataset<T>::getWidth() const {

@@ -102,6 +102,7 @@ uchar levelWindow(float value, float level, float window) {
     return result;
 }
 
+#ifdef USE_GTK
 void Visualization::renderMIP(int imageNr, GdkPixbuf * pixBuf) {
     int xSize;
     int ySize;
@@ -400,6 +401,7 @@ GdkPixbuf * Visualization::render() {
     }
     return pixBuf;
 }
+#endif
 
 void SIPL::Visualization::setLevel(float level) {
     for(unsigned int i = 0; i < images.size(); i++) {
@@ -426,6 +428,7 @@ void SIPL::Visualization::setTitle(std::string title) {
 }
 
 void Visualization::display() {
+#ifdef USE_GTK
     // For all images, get float data and then visualize it using window and level
     // Create image widget and fill up the pixbuf
     int3 size = images[0]->getSize();
@@ -536,6 +539,9 @@ void Visualization::display() {
 	gtk_widget_show_all(window);
 
 	gdk_threads_leave();
+#else
+	std::cout << "SIPL was not compiled with GTK and thus cannot visualize the results. Compile with sipl_use_gtk=ON to visualize." << std::endl;
+#endif
 }
 int validateSlice(int slice, slice_plane direction, int3 size) {
     if(slice < 0)
@@ -558,6 +564,7 @@ int validateSlice(int slice, slice_plane direction, int3 size) {
     return slice;
 }
 
+#ifdef USE_GTK
 void Visualization::keyPressed(GtkWidget * widget, GdkEventKey * event, gpointer user_data) {
     Visualization * v = (Visualization *)user_data;
     switch(event->keyval) {
@@ -602,6 +609,7 @@ void Visualization::keyPressed(GtkWidget * widget, GdkEventKey * event, gpointer
         v->update();
     }
 }
+#endif
 
 slice_plane Visualization::getDirection() const {
     return direction;
@@ -627,6 +635,7 @@ void Visualization::setType(visualizationType type) {
     this->type = type;
 }
 
+#ifdef USE_GTK
 void Visualization::draw() {
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf(GTK_IMAGE(gtkImage));
     GdkPixbuf * newPixBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
@@ -636,11 +645,18 @@ void Visualization::draw() {
     gtk_widget_queue_draw(scaledImage);
 }
 
+void Visualization::zoomOut() {
+    // TODO: check if image is actually displayed
+    scale = scale*0.5f;
+    this->draw();
+}
+
 void Visualization::zoomIn() {
     // TODO: check if image is actually displayed
     scale = scale*2;
     this->draw();
 }
+#endif
 
 float Visualization::getAngle() const {
     return angle;
@@ -650,17 +666,13 @@ void Visualization::setAngle(float angle) {
     this->angle = angle;
 }
 
-void Visualization::zoomOut() {
-    // TODO: check if image is actually displayed
-    scale = scale*0.5f;
-    this->draw();
-}
-
+#ifdef USE_GTK
 void Visualization::update() {
     GdkPixbuf * pixBuf = render();
     gtk_image_set_from_pixbuf(GTK_IMAGE(gtkImage), pixBuf);
     draw();
 }
+#endif
 
 float3 Visualization::getValue(int2 position) {
     float3 res;
@@ -714,6 +726,7 @@ int3 Visualization::getTrue3DPosition(int2 pos) {
     return realPos;
 }
 
+#ifdef USE_GTK
 bool Visualization::buttonPressed(GtkWidget * widget, GdkEventButton * event, gpointer user_data) {
     Visualization * v = (Visualization *)user_data;
     gtk_statusbar_pop(GTK_STATUSBAR(v->statusBar), 0); // remove old message
@@ -753,6 +766,7 @@ bool Visualization::buttonPressed(GtkWidget * widget, GdkEventButton * event, gp
 
     return true;
 }
+#endif
 
 float Visualization::getLevel(BaseDataset * image) {
     return level[image];
@@ -766,9 +780,11 @@ std::vector<BaseDataset *> Visualization::getImages() {
     return images;
 }
 
+#ifdef USE_GTK
 GtkWidget * Visualization::getGtkImage() {
     return gtkImage;
 }
+#endif
 
 int Visualization::getWidth() {
     return width;
