@@ -162,7 +162,14 @@ class OutOfBoundsException : public SIPLException {
 };
 
 class SIPLCompiledWithoutGTKException : public SIPLException {
-
+    public:
+        SIPLCompiledWithoutGTKException() {
+            this->setMessage("SIPL was compiled without GTK and cannot complete");
+        }
+        SIPLCompiledWithoutGTKException(int line, const char * file) {
+            this->setMessage("SIPL was compiled without GTK and cannot complete");
+            SIPLException(line, file);
+        }
 };
 
 class ConversionException : public SIPLException {
