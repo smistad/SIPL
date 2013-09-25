@@ -41,3 +41,20 @@ if(compile_sipl_tests)
 	add_subdirectory(tests)
 endif()
 endif()
+
+#------------------------------------------------------------------------------
+# Configure file for find_package module 
+#------------------------------------------------------------------------------
+set( SIPL_INCLUDE_DIRS
+    ${SIPL_SOURCE_DIR}
+    ) 
+
+set(SIPL_LIBRARY_DIRS
+    ${SIPL_BINARY_DIR}
+    )    
+
+configure_file (
+    "${PROJECT_SOURCE_DIR}/CMake/SIPLConfig.cmake.in"
+    "${PROJECT_BINARY_DIR}/SIPLConfig.cmake"
+    )
+
