@@ -635,14 +635,15 @@ void Visualization::setType(visualizationType type) {
     this->type = type;
 }
 
-#ifdef USE_GTK
 void Visualization::draw() {
+#ifdef USE_GTK
     GdkPixbuf * pixBuf = gtk_image_get_pixbuf(GTK_IMAGE(gtkImage));
     GdkPixbuf * newPixBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, false,
 			8, spacingX*scale*width, spacingY*scale*height);
     gdk_pixbuf_scale(pixBuf, newPixBuf, 0, 0, spacingX*scale*width, spacingY*scale*height, 0, 0, scale*spacingX, scale*spacingY, GDK_INTERP_BILINEAR);
     gtk_image_set_from_pixbuf(GTK_IMAGE(scaledImage), newPixBuf);
     gtk_widget_queue_draw(scaledImage);
+#endif
 }
 
 void Visualization::zoomOut() {
@@ -656,7 +657,6 @@ void Visualization::zoomIn() {
     scale = scale*2;
     this->draw();
 }
-#endif
 
 float Visualization::getAngle() const {
     return angle;
@@ -666,13 +666,13 @@ void Visualization::setAngle(float angle) {
     this->angle = angle;
 }
 
-#ifdef USE_GTK
 void Visualization::update() {
+#ifdef USE_GTK
     GdkPixbuf * pixBuf = render();
     gtk_image_set_from_pixbuf(GTK_IMAGE(gtkImage), pixBuf);
     draw();
-}
 #endif
+}
 
 float3 Visualization::getValue(int2 position) {
     float3 res;

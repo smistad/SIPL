@@ -512,7 +512,11 @@ Dataset<T>::~Dataset() {
 void saveImage(BaseDataset * d, const char * filepath, const char * imageType);
 template <class T>
 void Image<T>::save(const char * filepath, const char * imageType) {
+#ifdef USE_GTK
     saveImage(this, filepath, imageType);
+#else
+    std::cout << "SIPL was compiled without GTK and thus unable to save an image to disk." << std::endl;
+#endif
 }
 template <class T>
 void Volume<T>::save(const char * filepath) {
