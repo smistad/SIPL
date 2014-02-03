@@ -828,19 +828,20 @@ template <class T>
 T * Volume<T>::get(Region r) const {
     T * res = new T[r.size.x*r.size.y*r.size.z];
     int counter = 0;
-    for(int z = r.offset.z; z < r.size.z; z++) {
-    for(int y = r.offset.y; y < r.size.y; y++) {
-    for(int x = r.offset.x; x < r.size.x; x++) {
+    for(int z = r.offset.z; z < r.offset.z+r.size.z; z++) {
+    for(int y = r.offset.y; y < r.offset.y+r.size.y; y++) {
+    for(int x = r.offset.x; x < r.offset.x+r.size.x; x++) {
         res[counter] = this->get(x,y,z);
+        counter++;
     }}}
     return res;
 }
 
 template <class T>
 void Volume<T>::set(Region r, T value) {
-    for(int z = r.offset.z; z < r.size.z; z++) {
-    for(int y = r.offset.y; y < r.size.y; y++) {
-    for(int x = r.offset.x; x < r.size.x; x++) {
+    for(int z = r.offset.z; z < r.offset.z+r.size.z; z++) {
+    for(int y = r.offset.y; y < r.offset.y+r.size.y; y++) {
+    for(int x = r.offset.x; x < r.offset.x+r.size.x; x++) {
         this->set(x,y,z,value);
     }}}
 }
