@@ -134,6 +134,7 @@ class float3 {
             n.z = this->z / v;
             return n;
         };
+        ~float3(){};
 };
 
 // These are not for images/volumes

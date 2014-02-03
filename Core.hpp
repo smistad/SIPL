@@ -21,6 +21,7 @@
 #include <typeinfo>
 #include <string>
 #include <stdlib.h>
+#include <map>
 
 namespace SIPL {
 
@@ -78,10 +79,13 @@ class Dataset : public BaseDataset {
         void setDefaultLevelWindow();
         Visualization * display();
         Visualization * display(float level, float window);
+        std::string getAttribute(std::string str);
+        void setAttribute(std::string key, std::string value);
     protected:
         T * data;
         int width, height;
         float3 spacing;
+        std::map<std::string, std::string> attributes;
 };
 
 template <class T>
@@ -363,6 +367,12 @@ Volume<T>::Volume(std::string filename, IntensityTransformation IT) {
     this->spacing = float3(1.0f,1.0f,1.0f);
     do{
         std::getline(mhdFile, line);
+        if(!mhdFile.eof()) {
+            int firstSpace = line.find(" ");
+            std::string key = line.substr(0, firstSpace);
+            std::string value = line.substr(firstSpace+3);
+            this->setAttribute(key, value);
+        }
         if(line.substr(0, 7) == "DimSize") {
             std::string sizeString = line.substr(7+3);
             std::string sizeX = sizeString.substr(0,sizeString.find(" "));
@@ -620,6 +630,16 @@ struct _saveData {
 	Visualization * viz;
 };
 #endif
+
+template <class T>
+std::string Dataset<T>::getAttribute(std::string str) {
+    return this->attributes[str];
+}
+
+template <class T>
+void Dataset<T>::setAttribute(std::string key, std::string value) {
+    this->attributes[key] = value;
+}
 
 template <class T>
 int Dataset<T>::getWidth() const {

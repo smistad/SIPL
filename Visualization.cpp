@@ -2,6 +2,10 @@
 #include <iostream>
 using namespace SIPL;
 
+void Visualization::setScale(float scale) {
+    this->scale = scale;
+}
+
 Visualization::Visualization(BaseDataset * image) {
     if(images.size() == 3)
         throw SIPLException("A visualization can only contain a maximum of 3 images/volumes.");

@@ -32,6 +32,7 @@ class Visualization {
         float getWindow(BaseDataset * image);
         void setTitle(std::string);
         void setType(visualizationType);
+        void setScale(float scale);
         void addImage();
         void addVolume();
         void display();
