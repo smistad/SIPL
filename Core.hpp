@@ -148,7 +148,7 @@ class Volume : public Dataset<T> {
 		Visualization * displayMIP(float level, float window);
 		Visualization * displayMIP(slice_plane direction);
 		Visualization * displayMIP(slice_plane direction, float level, float window);
-		Volume<T> crop(Region r) const;
+		Volume<T> * crop(Region r) const;
     private:
         int depth;
 };
@@ -826,9 +826,10 @@ void Volume<T>::set(Region r, T value) {
 }
 
 template <class T>
-Volume<T> Volume<T>::crop(Region r) const {
+Volume<T> * Volume<T>::crop(Region r) const {
     Volume<T> * res = new Volume<T>(r.size);
     res->setData(this->get(r));
+    return res;
 }
 
 template <class T>
