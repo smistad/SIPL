@@ -172,6 +172,11 @@ class SIPLCompiledWithoutGTKException : public SIPLException {
 };
 
 class ConversionException : public SIPLException {
+    public:
+        ConversionException() : SIPLException() {};
+        ConversionException(const char * message) : SIPLException(message) {};
+        ConversionException(int line, const char * file) : SIPLException(line, file) {};
+        ConversionException(const char * message, int line, const char * file) : SIPLException(message, line, file) { };
 };
 
 }; // END NAMESPACE SIPL
