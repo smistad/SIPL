@@ -353,6 +353,7 @@ template <class T>
 Volume<T>::Volume(std::string filename, IntensityTransformation IT) {
 
     // Read mhd file
+    this->data = NULL;
     std::fstream mhdFile;
     mhdFile.open(filename.c_str(), std::fstream::in);
     if(!mhdFile.is_open())
