@@ -6,6 +6,7 @@
 #include "Core.hpp"
 #include "Visualization.hpp"
 #include <limits>
+#include <algorithm>
 
 namespace SIPL {
 bool init = false;

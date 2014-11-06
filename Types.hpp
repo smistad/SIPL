@@ -9,10 +9,11 @@
 
 #include <math.h>
 
-namespace SIPL {
 typedef unsigned char uchar;
 typedef unsigned short ushort;
-typedef unsigned int uint; 
+typedef unsigned int uint;
+
+namespace SIPL {
 typedef struct color_float { float red, blue, green;} color_float ; 
 typedef struct color_uchar { unsigned char red, blue, green;} color_uchar ;
 enum slice_plane {X,Y,Z};

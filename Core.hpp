@@ -8,6 +8,7 @@
 #define SIPL_H_
 
 #define _USE_MATH_DEFINES // windows crap
+
 #include <cmath>
 
 #include "Exceptions.hpp"

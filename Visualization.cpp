@@ -1,7 +1,9 @@
 #include "Visualization.hpp"
 #include <iostream>
-using namespace SIPL;
+//using namespace SIPL;
 
+namespace SIPL
+{
 void Visualization::setScale(float scale) {
     this->scale = scale;
 }
@@ -547,26 +549,6 @@ void Visualization::display() {
 	std::cout << "SIPL was not compiled with GTK and thus cannot visualize the results. Compile with sipl_use_gtk=ON to visualize." << std::endl;
 #endif
 }
-int validateSlice(int slice, slice_plane direction, int3 size) {
-    if(slice < 0)
-        return 0;
-
-    switch(direction) {
-        case X:
-            if(slice > size.x-1)
-                return size.x-1;
-            break;
-        case Y:
-            if(slice > size.y-1)
-                return size.y-1;
-            break;
-        case Z:
-            if(slice > size.z-1)
-                return size.z-1;
-            break;
-    }
-    return slice;
-}
 
 #ifdef USE_GTK
 void Visualization::keyPressed(GtkWidget * widget, GdkEventKey * event, gpointer user_data) {
@@ -805,3 +787,4 @@ float Visualization::getSpacingX() {
 float Visualization::getSpacingY() {
     return spacingY;
 }
+} //namespace SIPL

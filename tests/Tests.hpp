@@ -4,6 +4,6 @@
 #include "../Core.hpp"
 #include <gtest/gtest.h>
 
-using namespace SIPL;
+//using namespace SIPL;
 
 #endif

@@ -13,9 +13,7 @@ if(OPENMP_FOUND)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}" )
 endif()
 
-
-
-add_library (SIPL Core.cpp Types.cpp Visualization.cpp)
+add_library(SIPL Core.cpp Types.cpp Visualization.cpp)
 option(sipl_use_gtk "Use GTK for visualization and loading images in SIPL" ON)
 if(sipl_use_gtk)
 	message("-- Compiling SIPL with GTK")
@@ -53,7 +51,7 @@ set(SIPL_LIBRARY_DIRS
     ${SIPL_BINARY_DIR}
     )    
 
-configure_file (
+configure_file(
     "${PROJECT_SOURCE_DIR}/CMake/SIPLConfig.cmake.in"
     "${PROJECT_BINARY_DIR}/SIPLConfig.cmake"
     )
