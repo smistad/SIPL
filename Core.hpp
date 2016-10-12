@@ -369,7 +369,7 @@ Volume<T>::Volume(std::string filename, IntensityTransformation IT) {
     this->spacing = float3(1.0f,1.0f,1.0f);
     do{
         std::getline(mhdFile, line);
-        if(!mhdFile.eof()) {
+        if(!mhdFile.eof() && line.size() > 2) {
             int firstSpace = line.find(" ");
             std::string key = line.substr(0, firstSpace);
             std::string value = line.substr(firstSpace+3);
