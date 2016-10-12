@@ -19,8 +19,8 @@ GCond * initCondition;
 void * initGTK(void * t) {
     g_mutex_lock(initMutex);
 	init = true;
-    g_cond_signal(initCondition);
     g_mutex_unlock(initMutex);
+    g_cond_signal(initCondition);
 	gdk_threads_enter ();
 	gtk_main();
     gdk_threads_leave();
@@ -133,6 +133,7 @@ void Init() {
         windowCount = 0;
 		gtkThread = g_thread_new("main", initGTK, NULL);
 
+        g_mutex_lock(initMutex);
         while(!init) // wait for the thread to be created
             g_cond_wait(initCondition, initMutex);
         g_mutex_unlock(initMutex);
