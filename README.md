@@ -7,8 +7,5 @@ Features:
 * Supports volume processing
 * Templated
 
-[Click here to see a short tutorial with examples](http://www.thebigblob.com/simple-image-processing-library/#tutorial) and [here for installation notes](http://www.thebigblob.com/simple-image-processing-library/#installation).
-
-![SIPL](http://www.thebigblob.com/wp-content/uploads/sipl-300x224.png)
-
+[Click here to see a short tutorial with examples](http://www.eriksmistad.no/simple-image-processing-library/#tutorial) and [here for installation notes](http://www.eriksmistad.no/simple-image-processing-library/#installation).
 
