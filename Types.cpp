@@ -49,7 +49,7 @@ float int2::dot(float2 other) const {
     return x*other.x+y*other.y;
 }
 float int2::distance(int2 other) const {
-    return sqrt((x-other.x)*(x-other.x)+(y-other.y)*(y-other.y));
+    return sqrt((long double)(x-other.x)*(x-other.x)+(y-other.y)*(y-other.y));
 }
 float int2::dot(int2 other) const {
     return x*other.x+y*other.y;
@@ -70,7 +70,7 @@ float int3::dot(float3 other) const {
     return x*other.x+y*other.y+z*other.z;
 }
 float int3::distance(int3 other) const {
-    return sqrt((x-other.x)*(x-other.x)+(y-other.y)*(y-other.y)+(z-other.z)*(z-other.z));
+    return sqrt((long double)(x-other.x)*(x-other.x)+(y-other.y)*(y-other.y)+(z-other.z)*(z-other.z));
 }
 float int3::dot(int3 other) const {
     return x*other.x+y*other.y+z*other.z;

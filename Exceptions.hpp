@@ -20,11 +20,11 @@ class SIPLException : public std::exception {
             this->line = -1;
             this->message = message;
         };
-        SIPLException(int line, char * file) {
+        SIPLException(int line, const char * file) {
             this->line = line;
             this->file = file;
         };
-        SIPLException(const char * message, int line, char * file) {
+        SIPLException(const char * message, int line, const char * file) {
             this->message = message;
             this->line = line;
             this->file = file;
@@ -153,15 +153,30 @@ class OutOfBoundsException : public SIPLException {
             char * message = new char[255];
             sprintf(message, "Out of bounds exception. Requested position %d, %d, %d in volume of size %d, %d, %d", x, y, z, sizeX, sizeY, sizeZ);
             this->setMessage(message);
-            this->setLine(line);
-            this->setFile(file);
        };
     private:
         int x, y, z; // position requested
         int sizeX, sizeY, sizeZ;
 };
 
+class SIPLCompiledWithoutGTKException : public SIPLException {
+    public:
+        SIPLCompiledWithoutGTKException() {
+            this->setMessage("SIPL was compiled without GTK and cannot complete");
+        }
+        SIPLCompiledWithoutGTKException(int line, const char * file) {
+            this->setMessage("SIPL was compiled without GTK and cannot complete");
+            this->setLine(line);
+            this->setFile(file);
+        }
+};
+
 class ConversionException : public SIPLException {
+    public:
+        ConversionException() : SIPLException() {};
+        ConversionException(const char * message) : SIPLException(message) {};
+        ConversionException(int line, const char * file) : SIPLException(line, file) {};
+        ConversionException(const char * message, int line, const char * file) : SIPLException(message, line, file) { };
 };
 
 }; // END NAMESPACE SIPL

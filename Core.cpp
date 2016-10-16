@@ -4,17 +4,23 @@
  * See LICENSE file for information on use 
  */
 #include "Core.hpp"
+#include "Visualization.hpp"
+#include <limits>
+#include <algorithm>
 
 namespace SIPL {
 bool init = false;
+#ifdef USE_GTK
 GThread * gtkThread;
 int windowCount;
 GMutex * windowCountMutex;
+GMutex * initMutex;
+GCond * initCondition;
 void * initGTK(void * t) {
-	gdk_threads_init ();	
-	gtk_init(0, (char ***) "");
+    g_mutex_lock(initMutex);
 	init = true;
-    windowCountMutex = g_mutex_new();
+    g_mutex_unlock(initMutex);
+    g_cond_signal(initCondition);
 	gdk_threads_enter ();
 	gtk_main();
     gdk_threads_leave();
@@ -30,6 +36,43 @@ void Quit() {
 bool isInit() {
     return init;
 }
+
+void saveImage(BaseDataset * d, const char * filepath, const char * imageType) {
+    Visualization * v = new Visualization(d);
+    GdkPixbuf * pixBuf = v->render();
+    delete v;
+	gdk_pixbuf_save(pixBuf, filepath, imageType, NULL, NULL);
+}
+#endif
+
+Visualization * displayVisualization(BaseDataset * d, float level, float window) {
+    Visualization * v = new Visualization(d);
+    v->setLevel(level);
+    v->setWindow(window);
+    v->display();
+    return v;
+}
+
+Visualization * displayVolumeVisualization(BaseDataset * d, int slice, slice_plane direction, float level, float window) {
+    Visualization * v = new Visualization(d);
+    v->setLevel(level);
+    v->setWindow(window);
+    v->setSlice(slice);
+    v->setDirection(direction);
+    v->display();
+    return v;
+}
+
+Visualization * displayMIPVisualization(BaseDataset * d, slice_plane direction, float level, float window) {
+    Visualization * v = new Visualization(d);
+    v->setType(MIP);
+    v->setLevel(level);
+    v->setWindow(window);
+    v->setDirection(direction);
+    v->display();
+    return v;
+}
+
 
 int validateSlice(int slice, slice_plane direction, int3 size) {
     if(slice < 0)
@@ -51,6 +94,7 @@ int validateSlice(int slice, slice_plane direction, int3 size) {
     }
     return slice;
 }
+#ifdef USE_GTK
 int getWindowCount() {
     g_mutex_lock(windowCountMutex);
     int wc = windowCount;
@@ -80,13 +124,21 @@ void quit(void) {
 }
 
 void Init() {
-    windowCount = 0;
-	if (!init) {
-		g_thread_init(NULL);
-		gtkThread = g_thread_create(initGTK, NULL, true, NULL);
-	}
-	while(!init); // wait for the thread to be created
-    atexit(quit);
+	if(!init) {
+        gdk_threads_init ();	
+        gtk_init(0, (char ***) "");
+        windowCountMutex = g_mutex_new();
+        initMutex = g_mutex_new();
+        initCondition = g_cond_new();
+        windowCount = 0;
+		gtkThread = g_thread_new("main", initGTK, NULL);
+
+        g_mutex_lock(initMutex);
+        while(!init) // wait for the thread to be created
+            g_cond_wait(initCondition, initMutex);
+        g_mutex_unlock(initMutex);
+        atexit(quit);
+    }
 }
 
 void destroyWindow(GtkWidget * widget, gpointer window) {
@@ -111,8 +163,17 @@ void signalDestroyWindow(GtkWidget * widget, gpointer window) {
 void saveFileSignal(GtkWidget * widget, gpointer data) {
 	// Get extension to determine image type
     std::string filepath(gtk_file_selection_get_filename (GTK_FILE_SELECTION (((_saveData *)data)->fs)));
-	gdk_pixbuf_save(gtk_image_get_pixbuf(
-			((_saveData *)data)->image),
+    Visualization * v = ((_saveData *)data)->viz;
+    GdkPixbuf * pixBuf = gtk_image_get_pixbuf(GTK_IMAGE(v->getGtkImage()));
+    float width = v->getWidth();
+    float height = v->getHeight();
+    float spacingX = v->getSpacingX();
+    float spacingY = v->getSpacingY();
+    GdkPixbuf * newPixBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, false, 8, spacingX*width, spacingY*height);
+    gdk_pixbuf_scale(pixBuf, newPixBuf, 0, 0, spacingX*width, spacingY*height, 0, 0, spacingX, spacingY, GDK_INTERP_BILINEAR);
+
+	gdk_pixbuf_save(
+	        newPixBuf,
 			filepath.c_str(),
 			filepath.substr(filepath.rfind('.')+1).c_str(),
 			NULL, "quality", "100", NULL);
@@ -120,12 +181,154 @@ void saveFileSignal(GtkWidget * widget, gpointer data) {
 	gtk_widget_destroy(GTK_WIDGET(((_saveData *)data)->fs));
 }
 
-void saveDialog(GtkWidget * widget, gpointer image) {
+void refresh(GtkWidget * widget, gpointer data) {
+    Visualization * v = (Visualization *)data;
+    v->update();
+}
+#endif
+
+char * floatToChar(float v) {
+	char * str = new char[10];
+	sprintf(str, "%f", v);
+	return str;
+}
+
+void getMinAndMax(BaseDataset * image, float * min, float * max) {
+    *min = std::numeric_limits<float>::max();
+    *max = std::numeric_limits<float>::min();
+    if(image->isVectorType) {
+        float3 * floatData = image->getVectorFloatData();
+        for(int i = 0; i < image->getTotalSize(); i++) {
+            *min = std::min(*min, std::min(floatData[i].x, std::min(floatData[i].y, floatData[i].z)));
+            *max = std::max(*max, std::max(floatData[i].x, std::max(floatData[i].y, floatData[i].z)));
+        }
+
+        delete[] floatData;
+    } else {
+        float * floatData = image->getFloatData();
+        for(int i = 0; i < image->getTotalSize(); i++) {
+            if(floatData[i] < *min)
+                *min = floatData[i];
+            if(floatData[i] > *max)
+                *max = floatData[i];
+        }
+        delete[] floatData;
+    }
+}
+
+#ifdef USE_GTK
+class LevelWindowChange {
+    public:
+        LevelWindowChange(Visualization * v, BaseDataset * i, GtkWidget * w) {
+            viz = v;
+            image = i;
+            otherWidget = w;
+        };
+        Visualization * viz;
+        BaseDataset * image;
+        GtkWidget * otherWidget;
+};
+
+void entryChangeLevel(GtkWidget * widget, gpointer data) {
+    LevelWindowChange * c = (LevelWindowChange *)data;
+    const gchar * value = gtk_entry_get_text(GTK_ENTRY(widget));
+    gtk_range_set_value(GTK_RANGE(c->otherWidget), atof((char*)value));
+    c->viz->setLevel(c->image,atof((char*)value));
+    c->viz->update();
+}
+
+void scaleChangeLevel(GtkWidget * widget, gpointer data) {
+    LevelWindowChange * c = (LevelWindowChange *)data;
+    gdouble value = gtk_range_get_value(GTK_RANGE(widget));
+    gtk_entry_set_text(GTK_ENTRY(c->otherWidget), floatToChar((float)value));
+    c->viz->setLevel(c->image, (float)value);
+    c->viz->update();
+}
+
+void entryChangeWindow(GtkWidget * widget, gpointer data) {
+    LevelWindowChange * c = (LevelWindowChange *)data;
+    const gchar * value = gtk_entry_get_text(GTK_ENTRY(widget));
+    gtk_range_set_value(GTK_RANGE(c->otherWidget), atof((char*)value));
+    c->viz->setWindow(c->image,atof((char*)value));
+    c->viz->update();
+}
+
+void scaleChangeWindow(GtkWidget * widget, gpointer data) {
+    LevelWindowChange * c = (LevelWindowChange *)data;
+    gdouble value = gtk_range_get_value(GTK_RANGE(widget));
+    gtk_entry_set_text(GTK_ENTRY(c->otherWidget), floatToChar((float)value));
+    c->viz->setWindow(c->image, (float)value);
+    c->viz->update();
+}
+
+void adjustLevelAndWindow(GtkWidget * widget, gpointer data) {
+    Visualization * v = (Visualization *)data;
+    // Create window and add sliders and text boxes to it, one for each image
+    GtkWidget * window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(window), "Adjust Level & Window");
+	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
+
+	std::vector<BaseDataset *> images = v->getImages();
+	GtkWidget * table = gtk_table_new(3*images.size(),3,false);
+	gtk_container_add(GTK_CONTAINER(window), table);
+
+	for(unsigned int i = 0; i < images.size(); i++) {
+        float currentLevel = v->getLevel(images[i]);
+        float min,max;
+        getMinAndMax(images[i], &min, &max);
+        char * str = new char[10];
+        sprintf(str, "Image #%d", i+1);
+        GtkWidget * imageLabel = gtk_label_new(str);
+        gtk_table_attach_defaults(GTK_TABLE(table), imageLabel, 0, 3, i*3, i*3+1);
+
+        GtkWidget * levelLabel = gtk_label_new("Level: ");
+        gtk_table_attach_defaults(GTK_TABLE(table), levelLabel, 0, 1, i*3+1, i*3+2);
+        GtkWidget * levelScale = gtk_hscale_new_with_range(min, max, (max-min)/255.0f);
+        gtk_range_set_value(GTK_RANGE(levelScale), currentLevel);
+        gtk_widget_set_size_request(levelScale, 200, 40);
+        gtk_table_attach_defaults(GTK_TABLE(table), levelScale, 1, 2, i*3+1, i*3+2);
+        GtkWidget * levelEntry = gtk_entry_new();
+        gtk_entry_set_text(GTK_ENTRY(levelEntry), floatToChar(currentLevel));
+        gtk_table_attach_defaults(GTK_TABLE(table), levelEntry, 2, 3, i*3+1, i*3+2);
+        g_signal_connect(
+                levelScale, "value-changed",
+                G_CALLBACK(scaleChangeLevel),
+                new LevelWindowChange(v,images[i],levelEntry));
+        g_signal_connect(
+                levelEntry, "activate",
+                G_CALLBACK(entryChangeLevel),
+                new LevelWindowChange(v, images[i], levelScale));
+
+        float currentWindow = v->getWindow(images[i]);
+
+        GtkWidget * windowLabel = gtk_label_new("Window: ");
+        gtk_table_attach_defaults(GTK_TABLE(table), windowLabel, 0, 1, i*3+2, i*3+3);
+        GtkWidget * windowScale = gtk_hscale_new_with_range(0, max, (max)/255.0f);
+        gtk_range_set_value(GTK_RANGE(windowScale), currentWindow);
+        gtk_table_attach_defaults(GTK_TABLE(table), windowScale, 1, 2, i*3+2, i*3+3);
+        GtkWidget * windowEntry = gtk_entry_new();
+        gtk_entry_set_text(GTK_ENTRY(windowEntry), floatToChar(currentWindow));
+        gtk_table_attach_defaults(GTK_TABLE(table), windowEntry, 2, 3, i*3+2, i*3+3);
+        g_signal_connect(
+                windowScale, "value-changed",
+                G_CALLBACK(scaleChangeWindow),
+                new LevelWindowChange(v,images[i],windowEntry));
+        g_signal_connect(
+                windowEntry, "activate",
+                G_CALLBACK(entryChangeWindow),
+                new LevelWindowChange(v, images[i], windowScale));
+	}
+
+
+    gtk_widget_show_all(window);
+}
+
+void saveDialog(GtkWidget * widget, gpointer viz) {
 	GtkWidget * fileSelection = gtk_file_selection_new("Save an image");
 
 	_saveData * data = (_saveData *)malloc(sizeof(_saveData));
 	data->fs = fileSelection;
-	data->image = (GtkImage *)image;
+	data->viz = (Visualization *)viz;
 
 	/* Connect the ok_button to file_ok_sel function */
 	g_signal_connect (G_OBJECT (GTK_FILE_SELECTION (fileSelection)->ok_button),
@@ -139,132 +342,7 @@ void saveDialog(GtkWidget * widget, gpointer image) {
 
 	gtk_widget_show(fileSelection);
 }
-
-void toGuchar(bool value, guchar * pixel) {
-    uchar intensity = value ? 255 : 0;
-    pixel[0] = intensity;
-    pixel[1] = intensity;
-    pixel[2] = intensity;
-}
-void toGuchar(uchar value, guchar * pixel) {
-    pixel[0] = value;
-    pixel[1] = value;
-    pixel[2] = value;
-}
-void toGuchar(char value, guchar * pixel) {
-    pixel[0] = value+128;
-    pixel[1] = value+128;
-    pixel[2] = value+128;
-}
-void toGuchar(ushort value, guchar * pixel) {
-    pixel[0] = ((float)value/65535)*255;
-    pixel[1] = ((float)value/65535)*255;
-    pixel[2] = ((float)value/65535)*255;
-}
-void toGuchar(short value, guchar * pixel) {
-    pixel[0] = ((float)(value+32768)/65535)*255;
-    pixel[1] = ((float)(value+32768)/65535)*255;
-    pixel[2] = ((float)(value+32768)/65535)*255;
-}
-void toGuchar(uint value, guchar * pixel) {
-    pixel[0] = ((float)value/4294967295)*255;
-    pixel[1] = ((float)value/4294967295)*255;
-    pixel[2] = ((float)value/4294967295)*255;
-}
-void toGuchar(int value, guchar * pixel) {
-    pixel[0] = ((float)(value+2147483648)/4294967295)*255;
-    pixel[1] = ((float)(value+2147483648)/4294967295)*255;
-    pixel[2] = ((float)(value+2147483648)/4294967295)*255;
-}
-void toGuchar(float value, guchar * pixel) {
-    pixel[0] = value*255;
-    pixel[1] = value*255;
-    pixel[2] = value*255;
-}
-void toGuchar(color_uchar value, guchar * pixel) {
-    pixel[0] = value.red;
-    pixel[1] = value.green;
-    pixel[2] = value.blue;
-}
-void toGuchar(color_float value, guchar * pixel) {
-    pixel[0] = value.red*255;
-    pixel[1] = value.green*255;
-    pixel[2] = value.blue*255;
-}
-void toGuchar(float2 value, guchar * pixel) {
-    pixel[0] = fabs(value.x)*255;
-    pixel[1] = fabs(value.y)*255;
-    pixel[2] = 0;
-}
-void toGuchar(float3 value, guchar * pixel) {
-    pixel[0] = fabs(value.x)*255;
-    pixel[1] = fabs(value.y)*255;
-    pixel[2] = fabs(value.z)*255;
-}
-
-
-void toGuchar(uchar value, guchar * pixel, float level, float window) {
-    uchar n = levelWindow(value, level, window);
-    pixel[0] = n;
-    pixel[1] = n;
-    pixel[2] = n;
-}
-void toGuchar(char value, guchar * pixel, float level, float window) {
-    uchar n = levelWindow(value, level, window);
-    pixel[0] = n;
-    pixel[1] = n;
-    pixel[2] = n;
-}
-void toGuchar(ushort value, guchar * pixel, float level, float window) {
-    uchar n = levelWindow(value, level, window);
-    pixel[0] = n;
-    pixel[1] = n;
-    pixel[2] = n;
-}
-void toGuchar(short value, guchar * pixel, float level, float window) {
-    uchar n = levelWindow(value, level, window);
-    pixel[0] = n;
-    pixel[1] = n;
-    pixel[2] = n;
-}
-void toGuchar(uint value, guchar * pixel, float level, float window) {
-    uchar n = levelWindow(value, level, window);
-    pixel[0] = n;
-    pixel[1] = n;
-    pixel[2] = n;
-}
-void toGuchar(int value, guchar * pixel, float level, float window) {
-    uchar n = levelWindow(value, level, window);
-    pixel[0] = n;
-    pixel[1] = n;
-    pixel[2] = n;
-}
-void toGuchar(float value, guchar * pixel, float level, float window) {
-    uchar n = levelWindow(value, level, window);
-    pixel[0] = n;
-    pixel[1] = n;
-    pixel[2] = n;
-}
-void toGuchar(color_float value, guchar * pixel, float level, float window) {
-    pixel[0] = levelWindow(value.red, level, window);
-    pixel[1] = levelWindow(value.green, level, window);
-    pixel[2] = levelWindow(value.blue, level, window);
-}
-void toGuchar(color_uchar value, guchar * pixel, float level, float window) {
-    pixel[0] = levelWindow(value.red, level, window);
-    pixel[1] = levelWindow(value.green, level, window);
-    pixel[2] = levelWindow(value.blue, level, window);
-}
-void toGuchar(float2 value, guchar * pixel, float level, float window) {
-    pixel[0] = levelWindow(fabs(value.x), level, window);
-    pixel[1] = levelWindow(fabs(value.y), level, window);
-    pixel[2] = 0;
-}
-void toGuchar(float3 value, guchar * pixel, float level, float window) {
-    pixel[0] = levelWindow(value.x, level, window);
-    pixel[1] = levelWindow(value.y, level, window);
-    pixel[2] = levelWindow(value.z, level, window);
-}
+#endif
 
 uchar color2gray(uchar * p) {
    return 0.33*(p[0]+p[1]+p[2]); 
@@ -313,499 +391,19 @@ void toT(float3 * c, uchar * p) {
     c->y = (float)p[1]/255.0f;
     c->z = (float)p[2]/255.0f;
 }
-
-// Conversion from bool
-void convertImageType(bool * to, bool from) {
-    *to = from;
-}
-void convertImageType(uchar * to, bool from) {
-    *to = from ? 255 : 0;
-}
-void convertImageType(char * to, bool from) {
-    *to = from ? 127 : -128;
-}
-void convertImageType(ushort * to, bool from) {
-    *to = from ? 1 : 0;
-}
-void convertImageType(short * to, bool from) {
-    *to = from ? 1 : 0;
-}
-void convertImageType(uint * to, bool from) {
-    *to = from ? 1 : 0;
-}
-void convertImageType(int * to, bool from) {
-    *to = from ? 1 : 0;
-}
-void convertImageType(float * to, bool from) {
-    *to = from ? 1 : 0;
-}
-void convertImageType(color_float * to, bool from) {
-    to->red = from ? 1 : 0;
-    to->blue = to->red;
-    to->green = to->red;
-}
-void convertImageType(color_uchar * to, bool from) {
-    to->red = from ? 255 : 0;
-    to->blue = to->red;
-    to->green = to->red;
-}
-void convertImageType(float2 * to, bool from) {
-    to->x = from ? 1 : 0;
-    to->y = to->x;
-}
-void convertImageType(float3 * to, bool from) {
-    to->x = from ? 1 : 0;
-    to->y = to->x;
-    to->z = to->x;
-}
-
-// Conversion from uchar
-void convertImageType(bool * to, uchar from) {
-    *to = from > 127;
-}
-void convertImageType(uchar * to, uchar from) {
-    *to = from;
-}
-void convertImageType(char * to, uchar from) {
-    *to = from-128;
-}
-void convertImageType(ushort * to, uchar from) {
-    *to = from;
-}
-void convertImageType(short * to, uchar from) {
-    *to = from;
-}
-void convertImageType(uint * to, uchar from) {
-    *to = from;
-}
-void convertImageType(int * to, uchar from) {
-    *to = from;
-}
-void convertImageType(float * to, uchar from) {
-    *to = (float)from/255.0f;
-}
-void convertImageType(color_float * to, uchar from) {
-    to->red = (float)from/255.0f;
-    to->blue = to->red;
-    to->green = to->red;
-}
-void convertImageType(color_uchar * to, uchar from) {
-    to->red = from;
-    to->blue = from;
-    to->green = from;
-}
-void convertImageType(float2 * to, uchar from) {
-    to->x = (float)from/255.0f;
-    to->y = to->x;
-}
-void convertImageType(float3 * to, uchar from) {
-    to->x = (float)from/255.0f;
-    to->y = to->x;
-    to->z = to->x;
-}
-
-
-// Conversion from char
-void convertImageType(bool * to, char from) {
-    *to = from > 0;
-}
-void convertImageType(uchar * to, char from) {
-    *to = from+128;
-}
-void convertImageType(char * to, char from) {
-    *to = from;
-}
-void convertImageType(ushort * to, char from) {
-    *to = from;
-}
-void convertImageType(short * to, char from) {
-    *to = from;
-}
-void convertImageType(uint * to, char from) {
-    *to = from;
-}
-void convertImageType(int * to, char from) {
-    *to = from;
-}
-void convertImageType(float * to, char from) {
-    *to = (float)from/255.0f+0.5f;
-}
-void convertImageType(color_float * to, char from) {
-    to->red = (float)from/255.0f+0.5f;
-    to->blue = to->red;
-    to->green = to->red;
-}
-void convertImageType(color_uchar * to, char from) {
-    to->red = from+128;
-    to->blue = to->red;
-    to->green = to->red;
-}
-void convertImageType(float2 * to, char from) {
-    to->x = (float)from/255.0f+0.5f;
-    to->y = to->x;
-}
-void convertImageType(float3 * to, char from) {
-    to->x = (float)from/255.0f+0.5;
-    to->y = to->x;
-    to->z = to->x;
-}
-
-// Conversion from ushort
-void convertImageType(bool * to, ushort from) {
-    *to = from > 0;
-}
-void convertImageType(uchar * to, ushort from) {
-    *to = from/255;
-}
-void convertImageType(char * to, ushort from) {
-    *to = from/255-128;
-}
-void convertImageType(ushort * to, ushort from) {
-    *to = from;
-}
-void convertImageType(short * to, ushort from) {
-    *to = from-32768;
-}
-void convertImageType(uint * to, ushort from) {
-    *to = from;
-}
-void convertImageType(int * to, ushort from) {
-    *to = from;
-}
-void convertImageType(float * to, ushort from) {
-    *to = (float)from/65535.0f;
-}
-void convertImageType(color_float * to, ushort from) {
-    to->red = (float)from/65535.0f;
-    to->blue = to->red;
-    to->green = to->red;
-}
-void convertImageType(color_uchar * to, ushort from) {
-    to->red = ((float)from/65535)*255;
-    to->blue = to->red;
-    to->green = to->red;
-}
-void convertImageType(float2 * to, ushort from) {
-    to->x = (float)from/65535.0f;
-    to->y = to->x;
-}
-void convertImageType(float3 * to, ushort from) {
-    to->x = (float)from/65535.0f;
-    to->y = to->x;
-    to->z = to->x;
-}
-
-
-// Conversion from short
-void convertImageType(bool * to, short from) {
-    *to = from > 0;
-}
-void convertImageType(uchar * to, short from) {
-    *to = from/255;
-}
-void convertImageType(char * to, short from) {
-    *to = from/255-128;
-}
-void convertImageType(ushort * to, short from) {
-    *to = from+32768;
-}
-void convertImageType(short * to, short from) {
-    *to = from;
-}
-void convertImageType(uint * to, short from) {
-    *to = from;
-}
-void convertImageType(int * to, short from) {
-    *to = from;
-}
-void convertImageType(float * to, short from) {
-    *to = ((float)from/65535.0f)+0.5f;
-}
-void convertImageType(color_float * to, short from) {
-    to->red = (float)from/65535.0f;
-    to->blue = to->red;
-    to->green = to->red;
-}
-void convertImageType(color_uchar * to, short from) {
-    to->red = ((float)from/65535)*255;
-    to->blue = to->red;
-    to->green = to->red;
-}
-void convertImageType(float2 * to, short from) {
-    to->x = (float)from/65535.0f;
-    to->y = to->x;
-}
-void convertImageType(float3 * to, short from) {
-    to->x = (float)from/65535.0f;
-    to->y = to->x;
-    to->z = to->x;
-}
-
-// Conversion from int
-void convertImageType(bool * to, int from) {
-    *to = from > 0;
-}
-void convertImageType(uchar * to, int from) {
-    *to = from/255;
-}
-void convertImageType(char * to, int from) {
-    *to = from/255-128;
-}
-void convertImageType(ushort * to, int from) {
-    *to = from+32768;
-}
-void convertImageType(short * to, int from) {
-    *to = from;
-}
-void convertImageType(uint * to, int from) {
-    *to = from;
-}
-void convertImageType(int * to, int from) {
-    *to = from;
-}
-void convertImageType(float * to, int from) {
-    *to = ((float)from/4294967295.0f)+0.5f;
-}
-void convertImageType(color_float * to, int from) {
-    to->red = (float)from/65535.0f;
-    to->blue = to->red;
-    to->green = to->red;
-}
-void convertImageType(color_uchar * to, int from) {
-    to->red = ((float)from/65535)*255;
-    to->blue = to->red;
-    to->green = to->red;
-}
-void convertImageType(float2 * to, int from) {
-    to->x = (float)from/65535.0f;
-    to->y = to->x;
-}
-void convertImageType(float3 * to, int from) {
-    to->x = (float)from/65535.0f;
-    to->y = to->x;
-    to->z = to->x;
-}
-
-
-// Conversion from uint
-void convertImageType(bool * to, uint from) {
-    *to = from > 0;
-}
-void convertImageType(uchar * to, uint from) {
-    *to = from/255;
-}
-void convertImageType(char * to, uint from) {
-    *to = from/255-128;
-}
-void convertImageType(ushort * to, uint from) {
-    *to = from+32768;
-}
-void convertImageType(short * to, uint from) {
-    *to = from;
-}
-void convertImageType(uint * to, uint from) {
-    *to = from;
-}
-void convertImageType(int * to, uint from) {
-    *to = from;
-}
-void convertImageType(float * to, uint from) {
-    *to = ((float)from/4294967295.0f);
-}
-void convertImageType(color_float * to, uint from) {
-    to->red = (float)from/65535.0f;
-    to->blue = to->red;
-    to->green = to->red;
-}
-void convertImageType(color_uchar * to, uint from) {
-    to->red = ((float)from/65535)*255;
-    to->blue = to->red;
-    to->green = to->red;
-}
-void convertImageType(float2 * to, uint from) {
-    to->x = (float)from/65535.0f;
-    to->y = to->x;
-}
-void convertImageType(float3 * to, uint from) {
-    to->x = (float)from/65535.0f;
-    to->y = to->x;
-    to->z = to->x;
-}
-
-// Conversion from color_uchar
-void convertImageType(bool * to, color_uchar from) {
-    *to = 0.33f*(from.red+from.blue+from.green) > 128 ;
-}
-void convertImageType(uchar * to, color_uchar from) {
-    *to = (0.33f*(from.red+from.blue+from.green));
-}
-void convertImageType(char * to, color_uchar from) {
-    *to = (0.33f*(from.red+from.blue+from.green)-128);
-}
-void convertImageType(ushort * to, color_uchar from) {
-    *to = (0.33f*(from.red+from.blue+from.green)/255.0f)*65535;
-}
-void convertImageType(short * to, color_uchar from) {
-    *to = (0.33f*(from.red+from.blue+from.green)/255.0f - 0.5f)*65535;
-}
-void convertImageType(uint * to, color_uchar from) {
-    *to = (0.33f*(from.red+from.blue+from.green)/255.0f)*4294967295;
-}
-void convertImageType(int * to, color_uchar from) {
-    *to = (0.33f*(from.red+from.blue+from.green)/255.0f-0.5f)*4294967295;
-}
-void convertImageType(float * to, color_uchar from) {
-    *to = 0.33f*(from.red+from.blue+from.green)/255.0f;
-}
-void convertImageType(color_float * to, color_uchar from) {
-    to->red = (float)from.red/255.0f;
-    to->blue = (float)from.blue/255.0f;
-    to->green =(float)from.green/255.0f;
-}
-void convertImageType(color_uchar * to, color_uchar from) {
-    *to = from;
-}
-void convertImageType(float2 * to, color_uchar from) {
-    to->x = (float)from.red/255.0f;
-    to->y = (float)from.green/255.0f;
-}
-void convertImageType(float3 * to, color_uchar from) {
-    to->x = (float)from.red/255.0f;
-    to->y = (float)from.green/255.0f;
-    to->z = (float)from.blue/255.0f;
-}
-// Conversion from color_float
-void convertImageType(bool * to, color_float from) {
-    *to = 0.33f*(from.red+from.blue+from.green) > 0.5f;
-}
-void convertImageType(uchar * to, color_float from) {
-    *to = (0.33f*(from.red+from.blue+from.green))*255;
-}
-void convertImageType(char * to, color_float from) {
-    *to = (0.33f*(from.red+from.blue+from.green)-0.5f)*255;
-}
-void convertImageType(ushort * to, color_float from) {
-    *to = (0.33f*(from.red+from.blue+from.green))*65535;
-}
-void convertImageType(short * to, color_float from) {
-    *to = (0.33f*(from.red+from.blue+from.green)-0.5f)*65535;
-}
-void convertImageType(uint * to, color_float from) {
-    *to = (0.33f*(from.red+from.blue+from.green))*4294967295;
-}
-void convertImageType(int * to, color_float from) {
-    *to = (0.33f*(from.red+from.blue+from.green)-0.5f)*4294967295;
-}
-void convertImageType(float * to, color_float from) {
-    *to = 0.33f*(from.red+from.blue+from.green);
-}
-void convertImageType(color_float * to, color_float from) {
-    *to = from;
-}
-void convertImageType(color_uchar * to, color_float from) {
-    to->red = (float)from.red*255.0f;
-    to->blue = (float)from.blue*255.0f;
-    to->green = (float)from.green*255.0f;
-}
-void convertImageType(float2 * to, color_float from) {
-    to->x = from.red;
-    to->y = from.green;
-}
-void convertImageType(float3 * to, color_float from) {
-    to->x = from.red;
-    to->y = from.green;
-    to->z = from.blue;
-}
-
-// Conversion from float
-void convertImageType(bool * to, float from) {
-    *to = from > 0;
-}
-void convertImageType(uchar * to, float from) {
-    *to = from/255;
-}
-void convertImageType(char * to, float from) {
-    *to = from/255-128;
-}
-void convertImageType(ushort * to, float from) {
-    *to = from+32768;
-}
-void convertImageType(short * to, float from) {
-    *to = from;
-}
-void convertImageType(uint * to, float from) {
-    *to = from;
-}
-void convertImageType(int * to, float from) {
-    *to = from;
-}
-void convertImageType(float * to, float from) {
-    *to = from;
-}
-void convertImageType(color_float * to, float from) {
-    to->red = (float)from/65535.0f;
-    to->blue = to->red;
-    to->green = to->red;
-}
-void convertImageType(color_uchar * to, float from) {
-    to->red = ((float)from/65535)*255;
-    to->blue = to->red;
-    to->green = to->red;
-}
-void convertImageType(float2 * to, float from) {
-    to->x = (float)from/65535.0f;
-    to->y = to->x;
-}
-void convertImageType(float3 * to, float from) {
-    to->x = (float)from/65535.0f;
-    to->y = to->x;
-    to->z = to->x;
-}
-
-
-
-// Conversion from float2
-void convertImageType(float * to, float2 from) {
-    *to = sqrt(from.x*from.x+from.y*from.y);
-}
-void convertImageType(color_float * to, float2 from) {
-    to->red = from.x;
-    to->blue = from.y;
-    to->green = 0;
-}
-void convertImageType(color_uchar * to, float2 from) {
-    to->red = (float)from.x*255.0f;
-    to->blue = (float)from.y*255.0f;
-    to->green = 0;
-}
-void convertImageType(float2 * to, float2 from) {
-    *to = from;
-}
-void convertImageType(float3 * to, float2 from) {
-    to->x = from.x;
-    to->y = from.y;
-    to->z = 0;
-}
-
-// Conversion from float3
-void convertImageType(float * to, float3 from) {
-    *to = sqrt(from.x*from.x+from.y*from.y+from.z*from.z);
-}
-void convertImageType(color_float * to, float3 from) {
-    to->red = from.x;
-    to->blue = from.y;
-    to->green = from.z;
-}
-void convertImageType(color_uchar * to, float3 from) {
-    to->red = (float)from.x*255.0f;
-    to->blue = (float)from.y*255.0f;
-    to->green = (float)from.z*255.0f;
-}
-void convertImageType(float2 * to, float3 from) {
-    to->x = from.x;
-    to->y = from.y;
-}
-void convertImageType(float3 * to, float3 from) {
-    *to = from;
+template <>
+void Dataset<color_uchar>::setDefaultLevelWindow() {
+    this->defaultLevel = 255*0.5;
+    this->defaultWindow = 255;
+}
+template <>
+void Dataset<uchar>::setDefaultLevelWindow() {
+    this->defaultLevel = 255*0.5;
+    this->defaultWindow = 255;
+}
+template <>
+void Dataset<char>::setDefaultLevelWindow() {
+    this->defaultLevel = 0;
+    this->defaultWindow = 255;
 }
 } // End namespace
